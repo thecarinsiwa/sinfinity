@@ -23,35 +23,35 @@ Typical use cases include:
 
 ## Architecture
 
-| Layer | Technology | Role |
-|-------|------------|------|
-| Web frontend | **Next.js** | Business UI for desktop and tablet browsers |
-| Backend API | **NestJS** | Domain services, auth, workflows, integrations |
-| Mobile | **PWA** | Installable progressive web app for field and on-the-go use |
-| Data model | See [`database/`](./database/) | Conceptual schema (~143 tables across 18 modules) |
+| App | Package | Technology | Port (dev) | Role |
+|-----|---------|------------|------------|------|
+| Web | `@sinfinity/web` | **Next.js** | 3000 | Main business UI |
+| Admin | `@sinfinity/admin` | **Next.js** | 3001 | Administration console |
+| POS | `@sinfinity/pos` | **Next.js** | 3002 | Point of sale |
+| API | `@sinfinity/api` | **NestJS** | 4000 | Domain services, auth, workflows |
+| Data model | — | See [`database/`](./database/) | — | Conceptual schema (~143 tables across 18 modules) |
 
 ```text
-┌─────────────────┐     ┌─────────────────┐
-│  Next.js Web    │     │  PWA (Mobile)   │
-│  Admin / Ops UI │     │  Field / Sales  │
-└────────┬────────┘     └────────┬────────┘
-         │      HTTPS / REST     │
-         └──────────┬────────────┘
-                    ▼
-            ┌───────────────┐
-            │  NestJS API   │
-            │  Auth · RBAC  │
-            │  Domains      │
-            └───────┬───────┘
-                    ▼
-            ┌───────────────┐
-            │   Database    │
-            └───────────────┘
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  Next.js Web │  │ Next.js Admin│  │  Next.js POS │
+│   :3000      │  │    :3001     │  │    :3002     │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │                 │                 │
+       └─────────────────┼─────────────────┘
+                         │ HTTPS / REST
+                         ▼
+                 ┌───────────────┐
+                 │  NestJS API   │
+                 │     :4000     │
+                 └───────┬───────┘
+                         ▼
+                 ┌───────────────┐
+                 │   Database    │
+                 └───────────────┘
 ```
 
-- **Next.js** delivers the main web application (dashboards, CRM, procurement, finance, settings).
+- **Web / Admin / POS** are separate Next.js frontends that share the NestJS backend.
 - **NestJS** exposes a modular API aligned with business domains (customers, quotations, purchases, shipments, inventory, etc.), with organization-scoped multi-tenancy, roles, and audit trails.
-- **PWA** reuses the same backend so sales, technicians, and logistics teams can work from phones/tablets (offline-capable UX where relevant: deliveries, interventions, proofs of delivery).
 
 ## Functional modules
 
@@ -84,7 +84,7 @@ Detailed table-level design (French design-phase data dictionary): [`database/RE
 - **Auditability** — who did what, when (audit logs + status histories on critical workflows)
 - **End-to-end traceability** — from opportunity line items through serial numbers to installed equipment and warranties
 - **Import-aware costing** — landed cost breakdown tailored to DRC import operations
-- **One API, multiple clients** — Next.js web app and PWA share the NestJS backend
+- **One API, multiple clients** — Web, Admin, and POS share the NestJS backend
 
 ## Repository layout
 
@@ -92,7 +92,11 @@ Monorepo managed with **pnpm** workspaces from the project root.
 
 ```text
 sinfinity/
-├── apps/                 # Applications (web, api, pwa, …)
+├── apps/
+│   ├── web/              # Next.js — business UI (:3000)
+│   ├── admin/            # Next.js — admin console (:3001)
+│   ├── pos/              # Next.js — point of sale (:3002)
+│   └── api/              # NestJS — REST API (:4000)
 ├── packages/             # Shared libraries
 ├── database/             # Data model + MySQL DDL (docs & SQL, not a workspace package)
 │   ├── README.md
@@ -113,7 +117,11 @@ Requires **Node.js ≥ 22** and **pnpm ≥ 10**.
 ```bash
 # From the repository root
 pnpm install
-pnpm dev
+pnpm dev                 # all apps in parallel
+pnpm dev:web             # web only
+pnpm dev:admin
+pnpm dev:pos
+pnpm dev:api
 ```
 
 Useful workspace commands:
@@ -121,9 +129,9 @@ Useful workspace commands:
 | Command | Description |
 |---------|-------------|
 | `pnpm install` | Install all workspace dependencies |
-| `pnpm dev` | Run `dev` in all packages that define it |
+| `pnpm dev` | Run `dev` in all apps |
 | `pnpm build` | Build all packages |
-| `pnpm --filter <name> <script>` | Run a script in one package |
+| `pnpm --filter @sinfinity/<app> <script>` | Run a script in one app |
 
 ## Local database (MySQL 8)
 
@@ -137,7 +145,7 @@ See [`database/conventions.md`](./database/conventions.md) for schema rules.
 
 ## Status
 
-Data model documented; full MySQL DDL available in `database/sql/sinfinity_schema.sql`. NestJS / Next.js / PWA apps to follow under `apps/`.
+Data model documented; full MySQL DDL available in `database/sql/sinfinity_schema.sql`. Apps scaffolded under `apps/` (`web`, `admin`, `pos`, `api`).
 
 ## License
 
