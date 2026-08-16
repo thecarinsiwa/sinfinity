@@ -1,0 +1,25 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies / build
+node_modules/
+**/node_modules/
+dist/
+build/
+.next/
+**/.next/
+coverage/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.pnpm-store/

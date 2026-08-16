@@ -1,0 +1,20 @@
+{
+  "name": "sinfinity",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --if-present dev",
+    "dev:web": "pnpm --filter @sinfinity/web dev",
+    "dev:admin": "pnpm --filter @sinfinity/admin dev",
+    "dev:pos": "pnpm --filter @sinfinity/pos dev",
+    "dev:api": "pnpm --filter @sinfinity/api dev",
+    "build": "pnpm -r --if-present build",
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
+    "clean": "pnpm -r --parallel --if-present clean"
+  }
+}
