@@ -88,18 +88,42 @@ Detailed table-level design (French design-phase data dictionary): [`database/RE
 
 ## Repository layout
 
+Monorepo managed with **pnpm** workspaces from the project root.
+
 ```text
 sinfinity/
-├── apps/                 # Application packages (web, api, …)
-├── database/             # Data model + MySQL DDL
+├── apps/                 # Applications (web, api, pwa, …)
+├── packages/             # Shared libraries
+├── database/             # Data model + MySQL DDL (docs & SQL, not a workspace package)
 │   ├── README.md
 │   ├── conventions.md
 │   ├── dictionnaire-donnees.md
 │   ├── modules/
 │   └── sql/
 │       └── sinfinity_schema.sql
+├── package.json
+├── pnpm-workspace.yaml
 └── README.md
 ```
+
+## Getting started
+
+Requires **Node.js ≥ 22** and **pnpm ≥ 10**.
+
+```bash
+# From the repository root
+pnpm install
+pnpm dev
+```
+
+Useful workspace commands:
+
+| Command | Description |
+|---------|-------------|
+| `pnpm install` | Install all workspace dependencies |
+| `pnpm dev` | Run `dev` in all packages that define it |
+| `pnpm build` | Build all packages |
+| `pnpm --filter <name> <script>` | Run a script in one package |
 
 ## Local database (MySQL 8)
 
@@ -113,7 +137,7 @@ See [`database/conventions.md`](./database/conventions.md) for schema rules.
 
 ## Status
 
-Data model documented; full MySQL DDL available in `database/sql/sinfinity_schema.sql`. NestJS / Next.js / PWA apps to follow.
+Data model documented; full MySQL DDL available in `database/sql/sinfinity_schema.sql`. NestJS / Next.js / PWA apps to follow under `apps/`.
 
 ## License
 

@@ -11,7 +11,7 @@ Thumbs.db
 .env.local
 .env.*.local
 
-# Dependencies / build (apps later)
+# Dependencies / build
 node_modules/
 **/node_modules/
 dist/
@@ -19,3 +19,5 @@ build/
 coverage/
 *.log
 npm-debug.log*
+pnpm-debug.log*
+.pnpm-store/
