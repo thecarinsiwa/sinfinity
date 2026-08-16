@@ -8,6 +8,18 @@ Couvrir le cycle complet :
 
 **Prospect → Opportunité → Devis → Commande → Sourcing → Achat → Import → Stock → Livraison → Installation → Maintenance → Facturation**
 
+## Script SQL (source de vérité DDL)
+
+Fichier unique MySQL 8 (~142 tables) :
+
+- [`sql/sinfinity_schema.sql`](./sql/sinfinity_schema.sql)
+
+```bash
+mysql -u root -p < database/sql/sinfinity_schema.sql
+```
+
+Conventions : [`conventions.md`](./conventions.md)
+
 ## Modules
 
 | # | Module | Fichier | Tables |
@@ -31,35 +43,29 @@ Couvrir le cycle complet :
 | 17 | Communication et Tâches | [17_communication.md](./modules/17_communication.md) | 5 |
 | 18 | Paramétrage global | [18_settings.md](./modules/18_settings.md) | 8 |
 
-**Total estimé : ~143 tables**
-
 ## Conventions de conception
 
 ### Clés et audit
 
-Chaque table métier inclut en principe :
-
 | Colonne | Type | Description |
 |---------|------|-------------|
-| `id` | UUID / BIGINT | Clé primaire |
+| `id` | `CHAR(36)` UUID | Clé primaire |
 | `organization_id` | FK | Isolation multi-tenant |
-| `created_at` | TIMESTAMP | Date de création |
-| `updated_at` | TIMESTAMP | Dernière modification |
-| `created_by` | FK → users | Auteur |
-| `updated_by` | FK → users | Dernier modificateur |
-| `deleted_at` | TIMESTAMP NULL | Soft delete (si applicable) |
+| `created_at` / `updated_at` | `DATETIME(3)` | Audit |
+| `created_by` / `updated_by` | FK → users | Auteur |
+| `deleted_at` | `DATETIME(3)` NULL | Soft delete (si applicable) |
 
 ### Multi-tenant
 
-Toutes les données opérationnelles sont scopées par `organization_id`. Les tables de référentiel global (`currencies`, `countries`, etc.) peuvent être partagées ou scopées selon le besoin.
+Données opérationnelles scopées par `organization_id`. Référentiels globaux (`currencies`, `countries`, etc.) partagés.
 
 ### Statuts
 
-Les workflows (devis, commandes, expéditions, tickets…) utilisent des référentiels de statut ou des enums contrôlés, avec historisation dans des tables `*_status_history` lorsque le suivi est critique.
+Workflows via enums ou tables référentiel + `*_status_history` quand le suivi est critique.
 
 ### Polymorphisme documentaire
 
-Les documents, commentaires et notifications se lient aux entités via `(entity_type, entity_id)` ou via `document_links`.
+Documents / commentaires / notifications via `(entity_type, entity_id)` ou `document_links`.
 
 ## Flux métier principaux
 
@@ -77,5 +83,7 @@ leads → opportunities → quotations → sales_orders
 
 ## Fichiers
 
-- [dictionnaire-donnees.md](./dictionnaire-donnees.md) — index consolidé (rôle de chaque table)
-- [modules/](./modules/) — description détaillée par domaine (colonnes, relations)
+- [sql/sinfinity_schema.sql](./sql/sinfinity_schema.sql) — DDL MySQL complet
+- [dictionnaire-donnees.md](./dictionnaire-donnees.md) — index des tables
+- [modules/](./modules/) — description détaillée par domaine
+- [conventions.md](./conventions.md) — règles MySQL 8

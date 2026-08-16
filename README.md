@@ -91,16 +91,29 @@ Detailed table-level design (French design-phase data dictionary): [`database/RE
 ```text
 sinfinity/
 ├── apps/                 # Application packages (web, api, …)
-├── database/             # Data model documentation (design phase)
+├── database/             # Data model + MySQL DDL
 │   ├── README.md
+│   ├── conventions.md
 │   ├── dictionnaire-donnees.md
-│   └── modules/          # Per-domain table & column descriptions
-└── README.md             # This file
+│   ├── modules/
+│   └── sql/
+│       └── sinfinity_schema.sql
+└── README.md
 ```
+
+## Local database (MySQL 8)
+
+Install MySQL 8 locally, then:
+
+```bash
+mysql -u root -p < database/sql/sinfinity_schema.sql
+```
+
+See [`database/conventions.md`](./database/conventions.md) for schema rules.
 
 ## Status
 
-Design phase: business data model documented. Application scaffolding (Next.js / NestJS / PWA) to follow.
+Data model documented; full MySQL DDL available in `database/sql/sinfinity_schema.sql`. NestJS / Next.js / PWA apps to follow.
 
 ## License
 
