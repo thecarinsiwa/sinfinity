@@ -49,7 +49,7 @@ Conventions : [`conventions.md`](./conventions.md)
 
 | Colonne | Type | Description |
 |---------|------|-------------|
-| `id` | `CHAR(36)` UUID | Clé primaire |
+| `id` | `CHAR(36)` UUID `DEFAULT (UUID())` | Clé primaire |
 | `organization_id` | FK | Isolation multi-tenant |
 | `created_at` / `updated_at` | `DATETIME(3)` | Audit |
 | `created_by` / `updated_by` | FK → users | Auteur |

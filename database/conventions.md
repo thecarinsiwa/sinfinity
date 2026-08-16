@@ -28,9 +28,10 @@ Technical rules for the MySQL 8 schema. Conceptual design lives in [`modules/`](
 
 ## Primary keys
 
-- Type: `CHAR(36)` (UUID string).
-- Prefer UUID v7 when generated in the app (time-sortable); UUID v4 is acceptable.
-- Do **not** use auto-increment `BIGINT` for new domain tables (except append-only logs like `audit_logs`, `login_logs`).
+- Type: `CHAR(36)` (UUID string) with `DEFAULT (UUID())` in MySQL.
+- Prefer generating UUID in the application when needed (e.g. UUID v7); MySQL `UUID()` is the SQL default.
+- All tables use UUID primary keys, including append-only logs (`audit_logs`, `login_logs`).
+- Join tables may use a composite primary key without a surrogate `id` (e.g. `role_permissions`).
 
 ## Multi-tenancy
 

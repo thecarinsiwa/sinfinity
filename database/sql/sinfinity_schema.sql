@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Sinfinity — MySQL 8 schema (full DDL)
 -- Generated from database/modules + conventions.md
--- Charset: utf8mb4 / utf8mb4_unicode_ci | Engine: InnoDB | PK: CHAR(36) UUID
+-- Charset: utf8mb4 / utf8mb4_unicode_ci | Engine: InnoDB | PK: CHAR(36) UUID DEFAULT (UUID())
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -19,7 +19,7 @@ USE `sinfinity`;
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `currencies` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` CHAR(3) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `symbol` VARCHAR(16) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE `currencies` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `countries` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` CHAR(2) NOT NULL,
   `code3` CHAR(3) NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE `countries` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `cities` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `country_id` CHAR(36) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `region` VARCHAR(255) NULL,
@@ -56,7 +56,7 @@ CREATE TABLE `cities` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `exchange_rates` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `from_currency_id` CHAR(36) NOT NULL,
   `to_currency_id` CHAR(36) NOT NULL,
   `rate` DECIMAL(18,8) NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE `exchange_rates` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `units` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` VARCHAR(32) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `symbol` VARCHAR(32) NULL,
@@ -82,7 +82,7 @@ CREATE TABLE `units` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `shipping_terms` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` VARCHAR(32) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE `shipping_terms` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `organizations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(255) NOT NULL,
   `legal_name` VARCHAR(255) NULL,
   `tax_id` VARCHAR(64) NULL,
@@ -119,7 +119,7 @@ CREATE TABLE `organizations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `taxes` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE `taxes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `payment_terms` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -152,7 +152,7 @@ CREATE TABLE `payment_terms` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `branches` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -173,7 +173,7 @@ CREATE TABLE `branches` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `users` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `branch_id` CHAR(36) NULL,
   `email` VARCHAR(255) NOT NULL,
@@ -199,7 +199,7 @@ ALTER TABLE `branches`
   ADD CONSTRAINT `fk_branches_manager_user` FOREIGN KEY (`manager_user_id`) REFERENCES `users` (`id`);
 
 CREATE TABLE `roles` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -214,7 +214,7 @@ CREATE TABLE `roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `permissions` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `module` VARCHAR(64) NOT NULL,
   `action` VARCHAR(64) NOT NULL,
   `code` VARCHAR(128) NOT NULL,
@@ -234,7 +234,7 @@ CREATE TABLE `role_permissions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `user_roles` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `user_id` CHAR(36) NOT NULL,
   `role_id` CHAR(36) NOT NULL,
   `branch_id` CHAR(36) NULL,
@@ -249,7 +249,7 @@ CREATE TABLE `user_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `user_sessions` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `user_id` CHAR(36) NOT NULL,
   `token_hash` VARCHAR(255) NOT NULL,
   `ip_address` VARCHAR(64) NULL,
@@ -263,7 +263,7 @@ CREATE TABLE `user_sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `audit_logs` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NULL,
   `user_id` CHAR(36) NULL,
   `action` VARCHAR(64) NOT NULL,
@@ -281,7 +281,7 @@ CREATE TABLE `audit_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `login_logs` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `user_id` CHAR(36) NULL,
   `email_attempted` VARCHAR(255) NULL,
   `success` TINYINT(1) NOT NULL,
@@ -295,7 +295,7 @@ CREATE TABLE `login_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `system_settings` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `key` VARCHAR(128) NOT NULL,
   `value` JSON NULL,
@@ -312,7 +312,7 @@ CREATE TABLE `system_settings` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `customer_categories` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -326,7 +326,7 @@ CREATE TABLE `customer_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `lead_sources` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -339,7 +339,7 @@ CREATE TABLE `lead_sources` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `activity_types` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `icon` VARCHAR(64) NULL,
@@ -350,7 +350,7 @@ CREATE TABLE `activity_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `leads` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `source_id` CHAR(36) NULL,
   `company_name` VARCHAR(255) NULL,
@@ -376,7 +376,7 @@ CREATE TABLE `leads` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `customers` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `category_id` CHAR(36) NULL,
   `code` VARCHAR(64) NOT NULL,
@@ -408,7 +408,7 @@ ALTER TABLE `leads`
   ADD CONSTRAINT `fk_leads_converted_customer` FOREIGN KEY (`converted_customer_id`) REFERENCES `customers` (`id`);
 
 CREATE TABLE `customer_contacts` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `customer_id` CHAR(36) NOT NULL,
   `first_name` VARCHAR(128) NOT NULL,
   `last_name` VARCHAR(128) NOT NULL,
@@ -426,7 +426,7 @@ CREATE TABLE `customer_contacts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `customer_addresses` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `customer_id` CHAR(36) NOT NULL,
   `type` ENUM('billing','shipping','both') NOT NULL DEFAULT 'both',
   `label` VARCHAR(128) NULL,
@@ -447,7 +447,7 @@ CREATE TABLE `customer_addresses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `customer_notes` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `customer_id` CHAR(36) NOT NULL,
   `author_id` CHAR(36) NULL,
   `note` TEXT NOT NULL,
@@ -462,7 +462,7 @@ CREATE TABLE `customer_notes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `opportunities` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
   `lead_id` CHAR(36) NULL,
@@ -488,7 +488,7 @@ CREATE TABLE `opportunities` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `sales_activities` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `activity_type_id` CHAR(36) NULL,
   `subject` VARCHAR(255) NOT NULL,
@@ -515,7 +515,7 @@ CREATE TABLE `sales_activities` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `product_categories` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -531,7 +531,7 @@ CREATE TABLE `product_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_subcategories` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `category_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -544,7 +544,7 @@ CREATE TABLE `product_subcategories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_brands` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `logo_url` VARCHAR(512) NULL,
@@ -558,7 +558,7 @@ CREATE TABLE `product_brands` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_models` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `brand_id` CHAR(36) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `manufacturer_sku` VARCHAR(128) NULL,
@@ -572,7 +572,7 @@ CREATE TABLE `product_models` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_units` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` VARCHAR(32) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `symbol` VARCHAR(32) NULL,
@@ -585,7 +585,7 @@ CREATE TABLE `product_units` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `service_categories` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -598,7 +598,7 @@ CREATE TABLE `service_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `services` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -621,7 +621,7 @@ CREATE TABLE `services` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `products` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `sku` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -654,7 +654,7 @@ CREATE TABLE `products` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_specifications` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `product_id` CHAR(36) NOT NULL,
   `spec_key` VARCHAR(128) NOT NULL,
   `spec_value` VARCHAR(512) NOT NULL,
@@ -668,7 +668,7 @@ CREATE TABLE `product_specifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_images` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `product_id` CHAR(36) NOT NULL,
   `url` VARCHAR(512) NOT NULL,
   `alt_text` VARCHAR(255) NULL,
@@ -682,7 +682,7 @@ CREATE TABLE `product_images` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_services` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `product_id` CHAR(36) NOT NULL,
   `service_id` CHAR(36) NOT NULL,
   `is_required` TINYINT(1) NOT NULL DEFAULT 0,
@@ -696,7 +696,7 @@ CREATE TABLE `product_services` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `opportunity_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `opportunity_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `service_id` CHAR(36) NULL,
@@ -719,7 +719,7 @@ CREATE TABLE `opportunity_items` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `supplier_categories` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -732,7 +732,7 @@ CREATE TABLE `supplier_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `suppliers` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -759,7 +759,7 @@ CREATE TABLE `suppliers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_contacts` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_id` CHAR(36) NOT NULL,
   `first_name` VARCHAR(128) NOT NULL,
   `last_name` VARCHAR(128) NOT NULL,
@@ -775,7 +775,7 @@ CREATE TABLE `supplier_contacts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_addresses` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_id` CHAR(36) NOT NULL,
   `type` ENUM('hq','warehouse','factory','billing') NOT NULL DEFAULT 'hq',
   `line1` VARCHAR(255) NOT NULL,
@@ -793,7 +793,7 @@ CREATE TABLE `supplier_addresses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_products` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
   `supplier_sku` VARCHAR(128) NULL,
@@ -812,7 +812,7 @@ CREATE TABLE `supplier_products` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_quotes` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `supplier_id` CHAR(36) NOT NULL,
   `quote_number` VARCHAR(64) NOT NULL,
@@ -834,7 +834,7 @@ CREATE TABLE `supplier_quotes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_quote_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_quote_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `description` TEXT NULL,
@@ -850,7 +850,7 @@ CREATE TABLE `supplier_quote_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_evaluations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_id` CHAR(36) NOT NULL,
   `evaluated_by` CHAR(36) NULL,
   `evaluated_at` DATE NOT NULL,
@@ -867,7 +867,7 @@ CREATE TABLE `supplier_evaluations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_payment_terms` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_id` CHAR(36) NOT NULL,
   `payment_term_id` CHAR(36) NOT NULL,
   `is_default` TINYINT(1) NOT NULL DEFAULT 0,
@@ -880,7 +880,7 @@ CREATE TABLE `supplier_payment_terms` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_histories` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_id` CHAR(36) NOT NULL,
   `event_type` VARCHAR(64) NOT NULL,
   `entity_type` VARCHAR(64) NULL,
@@ -900,7 +900,7 @@ CREATE TABLE `supplier_histories` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `document_types` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -913,7 +913,7 @@ CREATE TABLE `document_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `documents` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `document_type_id` CHAR(36) NULL,
   `title` VARCHAR(255) NOT NULL,
@@ -935,7 +935,7 @@ CREATE TABLE `documents` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `supplier_documents` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `supplier_id` CHAR(36) NOT NULL,
   `document_id` CHAR(36) NOT NULL,
   `doc_kind` VARCHAR(64) NULL,
@@ -951,7 +951,7 @@ CREATE TABLE `supplier_documents` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `quotation_statuses` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `is_final` TINYINT(1) NOT NULL DEFAULT 0,
@@ -963,7 +963,7 @@ CREATE TABLE `quotation_statuses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `quotations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `quote_number` VARCHAR(64) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
@@ -996,7 +996,7 @@ CREATE TABLE `quotations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `quotation_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `quotation_id` CHAR(36) NOT NULL,
   `line_number` INT NOT NULL DEFAULT 1,
   `product_id` CHAR(36) NULL,
@@ -1019,7 +1019,7 @@ CREATE TABLE `quotation_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `quotation_versions` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `quotation_id` CHAR(36) NOT NULL,
   `version_number` INT NOT NULL,
   `snapshot` JSON NOT NULL,
@@ -1033,7 +1033,7 @@ CREATE TABLE `quotation_versions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `quotation_terms` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `quotation_id` CHAR(36) NOT NULL,
   `payment_term_id` CHAR(36) NULL,
   `shipping_term_id` CHAR(36) NULL,
@@ -1050,7 +1050,7 @@ CREATE TABLE `quotation_terms` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `quotation_approvals` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `quotation_id` CHAR(36) NOT NULL,
   `approver_id` CHAR(36) NULL,
   `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
@@ -1068,7 +1068,7 @@ CREATE TABLE `quotation_approvals` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `sales_orders` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `order_number` VARCHAR(64) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
@@ -1103,7 +1103,7 @@ CREATE TABLE `sales_orders` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `sales_order_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `sales_order_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `service_id` CHAR(36) NULL,
@@ -1123,7 +1123,7 @@ CREATE TABLE `sales_order_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `sales_order_status_history` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `sales_order_id` CHAR(36) NOT NULL,
   `from_status` VARCHAR(64) NULL,
   `to_status` VARCHAR(64) NOT NULL,
@@ -1137,7 +1137,7 @@ CREATE TABLE `sales_order_status_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `sales_order_documents` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `sales_order_id` CHAR(36) NOT NULL,
   `document_id` CHAR(36) NOT NULL,
   `doc_kind` VARCHAR(64) NULL,
@@ -1153,7 +1153,7 @@ CREATE TABLE `sales_order_documents` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `procurement_requests` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `request_number` VARCHAR(64) NOT NULL,
   `title` VARCHAR(255) NOT NULL,
@@ -1179,7 +1179,7 @@ CREATE TABLE `procurement_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `procurement_request_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `procurement_request_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `description` TEXT NULL,
@@ -1197,7 +1197,7 @@ CREATE TABLE `procurement_request_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `procurement_quotes` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `procurement_request_id` CHAR(36) NOT NULL,
   `supplier_id` CHAR(36) NOT NULL,
   `quote_number` VARCHAR(64) NULL,
@@ -1218,7 +1218,7 @@ CREATE TABLE `procurement_quotes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `procurement_quote_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `procurement_quote_id` CHAR(36) NOT NULL,
   `procurement_request_item_id` CHAR(36) NULL,
   `product_id` CHAR(36) NULL,
@@ -1236,7 +1236,7 @@ CREATE TABLE `procurement_quote_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `procurement_comparisons` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `procurement_request_id` CHAR(36) NOT NULL,
   `compared_by` CHAR(36) NULL,
   `compared_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -1253,7 +1253,7 @@ CREATE TABLE `procurement_comparisons` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `procurement_approvals` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `procurement_request_id` CHAR(36) NOT NULL,
   `procurement_quote_id` CHAR(36) NULL,
   `approver_id` CHAR(36) NULL,
@@ -1273,7 +1273,7 @@ CREATE TABLE `procurement_approvals` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `purchase_orders` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `po_number` VARCHAR(64) NOT NULL,
   `supplier_id` CHAR(36) NOT NULL,
@@ -1308,7 +1308,7 @@ CREATE TABLE `purchase_orders` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `purchase_order_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `purchase_order_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `description` TEXT NULL,
@@ -1324,7 +1324,7 @@ CREATE TABLE `purchase_order_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `purchase_order_payments` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `purchase_order_id` CHAR(36) NOT NULL,
   `amount` DECIMAL(18,4) NOT NULL,
   `currency_id` CHAR(36) NULL,
@@ -1340,7 +1340,7 @@ CREATE TABLE `purchase_order_payments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `purchase_order_status_history` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `purchase_order_id` CHAR(36) NOT NULL,
   `from_status` VARCHAR(64) NULL,
   `to_status` VARCHAR(64) NOT NULL,
@@ -1357,7 +1357,7 @@ CREATE TABLE `purchase_order_status_history` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `shipping_methods` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `code` VARCHAR(32) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
@@ -1368,7 +1368,7 @@ CREATE TABLE `shipping_methods` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `carriers` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `code` VARCHAR(64) NULL,
@@ -1385,7 +1385,7 @@ CREATE TABLE `carriers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `warehouses` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `branch_id` CHAR(36) NULL,
   `code` VARCHAR(64) NOT NULL,
@@ -1406,7 +1406,7 @@ CREATE TABLE `warehouses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `delivery_addresses` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `label` VARCHAR(128) NULL,
   `line1` VARCHAR(255) NOT NULL,
@@ -1429,7 +1429,7 @@ CREATE TABLE `delivery_addresses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `shipments` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `shipment_number` VARCHAR(64) NOT NULL,
   `purchase_order_id` CHAR(36) NULL,
@@ -1461,7 +1461,7 @@ CREATE TABLE `shipments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `shipment_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `shipment_id` CHAR(36) NOT NULL,
   `purchase_order_item_id` CHAR(36) NULL,
   `product_id` CHAR(36) NULL,
@@ -1477,7 +1477,7 @@ CREATE TABLE `shipment_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `shipment_tracking` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `shipment_id` CHAR(36) NOT NULL,
   `status` VARCHAR(64) NOT NULL,
   `location` VARCHAR(255) NULL,
@@ -1491,7 +1491,7 @@ CREATE TABLE `shipment_tracking` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `customs_declarations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `shipment_id` CHAR(36) NULL,
   `declaration_number` VARCHAR(128) NULL,
@@ -1510,7 +1510,7 @@ CREATE TABLE `customs_declarations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `customs_documents` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `customs_declaration_id` CHAR(36) NOT NULL,
   `document_id` CHAR(36) NOT NULL,
   `doc_kind` VARCHAR(64) NULL,
@@ -1521,7 +1521,7 @@ CREATE TABLE `customs_documents` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `import_documents` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `shipment_id` CHAR(36) NOT NULL,
   `document_id` CHAR(36) NOT NULL,
   `doc_kind` VARCHAR(64) NULL,
@@ -1532,7 +1532,7 @@ CREATE TABLE `import_documents` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `purchase_receipts` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `purchase_order_id` CHAR(36) NOT NULL,
   `receipt_number` VARCHAR(64) NOT NULL,
@@ -1559,7 +1559,7 @@ CREATE TABLE `purchase_receipts` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `landed_costs` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `reference` VARCHAR(64) NOT NULL,
   `purchase_order_id` CHAR(36) NULL,
@@ -1584,7 +1584,7 @@ CREATE TABLE `landed_costs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `landed_cost_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `landed_cost_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `purchase_order_item_id` CHAR(36) NULL,
@@ -1602,7 +1602,7 @@ CREATE TABLE `landed_cost_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `shipping_costs` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `landed_cost_id` CHAR(36) NOT NULL,
   `shipment_id` CHAR(36) NULL,
   `shipping_method_id` CHAR(36) NULL,
@@ -1621,7 +1621,7 @@ CREATE TABLE `shipping_costs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `customs_costs` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `landed_cost_id` CHAR(36) NOT NULL,
   `customs_declaration_id` CHAR(36) NULL,
   `duties_amount` DECIMAL(18,4) NOT NULL DEFAULT 0,
@@ -1638,7 +1638,7 @@ CREATE TABLE `customs_costs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `local_transport_costs` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `landed_cost_id` CHAR(36) NOT NULL,
   `from_location` VARCHAR(255) NULL,
   `to_location` VARCHAR(255) NULL,
@@ -1654,7 +1654,7 @@ CREATE TABLE `local_transport_costs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `inspection_costs` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `landed_cost_id` CHAR(36) NOT NULL,
   `inspection_place` ENUM('origin','destination','transit') NOT NULL DEFAULT 'origin',
   `inspector` VARCHAR(255) NULL,
@@ -1671,7 +1671,7 @@ CREATE TABLE `inspection_costs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `handling_costs` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `landed_cost_id` CHAR(36) NOT NULL,
   `location` VARCHAR(255) NULL,
   `amount` DECIMAL(18,4) NOT NULL DEFAULT 0,
@@ -1685,7 +1685,7 @@ CREATE TABLE `handling_costs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `other_procurement_costs` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `landed_cost_id` CHAR(36) NOT NULL,
   `cost_type` VARCHAR(64) NOT NULL,
   `amount` DECIMAL(18,4) NOT NULL DEFAULT 0,
@@ -1703,7 +1703,7 @@ CREATE TABLE `other_procurement_costs` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `warehouse_locations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `warehouse_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `aisle` VARCHAR(64) NULL,
@@ -1719,7 +1719,7 @@ CREATE TABLE `warehouse_locations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `inventory_batches` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
   `batch_number` VARCHAR(128) NOT NULL,
@@ -1736,7 +1736,7 @@ CREATE TABLE `inventory_batches` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `inventory` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `warehouse_id` CHAR(36) NOT NULL,
   `location_id` CHAR(36) NULL,
@@ -1758,7 +1758,7 @@ CREATE TABLE `inventory` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `inventory_movements` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
   `warehouse_id` CHAR(36) NOT NULL,
@@ -1782,7 +1782,7 @@ CREATE TABLE `inventory_movements` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `stock_transfers` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `transfer_number` VARCHAR(64) NOT NULL,
   `from_warehouse_id` CHAR(36) NOT NULL,
@@ -1803,7 +1803,7 @@ CREATE TABLE `stock_transfers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `stock_adjustments` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `warehouse_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
@@ -1822,7 +1822,7 @@ CREATE TABLE `stock_adjustments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `stock_reservations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `inventory_id` CHAR(36) NOT NULL,
   `sales_order_id` CHAR(36) NULL,
   `sales_order_item_id` CHAR(36) NULL,
@@ -1839,7 +1839,7 @@ CREATE TABLE `stock_reservations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `serial_numbers` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
   `serial_number` VARCHAR(128) NOT NULL,
@@ -1865,7 +1865,7 @@ CREATE TABLE `serial_numbers` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `deliveries` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `delivery_number` VARCHAR(64) NOT NULL,
   `sales_order_id` CHAR(36) NULL,
@@ -1894,7 +1894,7 @@ CREATE TABLE `deliveries` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `delivery_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `delivery_id` CHAR(36) NOT NULL,
   `sales_order_item_id` CHAR(36) NULL,
   `product_id` CHAR(36) NULL,
@@ -1909,7 +1909,7 @@ CREATE TABLE `delivery_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `delivery_tracking` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `delivery_id` CHAR(36) NOT NULL,
   `status` VARCHAR(64) NOT NULL,
   `latitude` DECIMAL(10,7) NULL,
@@ -1923,7 +1923,7 @@ CREATE TABLE `delivery_tracking` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `delivery_confirmations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `delivery_id` CHAR(36) NOT NULL,
   `confirmed_by_name` VARCHAR(255) NULL,
   `confirmed_at` DATETIME(3) NULL,
@@ -1936,7 +1936,7 @@ CREATE TABLE `delivery_confirmations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `proof_of_delivery` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `delivery_id` CHAR(36) NOT NULL,
   `confirmation_id` CHAR(36) NULL,
   `document_id` CHAR(36) NULL,
@@ -1955,7 +1955,7 @@ CREATE TABLE `proof_of_delivery` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `technicians` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `user_id` CHAR(36) NULL,
   `first_name` VARCHAR(128) NOT NULL,
@@ -1973,7 +1973,7 @@ CREATE TABLE `technicians` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `projects` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `project_number` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -1999,7 +1999,7 @@ CREATE TABLE `projects` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `project_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `project_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `service_id` CHAR(36) NULL,
@@ -2014,7 +2014,7 @@ CREATE TABLE `project_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `installations` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `project_id` CHAR(36) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   `site_location` TEXT NULL,
@@ -2030,7 +2030,7 @@ CREATE TABLE `installations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `installation_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `installation_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `serial_number_id` CHAR(36) NULL,
@@ -2046,7 +2046,7 @@ CREATE TABLE `installation_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `installation_tasks` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `installation_id` CHAR(36) NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
@@ -2062,7 +2062,7 @@ CREATE TABLE `installation_tasks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `installation_reports` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `installation_id` CHAR(36) NOT NULL,
   `author_user_id` CHAR(36) NULL,
   `summary` TEXT NULL,
@@ -2076,7 +2076,7 @@ CREATE TABLE `installation_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `commissioning_tests` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `installation_id` CHAR(36) NOT NULL,
   `test_name` VARCHAR(255) NOT NULL,
   `checklist` JSON NULL,
@@ -2096,7 +2096,7 @@ CREATE TABLE `commissioning_tests` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `support_tickets` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `ticket_number` VARCHAR(64) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
@@ -2123,7 +2123,7 @@ CREATE TABLE `support_tickets` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `maintenance_contracts` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `contract_number` VARCHAR(64) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
@@ -2144,7 +2144,7 @@ CREATE TABLE `maintenance_contracts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `maintenance_contract_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `maintenance_contract_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `serial_number_id` CHAR(36) NULL,
@@ -2159,7 +2159,7 @@ CREATE TABLE `maintenance_contract_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `maintenance_schedules` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `maintenance_contract_id` CHAR(36) NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `frequency` ENUM('monthly','quarterly','yearly','custom') NOT NULL DEFAULT 'quarterly',
@@ -2174,7 +2174,7 @@ CREATE TABLE `maintenance_schedules` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `maintenance_interventions` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `ticket_id` CHAR(36) NULL,
   `schedule_id` CHAR(36) NULL,
@@ -2197,7 +2197,7 @@ CREATE TABLE `maintenance_interventions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `maintenance_reports` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `intervention_id` CHAR(36) NOT NULL,
   `summary` TEXT NULL,
   `actions_taken` TEXT NULL,
@@ -2210,7 +2210,7 @@ CREATE TABLE `maintenance_reports` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `service_requests` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
   `request_type` VARCHAR(64) NULL,
@@ -2227,7 +2227,7 @@ CREATE TABLE `service_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `warranties` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `serial_number_id` CHAR(36) NULL,
@@ -2249,7 +2249,7 @@ CREATE TABLE `warranties` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `warranty_claims` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `warranty_id` CHAR(36) NOT NULL,
   `ticket_id` CHAR(36) NULL,
   `claim_number` VARCHAR(64) NOT NULL,
@@ -2269,7 +2269,7 @@ CREATE TABLE `warranty_claims` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `payment_methods` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -2286,7 +2286,7 @@ ALTER TABLE `purchase_order_payments`
   FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`id`);
 
 CREATE TABLE `invoices` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `invoice_number` VARCHAR(64) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
@@ -2315,7 +2315,7 @@ CREATE TABLE `invoices` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `invoice_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `invoice_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `service_id` CHAR(36) NULL,
@@ -2334,7 +2334,7 @@ CREATE TABLE `invoice_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `payments` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
   `invoice_id` CHAR(36) NULL,
@@ -2356,7 +2356,7 @@ CREATE TABLE `payments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `sales_order_payments` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `sales_order_id` CHAR(36) NOT NULL,
   `payment_id` CHAR(36) NULL,
   `payment_type` ENUM('deposit','partial','balance') NOT NULL DEFAULT 'partial',
@@ -2373,7 +2373,7 @@ CREATE TABLE `sales_order_payments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `expense_categories` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `code` VARCHAR(64) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
@@ -2388,7 +2388,7 @@ CREATE TABLE `expense_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `expenses` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `category_id` CHAR(36) NULL,
   `title` VARCHAR(255) NOT NULL,
@@ -2412,7 +2412,7 @@ CREATE TABLE `expenses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `refunds` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `invoice_id` CHAR(36) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
@@ -2431,7 +2431,7 @@ CREATE TABLE `refunds` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `accounts_receivable` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `customer_id` CHAR(36) NOT NULL,
   `invoice_id` CHAR(36) NOT NULL,
@@ -2449,7 +2449,7 @@ CREATE TABLE `accounts_receivable` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `accounts_payable` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `supplier_id` CHAR(36) NOT NULL,
   `purchase_order_id` CHAR(36) NULL,
@@ -2470,7 +2470,7 @@ CREATE TABLE `accounts_payable` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `document_versions` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `document_id` CHAR(36) NOT NULL,
   `version_number` INT NOT NULL,
   `file_url` VARCHAR(512) NOT NULL,
@@ -2484,7 +2484,7 @@ CREATE TABLE `document_versions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `document_links` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `document_id` CHAR(36) NOT NULL,
   `entity_type` VARCHAR(64) NOT NULL,
   `entity_id` CHAR(36) NOT NULL,
@@ -2497,7 +2497,7 @@ CREATE TABLE `document_links` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `contracts` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `contract_number` VARCHAR(64) NOT NULL,
   `customer_id` CHAR(36) NULL,
@@ -2522,7 +2522,7 @@ CREATE TABLE `contracts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `contract_items` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `contract_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NULL,
   `service_id` CHAR(36) NULL,
@@ -2543,7 +2543,7 @@ CREATE TABLE `contract_items` (
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE `activities` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `activity_type_id` CHAR(36) NULL,
   `subject` VARCHAR(255) NOT NULL,
@@ -2566,7 +2566,7 @@ CREATE TABLE `activities` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `appointments` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
@@ -2588,7 +2588,7 @@ CREATE TABLE `appointments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `tasks` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `description` TEXT NULL,
@@ -2612,7 +2612,7 @@ CREATE TABLE `tasks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `notifications` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `user_id` CHAR(36) NOT NULL,
   `channel` ENUM('in_app','email','sms') NOT NULL DEFAULT 'in_app',
@@ -2630,7 +2630,7 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `comments` (
-  `id` CHAR(36) NOT NULL,
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
   `organization_id` CHAR(36) NOT NULL,
   `entity_type` VARCHAR(64) NOT NULL,
   `entity_id` CHAR(36) NOT NULL,
