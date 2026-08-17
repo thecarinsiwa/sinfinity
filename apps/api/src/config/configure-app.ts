@@ -7,7 +7,9 @@ import { ConfigService } from '@nestjs/config';
 import {
   API_GLOBAL_PREFIX,
   SWAGGER_JSON_PATH,
+  SWAGGER_JSON_PATH_ALIAS,
   SWAGGER_PATH,
+  SWAGGER_PATH_ALIAS,
 } from './constants';
 import { Env } from './env.validation';
 
@@ -20,6 +22,9 @@ export function configureApp(
       { path: SWAGGER_PATH, method: RequestMethod.ALL },
       { path: `${SWAGGER_PATH}/(.*)`, method: RequestMethod.ALL },
       { path: SWAGGER_JSON_PATH, method: RequestMethod.ALL },
+      { path: SWAGGER_PATH_ALIAS, method: RequestMethod.ALL },
+      { path: `${SWAGGER_PATH_ALIAS}/(.*)`, method: RequestMethod.ALL },
+      { path: SWAGGER_JSON_PATH_ALIAS, method: RequestMethod.ALL },
     ],
   });
 

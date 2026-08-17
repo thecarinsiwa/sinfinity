@@ -4,7 +4,9 @@ import {
   DEFAULT_PORT,
   SWAGGER_BEARER_AUTH,
   SWAGGER_JSON_PATH,
+  SWAGGER_JSON_PATH_ALIAS,
   SWAGGER_PATH,
+  SWAGGER_PATH_ALIAS,
 } from './constants';
 
 export function setupSwagger(
@@ -30,7 +32,17 @@ export function setupSwagger(
 
   const document = SwaggerModule.createDocument(app, config);
 
+  const swaggerOptions = {
+    swaggerOptions: { persistAuthorization: true },
+  };
+
   SwaggerModule.setup(SWAGGER_PATH, app, document, {
+    ...swaggerOptions,
     jsonDocumentUrl: SWAGGER_JSON_PATH,
+  });
+
+  SwaggerModule.setup(SWAGGER_PATH_ALIAS, app, document, {
+    ...swaggerOptions,
+    jsonDocumentUrl: SWAGGER_JSON_PATH_ALIAS,
   });
 }

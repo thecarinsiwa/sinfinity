@@ -37,6 +37,22 @@ describe('AppController (e2e)', () => {
     expect(contentType).toMatch(/html/);
   });
 
+  it('/api/docs (GET) serves the Swagger UI', async () => {
+    const res = await request(app.getHttpServer()).get('/api/docs').expect(200);
+    const contentType = String(res.headers['content-type']);
+
+    expect(contentType).toMatch(/html/);
+  });
+
+  it('/api/docs/ (GET) serves the Swagger UI with a trailing slash', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/docs/')
+      .expect(200);
+    const contentType = String(res.headers['content-type']);
+
+    expect(contentType).toMatch(/html/);
+  });
+
   it('/api/v1/docs is not the Swagger UI', () => {
     return request(app.getHttpServer()).get('/api/v1/docs').expect(404);
   });
