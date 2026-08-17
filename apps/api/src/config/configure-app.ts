@@ -20,10 +20,10 @@ export function configureApp(
   app.setGlobalPrefix(API_GLOBAL_PREFIX, {
     exclude: [
       { path: SWAGGER_PATH, method: RequestMethod.ALL },
-      { path: `${SWAGGER_PATH}/(.*)`, method: RequestMethod.ALL },
+      { path: `${SWAGGER_PATH}/{*path}`, method: RequestMethod.ALL },
       { path: SWAGGER_JSON_PATH, method: RequestMethod.ALL },
       { path: SWAGGER_PATH_ALIAS, method: RequestMethod.ALL },
-      { path: `${SWAGGER_PATH_ALIAS}/(.*)`, method: RequestMethod.ALL },
+      { path: `${SWAGGER_PATH_ALIAS}/{*path}`, method: RequestMethod.ALL },
       { path: SWAGGER_JSON_PATH_ALIAS, method: RequestMethod.ALL },
     ],
   });
