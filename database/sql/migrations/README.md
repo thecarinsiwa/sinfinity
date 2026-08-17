@@ -47,3 +47,5 @@ mysql -u root -p < database/sql/sinfinity_schema.sql
 ```
 
 Le client MySQL 8 local est requis (pas de Docker dans ce projet).
+
+Connexion API et commande d’introspection : [`apps/api/docs/database.md`](../../../apps/api/docs/database.md).
