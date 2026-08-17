@@ -30,6 +30,21 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
+  it('/docs (GET) is outside the /api/v1 prefix', async () => {
+    const res = await request(app.getHttpServer()).get('/docs').expect(200);
+    const contentType = String(res.headers['content-type']);
+
+    expect(contentType).toMatch(/html/);
+  });
+
+  it('/api/v1/docs is not the Swagger UI', () => {
+    return request(app.getHttpServer()).get('/api/v1/docs').expect(404);
+  });
+
+  it('/api/v1/docs-json is not the OpenAPI spec', () => {
+    return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
+  });
+
   it('/docs-json (GET)', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
