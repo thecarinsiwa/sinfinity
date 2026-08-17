@@ -13,7 +13,7 @@ Ce document est conçu pour un flux **une branche principale par phase**, puis *
 | Conventions SQL | [`database/conventions.md`](../../../database/conventions.md) |
 | Module métier N | [`database/modules/`](../../../database/modules/) |
 
-L’API est aujourd’hui un scaffold NestJS 11 sans Prisma, sans auth et sans Swagger. La phase 0 pose ces fondations.
+L’API est aujourd’hui un scaffold NestJS 11 sans couche SQL, sans auth et sans Swagger. La phase 0 pose ces fondations. **Prisma n’est pas utilisé** : le DDL MySQL reste la source de vérité.
 
 ---
 
@@ -99,7 +99,9 @@ flowchart LR
 ### NestJS
 
 - Un module Nest par domaine (`src/modules/<domaine>/`).
-- Couche : `controller` → `service` → Prisma.
+- Couche : `controller` → `service` → repository Drizzle / SQL.
+- Accès données : **mysql2 + Drizzle**. Pas de Prisma. Le fichier [`database/sql/sinfinity_schema.sql`](../../../database/sql/sinfinity_schema.sql) est la source de vérité ; Drizzle s’aligne dessus (introspection), il ne régénère pas le DDL.
+- Migrations incrémentales uniquement dans `database/sql/migrations/` (jamais via un générateur ORM).
 - DTOs `class-validator` + `@ApiProperty` / `@ApiPropertyOptional`.
 - Isolation multi-tenant : **toute** requête métier filtre `organization_id` (jamais seulement en SQL).
 - Soft delete via `deleted_at` quand la table le prévoit. Pas de soft delete sur `audit_logs`, `login_logs`, `*_status_history`, `inventory_movements`.
@@ -143,7 +145,7 @@ Sources de vérité (ne pas inventer de colonnes ni de tables) :
 - apps/api/docs/ROADMAP.md
 
 Stack attendue (déjà posée en phase 0, à réutiliser) :
-- Prisma + MySQL 8
+- MySQL 8 via mysql2 + Drizzle (pas de Prisma)
 - @nestjs/swagger, préfixe /api/v1, UI /docs
 - JWT (access + refresh) + sessions (user_sessions)
 - Guards : JwtAuthGuard, OrganizationGuard, PermissionsGuard
@@ -158,6 +160,7 @@ Règles :
 5. Ne pas modifier un autre module sauf FK / import Nest indispensable.
 6. Ajouter les tests (service + e2e des routes clés).
 7. Répondre en français dans le résumé de fin, code en anglais (noms, messages d’API en anglais ou i18n keys — rester cohérent avec le code existant).
+8. Ne jamais introduire Prisma. Accès SQL uniquement via mysql2 / Drizzle (ou SQL brut).
 
 À la fin : lister les routes ajoutées, les tags Swagger, et comment lancer l’API pour les voir dans /docs.
 ```
@@ -168,7 +171,7 @@ Règles :
 
 ## Objectif
 
-Rendre l’API **démarrable, connectée à MySQL, documentée Swagger**, avec les briques transverses (config, Prisma, pagination, erreurs, health) **avant** tout module métier. Sans cette phase, les agents suivants n’ont pas de cadre commun.
+Rendre l’API **démarrable, connectée à MySQL, documentée Swagger**, avec les briques transverses (config, pool SQL, pagination, erreurs, health) **avant** tout module métier. Sans cette phase, les agents suivants n’ont pas de cadre commun.
 
 ## Branche principale
 
@@ -179,7 +182,7 @@ Rendre l’API **démarrable, connectée à MySQL, documentée Swagger**, avec l
 | Branche | Portée |
 |---------|--------|
 | `feat/api-p00-config` | ConfigModule, validation d’env, CORS, préfixe global `/api/v1` |
-| `feat/api-p00-prisma` | Prisma, mapping du DDL existant, client généré |
+| `feat/api-p00-database` | mysql2 + Drizzle, mapping du DDL existant (sans Prisma) |
 | `feat/api-p00-swagger` | OpenAPI, Bearer, tags vides, `/docs` |
 | `feat/api-p00-common` | Pagination, filtres, exception filter, interceptors, pipes |
 | `feat/api-p00-health` | Healthcheck DB + version |
@@ -196,21 +199,26 @@ Objectif : ConfigModule (@nestjs/config) + validation Joi/Zod des variables
 DATABASE_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, JWT_ACCESS_TTL, JWT_REFRESH_TTL,
 PORT, CORS_ORIGINS, NODE_ENV. Préfixe global /api/v1, CORS pour localhost:3000/3001/3002.
 Fichier .env.example. ValidationPipe global (whitelist, transform).
-Ne pas encore brancher Prisma ni Swagger.
+Ne pas encore brancher Drizzle / mysql2 ni Swagger.
 ```
 
-### `feat/api-p00-prisma`
+### `feat/api-p00-database`
 
 ```text
 [Coller le prompt socle]
 
-Branche : feat/api-p00-prisma
-Objectif : Initialiser Prisma (MySQL) dans apps/api. Le schéma SQL existe déjà
-(database/sql/sinfinity_schema.sql) — introspecter OU écrire schema.prisma
-fidèle au DDL (UUID CHAR(36), DECIMAL, JSON, soft delete, organisation_id).
-PrismaService, PrismaModule global. Script prisma:generate / prisma:studio
-dans package.json. Ne pas créer de migrations qui recréent le schéma : le DDL
-est la source de vérité. Documenter comment pointer DATABASE_URL vers la base locale.
+Branche : feat/api-p00-database
+Objectif : Brancher MySQL 8 dans apps/api avec mysql2 + Drizzle.
+INTERDIT : Prisma (pas de schema.prisma, pas de PrismaService, pas de migrations Prisma).
+
+Le schéma SQL existe déjà (database/sql/sinfinity_schema.sql) : c’est la source de vérité.
+- Pool mysql2 lu depuis DATABASE_URL
+- DatabaseModule / DrizzleModule global (injectable)
+- Schéma Drizzle aligné sur le DDL (introspection drizzle-kit ou tables écrites à la main) :
+  UUID CHAR(36), DECIMAL, JSON, soft delete, organization_id
+- Ne pas générer ni écraser sinfinity_schema.sql depuis Drizzle
+- Les évolutions de schéma se font en SQL dans database/sql/migrations/
+- Documenter comment pointer DATABASE_URL vers la base locale
 ```
 
 ### `feat/api-p00-swagger`
@@ -249,13 +257,13 @@ Pas de logique métier.
 [Coller le prompt socle]
 
 Branche : feat/api-p00-health
-Objectif : GET /api/v1/health (public) : statut up, ping Prisma/MySQL, version package.
+Objectif : GET /api/v1/health (public) : statut up, ping MySQL (SELECT 1 via le pool), version package.
 Swagger tag Health. Test e2e. Pas d’auth.
 ```
 
 ## Explication littéraire (branches secondaires)
 
-La phase 0 ne vend rien au métier : elle **évite que dix agents inventent dix façons** de paginer, de lire l’env, ou de générer le client SQL. La config arrive en premier pour que personne ne hardcode un mot de passe. Prisma suit, parce que tout le reste parle aux tables. Swagger est posé tôt pour que **chaque PR suivante soit déjà visible dans `/docs`**, pas « documentée plus tard ». Le module `common` est le contrat social des DTO et des erreurs. Le healthcheck est la preuve que la base répond — indispensable avant d’enchaîner organisation et auth.
+La phase 0 ne vend rien au métier : elle **évite que dix agents inventent dix façons** de paginer, de lire l’env, ou de parler à MySQL. La config arrive en premier pour que personne ne hardcode un mot de passe. La couche SQL suit (mysql2 + Drizzle), parce que tout le reste parle aux tables — sans céder la vérité du schéma à un ORM. Swagger est posé tôt pour que **chaque PR suivante soit déjà visible dans `/docs`**, pas « documentée plus tard ». Le module `common` est le contrat social des DTO et des erreurs. Le healthcheck est la preuve que la base répond — indispensable avant d’enchaîner organisation et auth.
 
 ---
 
@@ -323,11 +331,13 @@ Listes pour les selects UI. Tag Swagger « Settings ».
 [Coller le prompt socle — module 18_settings.md]
 
 Branche : feat/api-m18-seeds
-Script Prisma seed idempotent : USD, CDF, CNY, EUR ; pays CD, CN, AE, FR, BE
-et quelques villes (Kinshasa, Lubumbashi, Shenzhen, Dubai) ; unités PCS/KG/BOX/M ;
-Incoterms de base ; TVA RDC 16 % si présente dans le DDL.
-Documenter pnpm prisma db seed. En NODE_ENV=development seulement, POST /api/v1/settings/seed
-protégé admin. Ne pas écraser des lignes métier déjà saisies (upsert sur codes).
+Script de seed SQL (ou service Nest + Drizzle) idempotent : USD, CDF, CNY, EUR ;
+pays CD, CN, AE, FR, BE et quelques villes (Kinshasa, Lubumbashi, Shenzhen, Dubai) ;
+unités PCS/KG/BOX/M ; Incoterms de base ; TVA RDC 16 % si présente dans le DDL.
+Fichier de préférence sous database/sql/seeds/ + commande documentée (mysql client
+ou pnpm --filter @sinfinity/api seed). En NODE_ENV=development seulement,
+POST /api/v1/settings/seed protégé admin. Ne pas écraser des lignes métier
+déjà saisies (upsert sur codes). Pas de Prisma.
 ```
 
 ## Explication littéraire (branches secondaires)
