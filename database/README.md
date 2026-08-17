@@ -83,7 +83,8 @@ leads → opportunities → quotations → sales_orders
 
 ## Fichiers
 
-- [sql/sinfinity_schema.sql](./sql/sinfinity_schema.sql) — DDL MySQL complet
+- [sql/sinfinity_schema.sql](./sql/sinfinity_schema.sql) — DDL MySQL complet (baseline)
+- [sql/migrations/](./sql/migrations/) — migrations incrémentales SQL uniquement
 - [dictionnaire-donnees.md](./dictionnaire-donnees.md) — index des tables
 - [modules/](./modules/) — description détaillée par domaine
 - [conventions.md](./conventions.md) — règles MySQL 8
