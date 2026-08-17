@@ -1,6 +1,9 @@
 /**
- * Drizzle table definitions. Regenerated via `pnpm db:introspect`
- * after applying database/sql/sinfinity_schema.sql.
- * This folder is not the DDL source of truth.
+ * Drizzle table + relation mappings introspected from MySQL.
+ * DDL source of truth: database/sql/sinfinity_schema.sql
+ *
+ * Refresh after applying the SQL schema:
+ *   pnpm --filter @sinfinity/api db:introspect
  */
-export {};
+export * from './schema';
+export * from './relations';
