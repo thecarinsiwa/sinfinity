@@ -104,7 +104,8 @@ sinfinity/
 │   ├── dictionnaire-donnees.md
 │   ├── modules/
 │   └── sql/
-│       └── sinfinity_schema.sql
+│       ├── sinfinity_schema.sql
+│       └── migrations/
 ├── package.json
 ├── pnpm-workspace.yaml
 └── README.md
@@ -141,7 +142,7 @@ Install MySQL 8 locally, then:
 mysql -u root -p < database/sql/sinfinity_schema.sql
 ```
 
-See [`database/conventions.md`](./database/conventions.md) for schema rules.
+Point the API at that database with `DATABASE_URL` in `apps/api/.env` (copy `apps/api/.env.example`). Schema changes are SQL-first; Drizzle only introspects. See [`apps/api/docs/database.md`](./apps/api/docs/database.md) and [`database/conventions.md`](./database/conventions.md).
 
 ## Status
 

@@ -86,7 +86,8 @@ On business tables (unless append-only):
 ## Schema changes
 
 - Edit [`sql/sinfinity_schema.sql`](./sql/sinfinity_schema.sql) for greenfield installs.
-- For existing databases, add incremental scripts under `sql/migrations/` (e.g. `001_add_….sql`) and apply them manually with the MySQL client.
+- For existing databases, add incremental **SQL-only** scripts under [`sql/migrations/`](./sql/migrations/) (e.g. `001_add_….sql`) and apply them manually with the MySQL client. See [`sql/migrations/README.md`](./sql/migrations/README.md).
+- Never generate DDL with Drizzle (`generate` / `push` / `migrate`) or Prisma. After applying SQL, refresh TS mappings with `pnpm --filter @sinfinity/api db:introspect`. Workflow: [`../apps/api/docs/database.md`](../apps/api/docs/database.md).
 - Review indexes and FK order before applying.
 
 ## Seeds (later)

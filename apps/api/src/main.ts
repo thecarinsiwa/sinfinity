@@ -6,6 +6,8 @@ import { Env } from './config/env.validation';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
+
   const config = app.get(ConfigService<Env, true>);
 
   configureApp(app, config);
