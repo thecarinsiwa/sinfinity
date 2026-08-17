@@ -16,6 +16,7 @@ export function setupSwagger(
     .setDescription('REST API for the Sinfinity platform.')
     .setVersion('1.0')
     .addServer(`http://localhost:${port}`, 'Local')
+    .addTag('Health', 'Liveness and readiness')
     .addBearerAuth(
       {
         type: 'http',

@@ -23,7 +23,7 @@ Hors préfixe `/api/v1` (UI et spec ne sont pas sous `/api/v1/docs`).
 | UI interactive | http://localhost:4000/docs |
 | OpenAPI JSON | http://localhost:4000/docs-json |
 
-Le bouton **Authorize** accepte un JWT Bearer (`access-token`). Il n’est pas requis pour les routes publiques actuelles.
+Le bouton **Authorize** accepte un JWT Bearer (`access-token`). Il n’est pas requis pour les routes publiques (`GET /api/v1/ping`).
 
 Les modules métier (CRM, devis, stock, etc.) ne sont pas encore documentés ici.
 

@@ -23,11 +23,11 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/api/v1 (GET)', () => {
+  it('/api/v1/ping (GET)', () => {
     return request(app.getHttpServer())
-      .get('/api/v1')
+      .get('/api/v1/ping')
       .expect(200)
-      .expect('Hello World!');
+      .expect({ status: 'ok' });
   });
 
   it('/docs (GET) is outside the /api/v1 prefix', async () => {
@@ -52,6 +52,8 @@ describe('AppController (e2e)', () => {
 
     const body = res.body as {
       info: { title: string; version: string };
+      tags?: { name: string }[];
+      paths: Record<string, unknown>;
       components: {
         securitySchemes: Record<string, { type: string; scheme: string }>;
       };
@@ -59,6 +61,8 @@ describe('AppController (e2e)', () => {
 
     expect(body.info.title).toBe('Sinfinity API');
     expect(body.info.version).toBe('1.0');
+    expect(body.paths['/api/v1/ping']).toBeDefined();
+    expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
         type: 'http',
