@@ -6,6 +6,7 @@ import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/config/configure-app';
 import { Env } from './../src/config/env.validation';
+import { setupSwagger } from './../src/config/setup-swagger';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -16,15 +17,74 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    configureApp(app, app.get(ConfigService<Env, true>));
+    const config = app.get(ConfigService<Env, true>);
+    configureApp(app, config);
+    setupSwagger(app, config.get('PORT', { infer: true }));
     await app.init();
   });
 
-  it('/api/v1 (GET)', () => {
+  it('/api/v1/ping (GET)', () => {
     return request(app.getHttpServer())
-      .get('/api/v1')
+      .get('/api/v1/ping')
       .expect(200)
-      .expect('Hello World!');
+      .expect({ status: 'ok' });
+  });
+
+  it('/docs (GET) is outside the /api/v1 prefix', async () => {
+    const res = await request(app.getHttpServer()).get('/docs').expect(200);
+    const contentType = String(res.headers['content-type']);
+
+    expect(contentType).toMatch(/html/);
+  });
+
+  it('/api/docs (GET) serves the Swagger UI', async () => {
+    const res = await request(app.getHttpServer()).get('/api/docs').expect(200);
+    const contentType = String(res.headers['content-type']);
+
+    expect(contentType).toMatch(/html/);
+  });
+
+  it('/api/docs/ (GET) serves the Swagger UI with a trailing slash', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/docs/')
+      .expect(200);
+    const contentType = String(res.headers['content-type']);
+
+    expect(contentType).toMatch(/html/);
+  });
+
+  it('/api/v1/docs is not the Swagger UI', () => {
+    return request(app.getHttpServer()).get('/api/v1/docs').expect(404);
+  });
+
+  it('/api/v1/docs-json is not the OpenAPI spec', () => {
+    return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
+  });
+
+  it('/docs-json (GET)', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/docs-json')
+      .expect(200);
+
+    const body = res.body as {
+      info: { title: string; version: string };
+      tags?: { name: string }[];
+      paths: Record<string, unknown>;
+      components: {
+        securitySchemes: Record<string, { type: string; scheme: string }>;
+      };
+    };
+
+    expect(body.info.title).toBe('Sinfinity API');
+    expect(body.info.version).toBe('1.0');
+    expect(body.paths['/api/v1/ping']).toBeDefined();
+    expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
+    expect(body.components.securitySchemes['access-token']).toEqual(
+      expect.objectContaining({
+        type: 'http',
+        scheme: 'bearer',
+      }),
+    );
   });
 
   afterEach(async () => {
