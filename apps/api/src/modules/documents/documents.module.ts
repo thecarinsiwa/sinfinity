@@ -6,16 +6,23 @@ import { DocumentTypesSeedService } from './document-types/document-types-seed.s
 import { DocumentTypesService } from './document-types/document-types.service';
 import { DocumentsController } from './files/documents.controller';
 import { DocumentsService } from './files/documents.service';
+import { DocumentLinksController } from './links/document-links.controller';
+import { DocumentLinksService } from './links/document-links.service';
 import { LocalDiskStorageService } from './storage/local-disk.storage';
 import { STORAGE_SERVICE } from './storage/storage.types';
 
 @Module({
   imports: [ConfigModule],
-  controllers: [DocumentTypesController, DocumentsController],
+  controllers: [
+    DocumentTypesController,
+    DocumentsController,
+    DocumentLinksController,
+  ],
   providers: [
     DocumentTypesService,
     DocumentTypesSeedService,
     DocumentsService,
+    DocumentLinksService,
     LocalDiskStorageService,
     {
       provide: STORAGE_SERVICE,
@@ -36,6 +43,7 @@ import { STORAGE_SERVICE } from './storage/storage.types';
     DocumentTypesService,
     DocumentTypesSeedService,
     DocumentsService,
+    DocumentLinksService,
     STORAGE_SERVICE,
   ],
 })

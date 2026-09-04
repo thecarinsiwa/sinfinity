@@ -92,6 +92,11 @@ pnpm --filter @sinfinity/api seed:document-types
 Par défaut disque local (`STORAGE_DRIVER=local`, `STORAGE_LOCAL_ROOT=./storage/uploads`).
 Le dossier `storage/` est gitignored. Interface `StorageService` prête pour un driver S3 ultérieur.
 
+## Document links
+
+`POST/DELETE /document-links` + `GET /document-links?entityType&entityId`.
+`entity_type` et `role` sont validés contre une allowlist (`document-links.catalog.ts`).
+
 ## Workflow après un changement de schéma
 
 Toujours dans cet ordre — **jamais l’inverse** :
