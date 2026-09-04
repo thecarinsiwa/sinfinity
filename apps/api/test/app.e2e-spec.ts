@@ -119,6 +119,10 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/health']).toBeDefined();
     expect(body.paths['/api/v1/countries']).toBeDefined();
     expect(body.paths['/api/v1/cities']).toBeDefined();
+    expect(body.paths['/api/v1/currencies']).toBeDefined();
+    expect(body.paths['/api/v1/exchange-rates']).toBeDefined();
+    expect(body.paths['/api/v1/exchange-rates/latest']).toBeDefined();
+    expect(body.paths['/api/v1/taxes']).toBeDefined();
     expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
     expect(body.components.securitySchemes['access-token']).toEqual(
