@@ -227,6 +227,13 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/quotations/{id}/mark-accepted']).toBeDefined();
     expect(body.paths['/api/v1/quotations/{id}/mark-rejected']).toBeDefined();
     expect(body.paths['/api/v1/quotations/{id}/convert']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/convert-to-order']).toBeDefined();
+    expect(body.paths['/api/v1/sales-orders']).toBeDefined();
+    expect(body.paths['/api/v1/sales-orders/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/sales-orders/{id}/items']).toBeDefined();
+    expect(
+      body.paths['/api/v1/sales-orders/{id}/items/{itemId}'],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',

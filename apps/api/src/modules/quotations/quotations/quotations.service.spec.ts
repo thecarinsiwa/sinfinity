@@ -329,15 +329,4 @@ describe('QuotationsService', () => {
       service.send(quoteId, orgId, orgUser),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
-
-  it('returns 501 on convert stub', async () => {
-    db.select.mockReturnValueOnce(thenable([quoteRow]));
-
-    await expect(
-      service.convert(quoteId, orgId, orgUser),
-    ).rejects.toMatchObject({
-      status: 501,
-      response: expect.objectContaining({ code: 'NOT_IMPLEMENTED' }),
-    });
-  });
 });

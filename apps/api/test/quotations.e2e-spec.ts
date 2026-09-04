@@ -212,11 +212,16 @@ describe('Phase 7 OpenAPI — Devis (e2e)', () => {
     );
   });
 
-  it('documents convert stub under Devis', () => {
+  it('documents convert and convert-to-order under Commandes clients', () => {
+    expectTaggedOperation(
+      document.paths['/api/v1/quotations/{id}/convert-to-order'],
+      'post',
+      SWAGGER_TAG.CommandesClients,
+    );
     expectTaggedOperation(
       document.paths['/api/v1/quotations/{id}/convert'],
       'post',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
   });
 });

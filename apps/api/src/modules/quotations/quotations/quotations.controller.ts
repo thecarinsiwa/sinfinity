@@ -21,7 +21,6 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import {
@@ -38,8 +37,10 @@ import {
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
 import { SWAGGER_TAG } from '../../../config/swagger-tags';
+import { ConvertQuotationToOrderDto } from '../../sales-orders/sales-orders/dto/convert-quotation-to-order.dto';
+import { SalesOrderResponseDto } from '../../sales-orders/sales-orders/dto/sales-order-response.dto';
+import { SalesOrdersService } from '../../sales-orders/sales-orders/sales-orders.service';
 import {
-  ConvertNotImplementedDto,
   DecisionCommentsDto,
   QuotationApprovalResponseDto,
 } from '../quotation-approvals/dto/quotation-approval.dto';
@@ -68,7 +69,10 @@ import { QuotationsService } from './quotations.service';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('quotations')
 export class QuotationsController {
-  constructor(private readonly quotationsService: QuotationsService) {}
+  constructor(
+    private readonly quotationsService: QuotationsService,
+    private readonly salesOrdersService: SalesOrdersService,
+  ) {}
 
   @Get()
   @RequirePermissions('quotations.read')
@@ -307,20 +311,51 @@ export class QuotationsController {
     return this.quotationsService.markRejected(id, organizationId, user);
   }
 
-  @Post(':id/convert')
-  @RequirePermissions('quotations.write')
-  @HttpCode(HttpStatus.NOT_IMPLEMENTED)
+  @Post(':id/convert-to-order')
+  @RequirePermissions('sales_orders.write')
+  @ApiTags(SWAGGER_TAG.CommandesClients)
   @ApiOperation({
-    summary: 'Convert accepted quotation to sales order (stub)',
-    description: 'Returns 501 until Phase 8 (sales orders).',
+    summary: 'Convert an ACCEPTED quotation into a sales order',
+    description:
+      'Transactional copy of lines and totals. quantityDelivered starts at 0. orderNumber unique per org.',
   })
-  @ApiResponse({ status: 501, type: ConvertNotImplementedDto })
-  convert(
+  @ApiCreatedResponse({ type: SalesOrderResponseDto })
+  @ApiConflictResponse({ type: ErrorResponseDto })
+  convertToOrder(
     @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ConvertQuotationToOrderDto,
     @OrganizationId() organizationId?: string,
     @CurrentUser() user?: AuthUser,
-  ): Promise<never> {
-    return this.quotationsService.convert(id, organizationId, user);
+  ): Promise<SalesOrderResponseDto> {
+    return this.salesOrdersService.convertFromQuotation(
+      id,
+      dto,
+      organizationId,
+      user,
+    );
+  }
+
+  @Post(':id/convert')
+  @RequirePermissions('sales_orders.write')
+  @ApiTags(SWAGGER_TAG.CommandesClients)
+  @ApiOperation({
+    summary: 'Alias of convert-to-order',
+    description: 'Same as POST /quotations/:id/convert-to-order.',
+  })
+  @ApiCreatedResponse({ type: SalesOrderResponseDto })
+  @ApiConflictResponse({ type: ErrorResponseDto })
+  convert(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ConvertQuotationToOrderDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<SalesOrderResponseDto> {
+    return this.salesOrdersService.convertFromQuotation(
+      id,
+      dto,
+      organizationId,
+      user,
+    );
   }
 
   // --- Items ---
