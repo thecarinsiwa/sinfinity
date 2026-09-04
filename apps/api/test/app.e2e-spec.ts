@@ -300,6 +300,12 @@ describe('AppController (e2e)', () => {
         '/api/v1/procurement-requests/{requestId}/quotes/{quoteId}/items/{itemId}'
       ],
     ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/comparisons'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/approvals'],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
