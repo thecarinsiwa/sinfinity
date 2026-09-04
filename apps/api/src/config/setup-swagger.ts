@@ -28,6 +28,10 @@ export function setupSwagger(
       'Tenants, branches, users and organization-level settings',
     )
     .addTag('Auth', 'Login, refresh, logout and current user')
+    .addTag(
+      'Sécurité',
+      'Roles, permissions, user role assignments and audit',
+    )
     .addBearerAuth(
       {
         type: 'http',

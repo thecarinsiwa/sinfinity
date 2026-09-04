@@ -133,6 +133,10 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/organizations']).toBeDefined();
     expect(body.paths['/api/v1/branches']).toBeDefined();
     expect(body.paths['/api/v1/users']).toBeDefined();
+    expect(body.paths['/api/v1/roles']).toBeDefined();
+    expect(body.paths['/api/v1/permissions']).toBeDefined();
+    expect(body.paths['/api/v1/user-roles']).toBeDefined();
+    expect(body.paths['/api/v1/me/permissions']).toBeDefined();
     expect(body.paths['/api/v1/auth/login']).toBeDefined();
     expect(body.paths['/api/v1/auth/refresh']).toBeDefined();
     expect(body.paths['/api/v1/auth/set-password']).toBeDefined();
@@ -142,6 +146,7 @@ describe('AppController (e2e)', () => {
     expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Organisation')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Auth')).toBe(true);
+    expect(body.tags?.some((tag) => tag.name === 'Sécurité')).toBe(true);
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
         type: 'http',
