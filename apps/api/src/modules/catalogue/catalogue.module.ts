@@ -7,6 +7,8 @@ import { ProductModelsController } from './models/product-models.controller';
 import { ProductModelsService } from './models/product-models.service';
 import { ProductUnitsController } from './product-units/product-units.controller';
 import { ProductUnitsService } from './product-units/product-units.service';
+import { ProductsController } from './products/products.controller';
+import { ProductsService } from './products/products.service';
 import { ProductSubcategoriesController } from './subcategories/product-subcategories.controller';
 import { ProductSubcategoriesService } from './subcategories/product-subcategories.service';
 
@@ -17,6 +19,7 @@ import { ProductSubcategoriesService } from './subcategories/product-subcategori
     ProductBrandsController,
     ProductModelsController,
     ProductUnitsController,
+    ProductsController,
   ],
   providers: [
     ProductCategoriesService,
@@ -24,6 +27,7 @@ import { ProductSubcategoriesService } from './subcategories/product-subcategori
     ProductBrandsService,
     ProductModelsService,
     ProductUnitsService,
+    ProductsService,
   ],
   exports: [
     ProductCategoriesService,
@@ -31,6 +35,7 @@ import { ProductSubcategoriesService } from './subcategories/product-subcategori
     ProductBrandsService,
     ProductModelsService,
     ProductUnitsService,
+    ProductsService,
   ],
 })
 export class CatalogueModule {}
