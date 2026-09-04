@@ -1,7 +1,7 @@
 import { SWAGGER_TAG, SWAGGER_TAG_DEFINITIONS } from './swagger-tags';
 
 describe('swagger-tags', () => {
-  it('defines Phase 0–3 tags in stable order', () => {
+  it('defines Phase 0–4 tags in stable order', () => {
     expect(SWAGGER_TAG_DEFINITIONS.map((tag) => tag.name)).toEqual([
       SWAGGER_TAG.Health,
       SWAGGER_TAG.Settings,
@@ -9,11 +9,16 @@ describe('swagger-tags', () => {
       SWAGGER_TAG.Organisation,
       SWAGGER_TAG.Securite,
       SWAGGER_TAG.Documents,
+      SWAGGER_TAG.Catalogue,
     ]);
   });
 
   it('uses the accented Sécurité name expected by ROADMAP', () => {
     expect(SWAGGER_TAG.Securite).toBe('Sécurité');
+  });
+
+  it('uses the Catalogue tag name expected by ROADMAP', () => {
+    expect(SWAGGER_TAG.Catalogue).toBe('Catalogue');
   });
 
   it('has unique tag names', () => {

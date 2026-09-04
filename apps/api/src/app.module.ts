@@ -7,6 +7,7 @@ import { validateEnv } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganisationModule } from './modules/organisation/organisation.module';
 import { SecurityModule } from './modules/security/security.module';
@@ -29,6 +30,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     OrganisationModule,
     SecurityModule,
     DocumentsModule,
+    CatalogueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

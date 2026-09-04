@@ -103,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET) smoke: Phase 0–3 tags and security scheme', async () => {
+  it('/docs-json (GET) smoke: Phase 0–4 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -132,6 +132,26 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/contracts/{id}']).toBeDefined();
     expect(body.paths['/api/v1/contracts/{id}/items']).toBeDefined();
     expect(body.paths['/api/v1/contracts/{id}/items/{itemId}']).toBeDefined();
+    expect(body.paths['/api/v1/product-categories']).toBeDefined();
+    expect(body.paths['/api/v1/product-categories/tree']).toBeDefined();
+    expect(body.paths['/api/v1/product-subcategories']).toBeDefined();
+    expect(body.paths['/api/v1/product-brands']).toBeDefined();
+    expect(body.paths['/api/v1/product-models']).toBeDefined();
+    expect(body.paths['/api/v1/product-units']).toBeDefined();
+    expect(body.paths['/api/v1/products']).toBeDefined();
+    expect(body.paths['/api/v1/products/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/products/{id}/specifications']).toBeDefined();
+    expect(
+      body.paths['/api/v1/products/{id}/specifications/{specId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/products/{id}/images']).toBeDefined();
+    expect(body.paths['/api/v1/products/{id}/images/{imageId}']).toBeDefined();
+    expect(body.paths['/api/v1/service-categories']).toBeDefined();
+    expect(body.paths['/api/v1/services']).toBeDefined();
+    expect(body.paths['/api/v1/products/{productId}/services']).toBeDefined();
+    expect(
+      body.paths['/api/v1/products/{productId}/services/{linkId}'],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -140,6 +160,7 @@ describe('AppController (e2e)', () => {
         'Organisation',
         'Sécurité',
         'Documents',
+        'Catalogue',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(

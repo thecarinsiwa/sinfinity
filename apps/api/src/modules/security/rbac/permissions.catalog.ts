@@ -130,6 +130,7 @@ const SALES_PERMS = [
   'sales_orders.read',
   'sales_orders.write',
   'catalog.read',
+  'catalog.write',
   'documents.read',
   'documents.write',
   'contracts.read',
