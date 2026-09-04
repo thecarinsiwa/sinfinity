@@ -30,6 +30,7 @@ import {
   quotation_items,
   quotation_statuses,
   quotation_terms,
+  quotation_versions,
   quotations,
   services,
   taxes,
@@ -48,6 +49,16 @@ import {
   toQuotationStatusResponse,
   type QuotationStatusRow,
 } from '../quotation-statuses/quotation-statuses.mapper';
+import {
+  ReviseQuotationDto,
+  QuotationVersionResponseDto,
+  QuotationVersionSummaryDto,
+} from '../quotation-versions/dto/quotation-version.dto';
+import {
+  toQuotationVersionResponse,
+  toQuotationVersionSummary,
+  type QuotationVersionRow,
+} from '../quotation-versions/quotation-versions.mapper';
 import {
   assertOrgAccess,
   ensureOrganizationExists,
@@ -229,6 +240,12 @@ export class QuotationsService {
       await this.upsertTermsRow(id, dto.terms, user);
     }
 
+    await this.recordVersion(id, {
+      bump: false,
+      changeReason: 'Created',
+      changedBy: user?.id ?? null,
+    });
+
     return this.findOne(id, currentOrganizationId, user);
   }
 
@@ -312,6 +329,14 @@ export class QuotationsService {
       );
     }
 
+    if (this.hasSignificantHeaderChange(dto)) {
+      await this.recordVersion(id, {
+        bump: true,
+        changeReason: 'Header updated',
+        changedBy: user?.id ?? null,
+      });
+    }
+
     return this.findOne(id, currentOrganizationId, user);
   }
 
@@ -366,6 +391,11 @@ export class QuotationsService {
       dto,
     );
     await this.recalculateTotals(quotationId, user?.id ?? null);
+    await this.recordVersion(quotationId, {
+      bump: true,
+      changeReason: 'Item added',
+      changedBy: user?.id ?? null,
+    });
     return this.findItem(quotationId, itemId);
   }
 
@@ -450,6 +480,11 @@ export class QuotationsService {
     }
 
     await this.recalculateTotals(quotationId, user?.id ?? null);
+    await this.recordVersion(quotationId, {
+      bump: true,
+      changeReason: 'Item updated',
+      changedBy: user?.id ?? null,
+    });
     return this.findItem(quotationId, itemId);
   }
 
@@ -470,6 +505,11 @@ export class QuotationsService {
       .delete(quotation_items)
       .where(eq(quotation_items.id, itemId));
     await this.recalculateTotals(quotationId, user?.id ?? null);
+    await this.recordVersion(quotationId, {
+      bump: true,
+      changeReason: 'Item removed',
+      changedBy: user?.id ?? null,
+    });
   }
 
   // --- Terms (1:1) ---
@@ -501,8 +541,190 @@ export class QuotationsService {
     );
     await this.assertDraft(quotation);
     await this.upsertTermsRow(quotationId, dto, user);
+    await this.recordVersion(quotationId, {
+      bump: true,
+      changeReason: 'Terms updated',
+      changedBy: user?.id ?? null,
+    });
     const row = await this.loadTerms(quotationId);
     return toQuotationTermsResponse(row!);
+  }
+
+  // --- Versions ---
+
+  async listVersions(
+    quotationId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationVersionSummaryDto[]> {
+    await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    const rows = await this.db
+      .select({
+        id: quotation_versions.id,
+        quotation_id: quotation_versions.quotation_id,
+        version_number: quotation_versions.version_number,
+        snapshot: quotation_versions.snapshot,
+        changed_by: quotation_versions.changed_by,
+        change_reason: quotation_versions.change_reason,
+        created_at: quotation_versions.created_at,
+      })
+      .from(quotation_versions)
+      .where(eq(quotation_versions.quotation_id, quotationId))
+      .orderBy(desc(quotation_versions.version_number));
+
+    return (rows as QuotationVersionRow[]).map(toQuotationVersionSummary);
+  }
+
+  async findVersion(
+    quotationId: string,
+    versionNumber: number,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationVersionResponseDto> {
+    await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    const [row] = await this.db
+      .select({
+        id: quotation_versions.id,
+        quotation_id: quotation_versions.quotation_id,
+        version_number: quotation_versions.version_number,
+        snapshot: quotation_versions.snapshot,
+        changed_by: quotation_versions.changed_by,
+        change_reason: quotation_versions.change_reason,
+        created_at: quotation_versions.created_at,
+      })
+      .from(quotation_versions)
+      .where(
+        and(
+          eq(quotation_versions.quotation_id, quotationId),
+          eq(quotation_versions.version_number, versionNumber),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      throw new NotFoundException(
+        `Quotation version ${versionNumber} not found`,
+      );
+    }
+    return toQuotationVersionResponse(row as QuotationVersionRow);
+  }
+
+  async revise(
+    quotationId: string,
+    dto: ReviseQuotationDto,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    const quotation = await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    const status = await this.loadStatus(quotation.status_id);
+    const code = status?.code;
+    if (
+      code !== QUOTATION_STATUS_CODE.SENT &&
+      code !== QUOTATION_STATUS_CODE.REJECTED
+    ) {
+      throw new BadRequestException(
+        'Quotation can only be revised from SENT or REJECTED',
+      );
+    }
+
+    const draftStatusId = await this.requireStatusIdByCode(
+      QUOTATION_STATUS_CODE.DRAFT,
+    );
+    await this.db
+      .update(quotations)
+      .set({
+        status_id: draftStatusId,
+        updated_at: nowMysqlDateTime(),
+        updated_by: user?.id ?? null,
+      })
+      .where(eq(quotations.id, quotationId));
+
+    await this.recordVersion(quotationId, {
+      bump: true,
+      changeReason: dto.changeReason ?? 'Revised',
+      changedBy: user?.id ?? null,
+    });
+
+    return this.findOne(quotationId, currentOrganizationId, user);
+  }
+
+  private async recordVersion(
+    quotationId: string,
+    options: {
+      bump: boolean;
+      changeReason?: string | null;
+      changedBy?: string | null;
+    },
+  ): Promise<number> {
+    const [current] = await this.db
+      .select({ version: quotations.version })
+      .from(quotations)
+      .where(eq(quotations.id, quotationId))
+      .limit(1);
+    if (!current) {
+      throw new NotFoundException(`Quotation ${quotationId} not found`);
+    }
+
+    const versionNumber = options.bump
+      ? current.version + 1
+      : current.version;
+
+    if (options.bump) {
+      await this.db
+        .update(quotations)
+        .set({
+          version: versionNumber,
+          updated_at: nowMysqlDateTime(),
+          updated_by: options.changedBy ?? null,
+        })
+        .where(eq(quotations.id, quotationId));
+    }
+
+    const snapshot = await this.buildSnapshot(quotationId);
+    await this.db.insert(quotation_versions).values({
+      id: createId(),
+      quotation_id: quotationId,
+      version_number: versionNumber,
+      snapshot,
+      changed_by: options.changedBy ?? null,
+      change_reason: options.changeReason ?? null,
+    });
+
+    return versionNumber;
+  }
+
+  private async buildSnapshot(
+    quotationId: string,
+  ): Promise<Record<string, unknown>> {
+    const response = await this.findOne(quotationId);
+    return { ...response } as Record<string, unknown>;
+  }
+
+  private hasSignificantHeaderChange(dto: UpdateQuotationDto): boolean {
+    return (
+      dto.organizationId !== undefined ||
+      dto.quoteNumber !== undefined ||
+      dto.customerId !== undefined ||
+      dto.opportunityId !== undefined ||
+      dto.issueDate !== undefined ||
+      dto.validUntil !== undefined ||
+      dto.currencyId !== undefined ||
+      dto.exchangeRate !== undefined ||
+      dto.ownerUserId !== undefined ||
+      dto.notes !== undefined
+    );
   }
 
   private async upsertTermsRow(

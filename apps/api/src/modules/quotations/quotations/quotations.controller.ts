@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -36,6 +37,11 @@ import {
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
 import { SWAGGER_TAG } from '../../../config/swagger-tags';
+import {
+  QuotationVersionResponseDto,
+  QuotationVersionSummaryDto,
+  ReviseQuotationDto,
+} from '../quotation-versions/dto/quotation-version.dto';
 import { CreateQuotationDto } from './dto/create-quotation.dto';
 import { ListQuotationsQueryDto } from './dto/list-quotations-query.dto';
 import {
@@ -132,6 +138,59 @@ export class QuotationsController {
     @CurrentUser() user?: AuthUser,
   ): Promise<void> {
     return this.quotationsService.remove(id, organizationId, user);
+  }
+
+  // --- Versions ---
+
+  @Get(':id/versions')
+  @RequirePermissions('quotations.read')
+  @ApiOperation({
+    summary: 'List quotation version history',
+    description: 'Summaries without snapshot payload; newest first.',
+  })
+  @ApiOkResponse({ type: [QuotationVersionSummaryDto] })
+  listVersions(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationVersionSummaryDto[]> {
+    return this.quotationsService.listVersions(id, organizationId, user);
+  }
+
+  @Get(':id/versions/:versionNumber')
+  @RequirePermissions('quotations.read')
+  @ApiOperation({ summary: 'Get a quotation version snapshot' })
+  @ApiOkResponse({ type: QuotationVersionResponseDto })
+  @ApiNotFoundResponse({ type: ErrorResponseDto })
+  findVersion(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('versionNumber', ParseIntPipe) versionNumber: number,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationVersionResponseDto> {
+    return this.quotationsService.findVersion(
+      id,
+      versionNumber,
+      organizationId,
+      user,
+    );
+  }
+
+  @Post(':id/revise')
+  @RequirePermissions('quotations.write')
+  @ApiOperation({
+    summary: 'Revise a sent or rejected quotation',
+    description:
+      'Sets status back to DRAFT, increments version and stores a full JSON snapshot.',
+  })
+  @ApiOkResponse({ type: QuotationResponseDto })
+  revise(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReviseQuotationDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    return this.quotationsService.revise(id, dto, organizationId, user);
   }
 
   // --- Items ---
