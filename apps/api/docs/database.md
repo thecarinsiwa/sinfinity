@@ -69,6 +69,16 @@ mysql -u root -p < database/sql/sinfinity_schema.sql
 
 Cela crée la base `sinfinity` et les tables. Détail des règles : [`database/conventions.md`](../../../database/conventions.md). Migrations : [`database/sql/migrations/README.md`](../../../database/sql/migrations/README.md).
 
+## Seeds RBAC
+
+Permissions + rôles système :
+
+```bash
+pnpm --filter @sinfinity/api seed:rbac
+```
+
+SQL bootstrap minimal (optionnel) : [`database/sql/seeds/01_rbac.sql`](../../../database/sql/seeds/01_rbac.sql).
+
 ## Workflow après un changement de schéma
 
 Toujours dans cet ordre — **jamais l’inverse** :

@@ -22,6 +22,7 @@ describe('validateEnv', () => {
     expect(env.DATABASE_URL).toBe(validEnv.DATABASE_URL);
     expect(env.JWT_ACCESS_TTL).toBe('15m');
     expect(env.JWT_REFRESH_TTL).toBe('7d');
+    expect(env.JWT_PASSWORD_RESET_TTL).toBe('1h');
     expect(env.CORS_ORIGINS).toEqual([...DEFAULT_CORS_ORIGINS]);
   });
 
@@ -36,6 +37,7 @@ describe('validateEnv', () => {
     expect(env.PORT).toBe(DEFAULT_PORT);
     expect(env.JWT_ACCESS_TTL).toBe('15m');
     expect(env.JWT_REFRESH_TTL).toBe('7d');
+    expect(env.JWT_PASSWORD_RESET_TTL).toBe('1h');
     expect(env.CORS_ORIGINS).toEqual([...DEFAULT_CORS_ORIGINS]);
   });
 

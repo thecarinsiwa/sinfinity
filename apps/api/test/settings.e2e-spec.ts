@@ -5,10 +5,11 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/config/configure-app';
-import { SWAGGER_BEARER_AUTH } from '../src/config/constants';
 import { Env } from '../src/config/env.validation';
 import { setupSwagger } from '../src/config/setup-swagger';
+import { SWAGGER_TAG } from '../src/config/swagger-tags';
 import { MYSQL_POOL } from '../src/database/database.constants';
+import { JwtAuthGuard } from '../src/modules/auth/jwt-auth.guard';
 import { CitiesService } from '../src/modules/settings/cities/cities.service';
 import { CountriesService } from '../src/modules/settings/countries/countries.service';
 import { CurrenciesService } from '../src/modules/settings/currencies/currencies.service';
@@ -17,19 +18,12 @@ import { PaymentTermsService } from '../src/modules/settings/payment-terms/payme
 import { ShippingTermsService } from '../src/modules/settings/shipping-terms/shipping-terms.service';
 import { TaxesService } from '../src/modules/settings/taxes/taxes.service';
 import { UnitsService } from '../src/modules/settings/units/units.service';
-
-type OpenApiPathItem = Record<
-  string,
-  {
-    tags?: string[];
-    security?: Array<Record<string, unknown[]>>;
-  }
->;
-
-type OpenApiDocument = {
-  tags?: { name: string }[];
-  paths: Record<string, OpenApiPathItem>;
-};
+import {
+  expectTagDefined,
+  expectTaggedOperation,
+  type OpenApiDocument,
+} from './openapi-helpers';
+import { TestJwtAuthGuard } from './test-jwt-auth.guard';
 
 const emptyPage = {
   data: [],
@@ -83,21 +77,6 @@ const SETTINGS_CRUD_PATHS = [
   },
 ] as const;
 
-function expectSettingsOperation(
-  pathItem: OpenApiPathItem | undefined,
-  method: string,
-): void {
-  expect(pathItem).toBeDefined();
-  const operation = pathItem?.[method];
-  expect(operation).toBeDefined();
-  expect(operation?.tags).toContain('Settings');
-  expect(operation?.security).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({ [SWAGGER_BEARER_AUTH]: expect.any(Array) }),
-    ]),
-  );
-}
-
 describe('Settings module (e2e)', () => {
   let app: INestApplication<App>;
 
@@ -126,6 +105,8 @@ describe('Settings module (e2e)', () => {
       .useValue(stubListService())
       .overrideProvider(ShippingTermsService)
       .useValue(stubListService())
+      .overrideGuard(JwtAuthGuard)
+      .useClass(TestJwtAuthGuard)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -147,16 +128,39 @@ describe('Settings module (e2e)', () => {
 
       const body = res.body as OpenApiDocument;
 
-      expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
-      expect(body.paths['/api/v1/exchange-rates/latest']).toBeDefined();
-      expectSettingsOperation(body.paths['/api/v1/exchange-rates/latest'], 'get');
+      expectTagDefined(body, SWAGGER_TAG.Settings);
+      expectTaggedOperation(
+        body.paths['/api/v1/exchange-rates/latest'],
+        'get',
+        SWAGGER_TAG.Settings,
+      );
 
       for (const resource of SETTINGS_CRUD_PATHS) {
-        expectSettingsOperation(body.paths[resource.collection], 'get');
-        expectSettingsOperation(body.paths[resource.collection], 'post');
-        expectSettingsOperation(body.paths[resource.item], 'get');
-        expectSettingsOperation(body.paths[resource.item], 'patch');
-        expectSettingsOperation(body.paths[resource.item], 'delete');
+        expectTaggedOperation(
+          body.paths[resource.collection],
+          'get',
+          SWAGGER_TAG.Settings,
+        );
+        expectTaggedOperation(
+          body.paths[resource.collection],
+          'post',
+          SWAGGER_TAG.Settings,
+        );
+        expectTaggedOperation(
+          body.paths[resource.item],
+          'get',
+          SWAGGER_TAG.Settings,
+        );
+        expectTaggedOperation(
+          body.paths[resource.item],
+          'patch',
+          SWAGGER_TAG.Settings,
+        );
+        expectTaggedOperation(
+          body.paths[resource.item],
+          'delete',
+          SWAGGER_TAG.Settings,
+        );
       }
     });
   });

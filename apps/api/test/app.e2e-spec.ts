@@ -9,6 +9,8 @@ import { Env } from './../src/config/env.validation';
 import { setupSwagger } from './../src/config/setup-swagger';
 import { MYSQL_POOL } from './../src/database/database.constants';
 import { readPackageVersion } from './../src/health/package-version';
+import { JwtAuthGuard } from './../src/modules/auth/jwt-auth.guard';
+import { TestJwtAuthGuard } from './test-jwt-auth.guard';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -26,6 +28,8 @@ describe('AppController (e2e)', () => {
         query: poolQuery,
         end: jest.fn().mockResolvedValue(undefined),
       })
+      .overrideGuard(JwtAuthGuard)
+      .useClass(TestJwtAuthGuard)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -99,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET)', async () => {
+  it('/docs-json (GET) smoke: Phase 0–2 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -117,17 +121,15 @@ describe('AppController (e2e)', () => {
     expect(body.info.version).toBe('1.0');
     expect(body.paths['/api/v1/ping']).toBeDefined();
     expect(body.paths['/api/v1/health']).toBeDefined();
-    expect(body.paths['/api/v1/countries']).toBeDefined();
-    expect(body.paths['/api/v1/cities']).toBeDefined();
-    expect(body.paths['/api/v1/currencies']).toBeDefined();
-    expect(body.paths['/api/v1/exchange-rates']).toBeDefined();
-    expect(body.paths['/api/v1/exchange-rates/latest']).toBeDefined();
-    expect(body.paths['/api/v1/taxes']).toBeDefined();
-    expect(body.paths['/api/v1/units']).toBeDefined();
-    expect(body.paths['/api/v1/payment-terms']).toBeDefined();
-    expect(body.paths['/api/v1/shipping-terms']).toBeDefined();
-    expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
-    expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
+    expect(body.tags?.map((tag) => tag.name)).toEqual(
+      expect.arrayContaining([
+        'Health',
+        'Settings',
+        'Auth',
+        'Organisation',
+        'Sécurité',
+      ]),
+    );
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
         type: 'http',

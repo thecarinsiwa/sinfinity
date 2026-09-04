@@ -1,7 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
@@ -16,9 +15,8 @@ import { LoggingInterceptor } from './interceptors/logging.interceptor';
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
-    JwtAuthGuard,
     PermissionsGuard,
   ],
-  exports: [JwtAuthGuard, PermissionsGuard],
+  exports: [PermissionsGuard],
 })
 export class CommonModule {}

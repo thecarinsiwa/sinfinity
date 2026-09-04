@@ -24,6 +24,7 @@ export const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32, 'must be at least 32 characters'),
   JWT_ACCESS_TTL: z.string().min(1).default('15m'),
   JWT_REFRESH_TTL: z.string().min(1).default('7d'),
+  JWT_PASSWORD_RESET_TTL: z.string().min(1).default('1h'),
   CORS_ORIGINS: corsOriginsSchema,
 });
 

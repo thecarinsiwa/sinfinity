@@ -8,21 +8,23 @@ import {
   SWAGGER_PATH,
   SWAGGER_PATH_ALIAS,
 } from './constants';
+import { SWAGGER_TAG_DEFINITIONS } from './swagger-tags';
 
 export function setupSwagger(
   app: INestApplication,
   port: number = DEFAULT_PORT,
 ): void {
-  const config = new DocumentBuilder()
+  const builder = new DocumentBuilder()
     .setTitle('Sinfinity API')
     .setDescription('REST API for the Sinfinity platform.')
     .setVersion('1.0')
-    .addServer(`http://localhost:${port}`, 'Local')
-    .addTag('Health', 'Liveness and readiness')
-    .addTag(
-      'Settings',
-      'Global reference data: geography, currencies, taxes, units, commercial terms',
-    )
+    .addServer(`http://localhost:${port}`, 'Local');
+
+  for (const tag of SWAGGER_TAG_DEFINITIONS) {
+    builder.addTag(tag.name, tag.description);
+  }
+
+  const config = builder
     .addBearerAuth(
       {
         type: 'http',

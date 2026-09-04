@@ -18,8 +18,9 @@ export {
   PaginationMetaDto,
 } from './dto/paginated-response.dto';
 export { PaginationQueryDto } from './dto/pagination-query.dto';
+export { Public, IS_PUBLIC_KEY } from './decorators/public.decorator';
+export { SkipAudit, SKIP_AUDIT_KEY } from './decorators/skip-audit.decorator';
 export { HttpExceptionFilter } from './filters/http-exception.filter';
-export { JwtAuthGuard } from './guards/jwt-auth.guard';
 export { PermissionsGuard } from './guards/permissions.guard';
 export { LoggingInterceptor } from './interceptors/logging.interceptor';
 export {
@@ -28,3 +29,7 @@ export {
 } from './pipes/parse-uuid.pipe';
 export type { AuthenticatedRequest, AuthUser } from './types/auth-user.type';
 export { createId } from './utils/create-id';
+export { parseTtlToMs, parseTtlToSeconds } from './utils/parse-ttl';
+
+/** Re-export real guard from Auth module for stable import path. */
+export { JwtAuthGuard } from '../modules/auth/jwt-auth.guard';
