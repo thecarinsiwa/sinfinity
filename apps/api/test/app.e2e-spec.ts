@@ -270,6 +270,53 @@ describe('AppController (e2e)', () => {
         '/api/v1/sales-orders/{orderId}/documents/{documentLinkId}'
       ],
     ).toBeDefined();
+    expect(body.paths['/api/v1/procurement-requests']).toBeDefined();
+    expect(body.paths['/api/v1/procurement-requests/{id}']).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{id}/items'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{id}/items/{itemId}'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{id}/transition'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/quotes'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/quotes/{quoteId}'],
+    ).toBeDefined();
+    expect(
+      body.paths[
+        '/api/v1/procurement-requests/{requestId}/quotes/{quoteId}/transition'
+      ],
+    ).toBeDefined();
+    expect(
+      body.paths[
+        '/api/v1/procurement-requests/{requestId}/quotes/{quoteId}/items'
+      ],
+    ).toBeDefined();
+    expect(
+      body.paths[
+        '/api/v1/procurement-requests/{requestId}/quotes/{quoteId}/items/{itemId}'
+      ],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/comparisons'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/approvals'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/comparisons']?.post
+        ?.responses?.['201'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/approvals']?.post
+        ?.responses?.['201'],
+    ).toBeDefined();
+    expect(body.components?.schemas?.ProcurementRequestResponseDto).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -283,6 +330,7 @@ describe('AppController (e2e)', () => {
         'Fournisseurs',
         'Devis',
         'Commandes clients',
+        'Sourcing',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(
