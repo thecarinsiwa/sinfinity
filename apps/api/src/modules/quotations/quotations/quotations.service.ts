@@ -1,8 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  HttpException,
-  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -854,26 +852,6 @@ export class QuotationsService {
       QUOTATION_STATUS_CODE.REJECTED,
       currentOrganizationId,
       user,
-    );
-  }
-
-  async convert(
-    quotationId: string,
-    currentOrganizationId?: string,
-    user?: AuthUser,
-  ): Promise<never> {
-    await this.requireQuotationAccess(
-      quotationId,
-      currentOrganizationId,
-      user,
-    );
-    throw new HttpException(
-      {
-        message:
-          'Quotation to sales order conversion is not implemented yet (Phase 8)',
-        code: 'NOT_IMPLEMENTED',
-      },
-      HttpStatus.NOT_IMPLEMENTED,
     );
   }
 

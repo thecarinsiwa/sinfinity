@@ -1,7 +1,7 @@
 import { SWAGGER_TAG, SWAGGER_TAG_DEFINITIONS } from './swagger-tags';
 
 describe('swagger-tags', () => {
-  it('defines Phase 0–7 tags in stable order', () => {
+  it('defines Phase 0–8 tags in stable order', () => {
     expect(SWAGGER_TAG_DEFINITIONS.map((tag) => tag.name)).toEqual([
       SWAGGER_TAG.Health,
       SWAGGER_TAG.Settings,
@@ -13,6 +13,7 @@ describe('swagger-tags', () => {
       SWAGGER_TAG.Crm,
       SWAGGER_TAG.Fournisseurs,
       SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     ]);
   });
 
@@ -34,6 +35,10 @@ describe('swagger-tags', () => {
 
   it('uses the Devis tag name expected by ROADMAP', () => {
     expect(SWAGGER_TAG.Devis).toBe('Devis');
+  });
+
+  it('uses the Commandes clients tag name expected by ROADMAP', () => {
+    expect(SWAGGER_TAG.CommandesClients).toBe('Commandes clients');
   });
 
   it('has unique tag names', () => {

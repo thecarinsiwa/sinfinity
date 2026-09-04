@@ -42,14 +42,3 @@ export class QuotationApprovalResponseDto {
   @ApiProperty()
   updatedAt!: string;
 }
-
-export class ConvertNotImplementedDto {
-  @ApiProperty({
-    example:
-      'Quotation to sales order conversion is not implemented yet (Phase 8)',
-  })
-  message!: string;
-
-  @ApiProperty({ example: 'NOT_IMPLEMENTED' })
-  code!: 'NOT_IMPLEMENTED';
-}

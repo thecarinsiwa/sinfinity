@@ -19,7 +19,7 @@ import {
 } from './openapi-helpers';
 import { TestJwtAuthGuard } from './test-jwt-auth.guard';
 
-describe('Phase 7 OpenAPI — Devis (e2e)', () => {
+describe('Phase 8 OpenAPI — Commandes clients (e2e)', () => {
   let app: INestApplication<App>;
   let document: OpenApiDocument;
 
@@ -50,17 +50,16 @@ describe('Phase 7 OpenAPI — Devis (e2e)', () => {
     await app.close();
   });
 
-  it('registers Devis tag with description among Phase 0–8 tags', () => {
-    expectTagDefined(document, SWAGGER_TAG.Devis);
+  it('registers Commandes clients tag with description among Phase 0–8 tags', () => {
     expectTagDefined(document, SWAGGER_TAG.CommandesClients);
-    const devisTag = SWAGGER_TAG_DEFINITIONS.find(
-      (tag) => tag.name === SWAGGER_TAG.Devis,
+    const tagDef = SWAGGER_TAG_DEFINITIONS.find(
+      (tag) => tag.name === SWAGGER_TAG.CommandesClients,
     );
-    expect(devisTag).toBeDefined();
+    expect(tagDef).toBeDefined();
     const tag = document.tags?.find(
-      (entry) => entry.name === SWAGGER_TAG.Devis,
+      (entry) => entry.name === SWAGGER_TAG.CommandesClients,
     );
-    expect(tag?.description).toBe(devisTag?.description);
+    expect(tag?.description).toBe(tagDef?.description);
 
     for (const def of SWAGGER_TAG_DEFINITIONS) {
       expectTagDefined(document, def.name);
@@ -76,145 +75,121 @@ describe('Phase 7 OpenAPI — Devis (e2e)', () => {
     );
   });
 
-  it('tags quotation-statuses as read-only under Devis', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/quotation-statuses'],
-      'get',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotation-statuses/{id}'],
-      'get',
-      SWAGGER_TAG.Devis,
-    );
-    expect(document.paths['/api/v1/quotation-statuses']?.post).toBeUndefined();
+  it('documents SalesOrderResponseDto schema', () => {
     expect(
-      document.paths['/api/v1/quotation-statuses/{id}']?.patch,
-    ).toBeUndefined();
-    expect(
-      document.paths['/api/v1/quotation-statuses/{id}']?.delete,
-    ).toBeUndefined();
+      document.components?.schemas?.SalesOrderResponseDto,
+    ).toBeDefined();
   });
 
-  it('tags quotations CRUD under Devis with bearer', () => {
+  it('tags sales-orders CRUD under Commandes clients with bearer', () => {
     expectTaggedOperation(
-      document.paths['/api/v1/quotations'],
+      document.paths['/api/v1/sales-orders'],
       'get',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations'],
+      document.paths['/api/v1/sales-orders'],
       'post',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}'],
+      document.paths['/api/v1/sales-orders/{id}'],
       'get',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}'],
+      document.paths['/api/v1/sales-orders/{id}'],
       'patch',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}'],
+      document.paths['/api/v1/sales-orders/{id}'],
       'delete',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
   });
 
-  it('tags quotation items and terms under Devis', () => {
+  it('tags items, transition and status-history under Commandes clients', () => {
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/items'],
+      document.paths['/api/v1/sales-orders/{id}/items'],
       'get',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/items'],
+      document.paths['/api/v1/sales-orders/{id}/items'],
       'post',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/items/{itemId}'],
+      document.paths['/api/v1/sales-orders/{id}/items/{itemId}'],
       'patch',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/items/{itemId}'],
+      document.paths['/api/v1/sales-orders/{id}/items/{itemId}'],
       'delete',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
-
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/terms'],
+      document.paths['/api/v1/sales-orders/{id}/transition'],
+      'post',
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/sales-orders/{id}/status-history'],
       'get',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/terms'],
-      'put',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
   });
 
-  it('tags quotation versions and revise under Devis', () => {
+  it('tags payments and documents nested resources', () => {
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/versions'],
+      document.paths['/api/v1/sales-orders/{orderId}/payments'],
       'get',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/versions/{versionNumber}'],
-      'get',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/revise'],
+      document.paths['/api/v1/sales-orders/{orderId}/payments'],
       'post',
-      SWAGGER_TAG.Devis,
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/sales-orders/{orderId}/payments/{paymentLinkId}'],
+      'patch',
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/sales-orders/{orderId}/payments/{paymentLinkId}'],
+      'delete',
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/sales-orders/{orderId}/documents'],
+      'get',
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/sales-orders/{orderId}/documents'],
+      'post',
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths[
+        '/api/v1/sales-orders/{orderId}/documents/{documentLinkId}'
+      ],
+      'patch',
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths[
+        '/api/v1/sales-orders/{orderId}/documents/{documentLinkId}'
+      ],
+      'delete',
+      SWAGGER_TAG.CommandesClients,
     );
   });
 
-  it('tags approval and status workflow under Devis', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/approvals'],
-      'get',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/submit-for-approval'],
-      'post',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/approve'],
-      'post',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/reject'],
-      'post',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/send'],
-      'post',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/mark-accepted'],
-      'post',
-      SWAGGER_TAG.Devis,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/mark-rejected'],
-      'post',
-      SWAGGER_TAG.Devis,
-    );
-  });
-
-  it('documents convert and convert-to-order as real Commandes clients ops (201, not 501 stub)', () => {
+  it('tags convert routes as implemented Commandes clients operations (201, not 501)', () => {
     for (const path of [
       '/api/v1/quotations/{id}/convert-to-order',
       '/api/v1/quotations/{id}/convert',
@@ -225,8 +200,6 @@ describe('Phase 7 OpenAPI — Devis (e2e)', () => {
         SWAGGER_TAG.CommandesClients,
       );
       expectImplementedResponse(document.paths[path], 'post', '201');
-      // Still under quotations path but not the Devis tag alone as a stub.
-      expect(document.paths[path]?.post?.tags).not.toEqual(['Devis']);
     }
   });
 });

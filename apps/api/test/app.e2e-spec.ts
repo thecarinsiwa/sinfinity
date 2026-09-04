@@ -229,6 +229,47 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/quotations/{id}/mark-accepted']).toBeDefined();
     expect(body.paths['/api/v1/quotations/{id}/mark-rejected']).toBeDefined();
     expect(body.paths['/api/v1/quotations/{id}/convert']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/convert-to-order']).toBeDefined();
+    expect(
+      body.paths['/api/v1/quotations/{id}/convert']?.post?.responses?.['201'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/quotations/{id}/convert']?.post?.responses?.['501'],
+    ).toBeUndefined();
+    expect(
+      body.paths['/api/v1/quotations/{id}/convert-to-order']?.post?.responses?.[
+        '201'
+      ],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/quotations/{id}/convert-to-order']?.post?.responses?.[
+        '501'
+      ],
+    ).toBeUndefined();
+    expect(body.paths['/api/v1/sales-orders']).toBeDefined();
+    expect(body.paths['/api/v1/sales-orders/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/sales-orders/{id}/items']).toBeDefined();
+    expect(
+      body.paths['/api/v1/sales-orders/{id}/items/{itemId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/sales-orders/{id}/transition']).toBeDefined();
+    expect(
+      body.paths['/api/v1/sales-orders/{id}/status-history'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/sales-orders/{orderId}/payments'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/sales-orders/{orderId}/payments/{paymentLinkId}'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/sales-orders/{orderId}/documents'],
+    ).toBeDefined();
+    expect(
+      body.paths[
+        '/api/v1/sales-orders/{orderId}/documents/{documentLinkId}'
+      ],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -241,6 +282,7 @@ describe('AppController (e2e)', () => {
         'CRM',
         'Fournisseurs',
         'Devis',
+        'Commandes clients',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(
