@@ -87,6 +87,11 @@ Types système (`QUOTE`, `INVOICE`, `BL`, `CONTRACT`, …) :
 pnpm --filter @sinfinity/api seed:document-types
 ```
 
+## Stockage fichiers
+
+Par défaut disque local (`STORAGE_DRIVER=local`, `STORAGE_LOCAL_ROOT=./storage/uploads`).
+Le dossier `storage/` est gitignored. Interface `StorageService` prête pour un driver S3 ultérieur.
+
 ## Workflow après un changement de schéma
 
 Toujours dans cet ordre — **jamais l’inverse** :

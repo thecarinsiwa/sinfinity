@@ -24,6 +24,8 @@ describe('validateEnv', () => {
     expect(env.JWT_REFRESH_TTL).toBe('7d');
     expect(env.JWT_PASSWORD_RESET_TTL).toBe('1h');
     expect(env.CORS_ORIGINS).toEqual([...DEFAULT_CORS_ORIGINS]);
+    expect(env.STORAGE_DRIVER).toBe('local');
+    expect(env.STORAGE_LOCAL_ROOT).toBe('./storage/uploads');
   });
 
   it('applies defaults for optional variables', () => {
@@ -39,6 +41,8 @@ describe('validateEnv', () => {
     expect(env.JWT_REFRESH_TTL).toBe('7d');
     expect(env.JWT_PASSWORD_RESET_TTL).toBe('1h');
     expect(env.CORS_ORIGINS).toEqual([...DEFAULT_CORS_ORIGINS]);
+    expect(env.STORAGE_DRIVER).toBe('local');
+    expect(env.STORAGE_LOCAL_ROOT).toBe('./storage/uploads');
   });
 
   it('throws when DATABASE_URL is missing', () => {
