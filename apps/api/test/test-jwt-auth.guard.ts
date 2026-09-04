@@ -22,6 +22,8 @@ export class TestJwtAuthGuard implements CanActivate {
         'roles.read',
         'roles.write',
         'audit.read',
+        'system_settings.read',
+        'system_settings.write',
       ],
       isSuperAdmin: true,
       sessionId: '0191e6b8-4c3a-7b2d-9f1e-session0001',

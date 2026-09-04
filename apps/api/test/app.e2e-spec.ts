@@ -133,6 +133,8 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/organizations']).toBeDefined();
     expect(body.paths['/api/v1/branches']).toBeDefined();
     expect(body.paths['/api/v1/users']).toBeDefined();
+    expect(body.paths['/api/v1/system-settings']).toBeDefined();
+    expect(body.paths['/api/v1/system-settings/{key}']).toBeDefined();
     expect(body.paths['/api/v1/roles']).toBeDefined();
     expect(body.paths['/api/v1/permissions']).toBeDefined();
     expect(body.paths['/api/v1/user-roles']).toBeDefined();
