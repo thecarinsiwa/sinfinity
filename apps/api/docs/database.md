@@ -79,6 +79,14 @@ pnpm --filter @sinfinity/api seed:rbac
 
 SQL bootstrap minimal (optionnel) : [`database/sql/seeds/01_rbac.sql`](../../../database/sql/seeds/01_rbac.sql).
 
+## Seeds document types
+
+Types système (`QUOTE`, `INVOICE`, `BL`, `CONTRACT`, …) :
+
+```bash
+pnpm --filter @sinfinity/api seed:document-types
+```
+
 ## Workflow après un changement de schéma
 
 Toujours dans cet ordre — **jamais l’inverse** :

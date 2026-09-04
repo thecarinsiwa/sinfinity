@@ -1,5 +1,5 @@
 /**
- * Canonical Swagger / OpenAPI tag names (Phase 0–2).
+ * Canonical Swagger / OpenAPI tag names (Phase 0–3).
  * Controllers and DocumentBuilder must use these exact strings.
  */
 export const SWAGGER_TAG = {
@@ -8,6 +8,7 @@ export const SWAGGER_TAG = {
   Auth: 'Auth',
   Organisation: 'Organisation',
   Securite: 'Sécurité',
+  Documents: 'Documents',
 } as const;
 
 export type SwaggerTagName = (typeof SWAGGER_TAG)[keyof typeof SWAGGER_TAG];
@@ -39,5 +40,10 @@ export const SWAGGER_TAG_DEFINITIONS: ReadonlyArray<{
     name: SWAGGER_TAG.Securite,
     description:
       'Roles, permissions, user role assignments, me/permissions and audit logs',
+  },
+  {
+    name: SWAGGER_TAG.Documents,
+    description:
+      'Document types, file storage, versions, polymorphic links and framework contracts',
   },
 ];

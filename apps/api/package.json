@@ -20,7 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:introspect": "drizzle-kit introspect && node ./scripts/clean-drizzle-introspect.mjs",
-    "seed:rbac": "ts-node -r tsconfig-paths/register ./scripts/seed-rbac.ts"
+    "seed:rbac": "ts-node -r tsconfig-paths/register ./scripts/seed-rbac.ts",
+    "seed:document-types": "ts-node -r tsconfig-paths/register ./scripts/seed-document-types.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

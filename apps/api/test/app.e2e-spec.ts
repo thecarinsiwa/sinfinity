@@ -103,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET) smoke: Phase 0–2 tags and security scheme', async () => {
+  it('/docs-json (GET) smoke: Phase 0–3 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -121,6 +121,7 @@ describe('AppController (e2e)', () => {
     expect(body.info.version).toBe('1.0');
     expect(body.paths['/api/v1/ping']).toBeDefined();
     expect(body.paths['/api/v1/health']).toBeDefined();
+    expect(body.paths['/api/v1/document-types']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -128,6 +129,7 @@ describe('AppController (e2e)', () => {
         'Auth',
         'Organisation',
         'Sécurité',
+        'Documents',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(
