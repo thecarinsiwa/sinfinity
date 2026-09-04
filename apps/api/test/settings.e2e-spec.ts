@@ -9,6 +9,7 @@ import { SWAGGER_BEARER_AUTH } from '../src/config/constants';
 import { Env } from '../src/config/env.validation';
 import { setupSwagger } from '../src/config/setup-swagger';
 import { MYSQL_POOL } from '../src/database/database.constants';
+import { JwtAuthGuard } from '../src/modules/auth/jwt-auth.guard';
 import { CitiesService } from '../src/modules/settings/cities/cities.service';
 import { CountriesService } from '../src/modules/settings/countries/countries.service';
 import { CurrenciesService } from '../src/modules/settings/currencies/currencies.service';
@@ -17,6 +18,7 @@ import { PaymentTermsService } from '../src/modules/settings/payment-terms/payme
 import { ShippingTermsService } from '../src/modules/settings/shipping-terms/shipping-terms.service';
 import { TaxesService } from '../src/modules/settings/taxes/taxes.service';
 import { UnitsService } from '../src/modules/settings/units/units.service';
+import { TestJwtAuthGuard } from './test-jwt-auth.guard';
 
 type OpenApiPathItem = Record<
   string,
@@ -126,6 +128,8 @@ describe('Settings module (e2e)', () => {
       .useValue(stubListService())
       .overrideProvider(ShippingTermsService)
       .useValue(stubListService())
+      .overrideGuard(JwtAuthGuard)
+      .useClass(TestJwtAuthGuard)
       .compile();
 
     app = moduleFixture.createNestApplication();

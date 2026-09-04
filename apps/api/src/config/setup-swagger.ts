@@ -27,6 +27,7 @@ export function setupSwagger(
       'Organisation',
       'Tenants, branches, users and organization-level settings',
     )
+    .addTag('Auth', 'Login, refresh, logout and current user')
     .addBearerAuth(
       {
         type: 'http',

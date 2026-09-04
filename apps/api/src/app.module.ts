@@ -6,6 +6,7 @@ import { CommonModule } from './common/common.module';
 import { validateEnv } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { OrganisationModule } from './modules/organisation/organisation.module';
 import { SettingsModule } from './modules/settings/settings.module';
 
@@ -20,6 +21,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     }),
     CommonModule,
     DatabaseModule,
+    AuthModule,
     HealthModule,
     SettingsModule,
     OrganisationModule,

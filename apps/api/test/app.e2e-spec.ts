@@ -9,6 +9,8 @@ import { Env } from './../src/config/env.validation';
 import { setupSwagger } from './../src/config/setup-swagger';
 import { MYSQL_POOL } from './../src/database/database.constants';
 import { readPackageVersion } from './../src/health/package-version';
+import { JwtAuthGuard } from './../src/modules/auth/jwt-auth.guard';
+import { TestJwtAuthGuard } from './test-jwt-auth.guard';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -26,6 +28,8 @@ describe('AppController (e2e)', () => {
         query: poolQuery,
         end: jest.fn().mockResolvedValue(undefined),
       })
+      .overrideGuard(JwtAuthGuard)
+      .useClass(TestJwtAuthGuard)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -128,9 +132,14 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/shipping-terms']).toBeDefined();
     expect(body.paths['/api/v1/organizations']).toBeDefined();
     expect(body.paths['/api/v1/branches']).toBeDefined();
+    expect(body.paths['/api/v1/auth/login']).toBeDefined();
+    expect(body.paths['/api/v1/auth/refresh']).toBeDefined();
+    expect(body.paths['/api/v1/auth/logout']).toBeDefined();
+    expect(body.paths['/api/v1/auth/me']).toBeDefined();
     expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Organisation')).toBe(true);
+    expect(body.tags?.some((tag) => tag.name === 'Auth')).toBe(true);
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
         type: 'http',
