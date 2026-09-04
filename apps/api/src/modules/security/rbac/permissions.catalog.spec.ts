@@ -46,4 +46,12 @@ describe('permissions.catalog', () => {
     expect(codes.has('quotations.write')).toBe(true);
     expect(codes.has('quotations.approve')).toBe(true);
   });
+
+  it('gives PROCUREMENT purchase_orders.send', () => {
+    const codes = new Set(PERMISSION_CATALOG.map((p) => p.code));
+    expect(codes.has('purchase_orders.send')).toBe(true);
+    const procurement = SYSTEM_ROLES.find((r) => r.code === 'PROCUREMENT')!;
+    const roleCodes = new Set(resolveRolePermissionCodes(procurement));
+    expect(roleCodes.has('purchase_orders.send')).toBe(true);
+  });
 });

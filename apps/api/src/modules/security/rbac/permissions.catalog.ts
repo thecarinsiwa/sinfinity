@@ -70,6 +70,7 @@ export const PERMISSION_CATALOG: PermissionDef[] = [
   perm('procurement', 'approve', 'Approve procurement'),
   perm('purchase_orders', 'read', 'Read purchase orders'),
   perm('purchase_orders', 'write', 'Manage purchase orders'),
+  perm('purchase_orders', 'send', 'Send purchase orders to suppliers'),
 
   // Logistics / inventory
   perm('shipments', 'read', 'Read shipments'),
@@ -155,6 +156,7 @@ const PROCUREMENT_PERMS = [
   'procurement.approve',
   'purchase_orders.read',
   'purchase_orders.write',
+  'purchase_orders.send',
   'catalog.read',
   'documents.read',
   'documents.write',
