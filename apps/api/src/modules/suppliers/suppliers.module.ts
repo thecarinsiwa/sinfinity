@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
+import { SupplierCategoriesController } from './supplier-categories/supplier-categories.controller';
+import { SupplierCategoriesService } from './supplier-categories/supplier-categories.service';
+import { SuppliersController } from './suppliers/suppliers.controller';
+import { SuppliersService } from './suppliers/suppliers.service';
 
-/**
- * Phase 6 — Fournisseurs (master data, catalog, evaluations, history).
- * Controllers are registered in later lots.
- */
 @Module({
-  controllers: [],
-  providers: [],
-  exports: [],
+  controllers: [SupplierCategoriesController, SuppliersController],
+  providers: [SupplierCategoriesService, SuppliersService],
+  exports: [SupplierCategoriesService, SuppliersService],
 })
 export class SuppliersModule {}
