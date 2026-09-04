@@ -103,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET) smoke: Phase 0–4 tags and security scheme', async () => {
+  it('/docs-json (GET) smoke: Phase 0–5 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -152,6 +152,35 @@ describe('AppController (e2e)', () => {
     expect(
       body.paths['/api/v1/products/{productId}/services/{linkId}'],
     ).toBeDefined();
+    expect(body.paths['/api/v1/customer-categories']).toBeDefined();
+    expect(body.paths['/api/v1/customers']).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/contacts']).toBeDefined();
+    expect(
+      body.paths['/api/v1/customers/{id}/contacts/{contactId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/addresses']).toBeDefined();
+    expect(
+      body.paths['/api/v1/customers/{id}/addresses/{addressId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/notes']).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/notes/{noteId}']).toBeDefined();
+    expect(body.paths['/api/v1/lead-sources']).toBeDefined();
+    expect(body.paths['/api/v1/lead-sources/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/leads']).toBeDefined();
+    expect(body.paths['/api/v1/leads/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/leads/{id}/convert']).toBeDefined();
+    expect(body.paths['/api/v1/opportunities']).toBeDefined();
+    expect(body.paths['/api/v1/opportunities/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/opportunities/{id}/items']).toBeDefined();
+    expect(
+      body.paths['/api/v1/opportunities/{id}/items/{itemId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/activity-types']).toBeDefined();
+    expect(body.paths['/api/v1/activity-types/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/sales-activities']).toBeDefined();
+    expect(body.paths['/api/v1/sales-activities/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/customer-categories/{id}']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -161,6 +190,7 @@ describe('AppController (e2e)', () => {
         'Sécurité',
         'Documents',
         'Catalogue',
+        'CRM',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(

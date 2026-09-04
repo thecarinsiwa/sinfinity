@@ -50,7 +50,7 @@ describe('Phase 3 OpenAPI — Documents (e2e)', () => {
     await app.close();
   });
 
-  it('registers Documents tag with description among Phase 0–4 tags', () => {
+  it('registers Documents tag with description among Phase 0–5 tags', () => {
     expectTagDefined(document, SWAGGER_TAG.Documents);
     const documentsTag = SWAGGER_TAG_DEFINITIONS.find(
       (tag) => tag.name === SWAGGER_TAG.Documents,

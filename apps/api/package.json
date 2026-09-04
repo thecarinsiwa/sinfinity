@@ -21,7 +21,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:introspect": "drizzle-kit introspect && node ./scripts/clean-drizzle-introspect.mjs",
     "seed:rbac": "ts-node -r tsconfig-paths/register ./scripts/seed-rbac.ts",
-    "seed:document-types": "ts-node -r tsconfig-paths/register ./scripts/seed-document-types.ts"
+    "seed:document-types": "ts-node -r tsconfig-paths/register ./scripts/seed-document-types.ts",
+    "seed:activity-types": "ts-node -r tsconfig-paths/register ./scripts/seed-activity-types.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
