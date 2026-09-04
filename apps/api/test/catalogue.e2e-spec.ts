@@ -68,7 +68,7 @@ describe('Phase 4 OpenAPI — Catalogue (e2e)', () => {
     await app.close();
   });
 
-  it('registers Catalogue tag with description among Phase 0–4 tags', () => {
+  it('registers Catalogue tag with description among Phase 0–5 tags', () => {
     expectTagDefined(document, SWAGGER_TAG.Catalogue);
     const catalogueTag = SWAGGER_TAG_DEFINITIONS.find(
       (tag) => tag.name === SWAGGER_TAG.Catalogue,

@@ -64,7 +64,7 @@ describe('Phase 2 OpenAPI — Auth / Organisation / Sécurité (e2e)', () => {
     await app.close();
   });
 
-  it('registers Phase 0–4 Swagger tags with descriptions', () => {
+  it('registers Phase 0–5 Swagger tags with descriptions', () => {
     for (const def of SWAGGER_TAG_DEFINITIONS) {
       expectTagDefined(document, def.name);
       const tag = document.tags?.find((entry) => entry.name === def.name);

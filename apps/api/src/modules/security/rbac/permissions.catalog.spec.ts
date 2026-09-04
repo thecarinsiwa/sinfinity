@@ -38,4 +38,16 @@ describe('permissions.catalog', () => {
     expect(codes.has('catalog.read')).toBe(true);
     expect(codes.has('catalog.write')).toBe(true);
   });
+
+  it('includes activities.* and gives them to SALES', () => {
+    const codes = new Set(PERMISSION_CATALOG.map((p) => p.code));
+    expect(codes.has('activities.read')).toBe(true);
+    expect(codes.has('activities.write')).toBe(true);
+
+    const sales = SYSTEM_ROLES.find((r) => r.code === 'SALES')!;
+    const salesCodes = new Set(resolveRolePermissionCodes(sales));
+    expect(salesCodes.has('activities.read')).toBe(true);
+    expect(salesCodes.has('activities.write')).toBe(true);
+    expect(salesCodes.has('leads.convert')).toBe(true);
+  });
 });
