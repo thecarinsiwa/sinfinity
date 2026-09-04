@@ -13,6 +13,7 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganisationModule } from './modules/organisation/organisation.module';
 import { SecurityModule } from './modules/security/security.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { SuppliersModule } from './modules/suppliers/suppliers.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     DocumentsModule,
     CatalogueModule,
     CrmModule,
+    SuppliersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
