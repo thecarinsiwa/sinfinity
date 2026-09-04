@@ -1,6 +1,7 @@
 import type { PurchaseOrderStatus } from './purchase-order-statuses';
 import type { PurchaseOrderItemResponseDto } from './dto/purchase-order-item.dto';
 import type { PurchaseOrderResponseDto } from './dto/purchase-order-response.dto';
+import type { PurchaseOrderStatusHistoryResponseDto } from './dto/purchase-order-status-history.dto';
 
 export type PurchaseOrderRow = {
   id: string;
@@ -78,5 +79,29 @@ export function toPurchaseOrderResponse(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     ...(items !== undefined ? { items } : {}),
+  };
+}
+
+export type PurchaseOrderStatusHistoryRow = {
+  id: string;
+  purchase_order_id: string;
+  from_status: string | null;
+  to_status: string;
+  changed_by: string | null;
+  changed_at: string;
+  notes: string | null;
+};
+
+export function toPurchaseOrderStatusHistoryResponse(
+  row: PurchaseOrderStatusHistoryRow,
+): PurchaseOrderStatusHistoryResponseDto {
+  return {
+    id: row.id,
+    purchaseOrderId: row.purchase_order_id,
+    fromStatus: row.from_status as PurchaseOrderStatus | null,
+    toStatus: row.to_status as PurchaseOrderStatus,
+    changedBy: row.changed_by,
+    changedAt: row.changed_at,
+    notes: row.notes,
   };
 }

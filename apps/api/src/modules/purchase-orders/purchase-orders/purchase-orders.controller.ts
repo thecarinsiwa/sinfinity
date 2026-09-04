@@ -44,6 +44,8 @@ import {
   UpdatePurchaseOrderItemDto,
 } from './dto/purchase-order-item.dto';
 import { PurchaseOrderResponseDto } from './dto/purchase-order-response.dto';
+import { PurchaseOrderStatusHistoryResponseDto } from './dto/purchase-order-status-history.dto';
+import { TransitionPurchaseOrderDto } from './dto/transition-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { PurchaseOrdersService } from './purchase-orders.service';
 
@@ -148,6 +150,46 @@ export class PurchaseOrdersController {
     @CurrentUser() user?: AuthUser,
   ): Promise<void> {
     return this.purchaseOrdersService.remove(id, organizationId, user);
+  }
+
+  @Post(':id/transition')
+  @RequirePermissions('purchase_orders.write')
+  @ApiOperation({
+    summary: 'Transition purchase order status',
+    description:
+      'Forward-only: draft → sent → confirmed → partial → received → closed (+ cancelled until received). draft→sent requires purchase_orders.send. partial/received enforce quantityReceived invariants. Writes status history.',
+  })
+  @ApiOkResponse({ type: PurchaseOrderResponseDto })
+  transition(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: TransitionPurchaseOrderDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<PurchaseOrderResponseDto> {
+    return this.purchaseOrdersService.transition(
+      id,
+      dto,
+      organizationId,
+      user,
+    );
+  }
+
+  @Get(':id/status-history')
+  @RequirePermissions('purchase_orders.read')
+  @ApiOperation({
+    summary: 'List purchase order status history (oldest first)',
+  })
+  @ApiOkResponse({ type: [PurchaseOrderStatusHistoryResponseDto] })
+  listStatusHistory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<PurchaseOrderStatusHistoryResponseDto[]> {
+    return this.purchaseOrdersService.listStatusHistory(
+      id,
+      organizationId,
+      user,
+    );
   }
 
   @Get(':id/items')

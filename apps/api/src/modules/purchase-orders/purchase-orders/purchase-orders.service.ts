@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -63,16 +64,22 @@ import {
   UpdatePurchaseOrderItemDto,
 } from './dto/purchase-order-item.dto';
 import { PurchaseOrderResponseDto } from './dto/purchase-order-response.dto';
+import { PurchaseOrderStatusHistoryResponseDto } from './dto/purchase-order-status-history.dto';
+import { TransitionPurchaseOrderDto } from './dto/transition-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import {
+  assertPurchaseOrderTransition,
+  assertReceiptQtyInvariants,
   PURCHASE_ORDER_STATUS,
   type PurchaseOrderStatus,
 } from './purchase-order-statuses';
 import {
   toPurchaseOrderItemResponse,
   toPurchaseOrderResponse,
+  toPurchaseOrderStatusHistoryResponse,
   type PurchaseOrderItemRow,
   type PurchaseOrderRow,
+  type PurchaseOrderStatusHistoryRow,
 } from './purchase-orders.mapper';
 
 type Tx = Parameters<Parameters<DrizzleDB['transaction']>[0]>[0];
@@ -583,6 +590,107 @@ export class PurchaseOrdersService {
       .delete(purchase_order_items)
       .where(eq(purchase_order_items.id, itemId));
     await this.recalculateTotals(orderId, user?.id ?? null);
+  }
+
+  // --- Workflow ---
+
+  async transition(
+    id: string,
+    dto: TransitionPurchaseOrderDto,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<PurchaseOrderResponseDto> {
+    const order = await this.requireOrderAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+    const fromStatus = order.status;
+    const toStatus = dto.toStatus;
+
+    try {
+      assertPurchaseOrderTransition(fromStatus, toStatus);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid status transition',
+      );
+    }
+
+    if (
+      fromStatus === PURCHASE_ORDER_STATUS.DRAFT &&
+      toStatus === PURCHASE_ORDER_STATUS.SENT
+    ) {
+      const granted = user?.permissions;
+      if (
+        granted !== undefined &&
+        !granted.includes('purchase_orders.send')
+      ) {
+        throw new ForbiddenException(
+          'Missing permissions: purchase_orders.send',
+        );
+      }
+    }
+
+    if (
+      toStatus === PURCHASE_ORDER_STATUS.PARTIAL ||
+      toStatus === PURCHASE_ORDER_STATUS.RECEIVED
+    ) {
+      const items = await this.loadItems(id);
+      try {
+        assertReceiptQtyInvariants(
+          toStatus,
+          items.map((item) => ({
+            quantity: item.quantity,
+            quantityReceived: item.quantity_received,
+          })),
+        );
+      } catch (error) {
+        throw new BadRequestException(
+          error instanceof Error
+            ? error.message
+            : 'Receipt quantity invariants failed',
+        );
+      }
+    }
+
+    await this.db
+      .update(purchase_orders)
+      .set({
+        status: toStatus,
+        updated_at: nowMysqlDateTime(),
+        updated_by: user?.id ?? null,
+      })
+      .where(eq(purchase_orders.id, id));
+
+    await this.insertStatusHistory(
+      this.db,
+      id,
+      fromStatus,
+      toStatus,
+      user?.id ?? null,
+      dto.notes,
+    );
+
+    return this.findOne(id, currentOrganizationId, user);
+  }
+
+  async listStatusHistory(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<PurchaseOrderStatusHistoryResponseDto[]> {
+    await this.requireOrderAccess(id, currentOrganizationId, user);
+    const rows = await this.db
+      .select()
+      .from(purchase_order_status_history)
+      .where(eq(purchase_order_status_history.purchase_order_id, id))
+      .orderBy(
+        asc(purchase_order_status_history.changed_at),
+        asc(purchase_order_status_history.id),
+      );
+    return (rows as PurchaseOrderStatusHistoryRow[]).map(
+      toPurchaseOrderStatusHistoryResponse,
+    );
   }
 
   private async insertItem(

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PurchaseOrdersService } from './purchase-orders.service';
 
@@ -33,6 +34,11 @@ describe('PurchaseOrdersService', () => {
     id: 'user-1',
     organizationId: orgId,
     isSuperAdmin: false,
+    permissions: [
+      'purchase_orders.read',
+      'purchase_orders.write',
+      'purchase_orders.send',
+    ],
   };
 
   const orderRow = {
@@ -285,5 +291,108 @@ describe('PurchaseOrdersService', () => {
         orgUser,
       ),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('rejects illegal status transitions', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([{ ...orderRow, status: 'sent' }]),
+    );
+
+    await expect(
+      service.transition(orderId, { toStatus: 'draft' }, orgId, orgUser),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects draft→sent without purchase_orders.send', async () => {
+    db.select.mockReturnValueOnce(thenable([orderRow]));
+
+    await expect(
+      service.transition(
+        orderId,
+        { toStatus: 'sent' },
+        orgId,
+        {
+          ...orgUser,
+          permissions: ['purchase_orders.read', 'purchase_orders.write'],
+        },
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('rejects received when quantities are incomplete', async () => {
+    db.select
+      .mockReturnValueOnce(
+        thenable([{ ...orderRow, status: 'partial' }]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: 'poi-1',
+            purchase_order_id: orderId,
+            product_id: null,
+            description: 'Line',
+            quantity: '10.0000',
+            quantity_received: '4.0000',
+            unit_price: '1.0000',
+            line_total: '10.0000',
+            created_at: '2026-09-04 10:00:00.000',
+            updated_at: '2026-09-04 10:00:00.000',
+          },
+        ]),
+      );
+
+    await expect(
+      service.transition(orderId, { toStatus: 'received' }, orgId, orgUser),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('transitions draft→sent with send perm and writes history', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([orderRow]))
+      .mockReturnValueOnce(thenable([{ ...orderRow, status: 'sent' }]))
+      .mockReturnValueOnce(thenable([]));
+
+    const result = await service.transition(
+      orderId,
+      { toStatus: 'sent', notes: 'Emailed supplier' },
+      orgId,
+      orgUser,
+    );
+
+    expect(db.update).toHaveBeenCalled();
+    expect(db.insert).toHaveBeenCalled();
+    expect(result.status).toBe('sent');
+  });
+
+  it('lists status history oldest first', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([orderRow]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: 'h1',
+            purchase_order_id: orderId,
+            from_status: null,
+            to_status: 'draft',
+            changed_by: 'user-1',
+            changed_at: '2026-09-04 10:00:00.000',
+            notes: null,
+          },
+          {
+            id: 'h2',
+            purchase_order_id: orderId,
+            from_status: 'draft',
+            to_status: 'sent',
+            changed_by: 'user-1',
+            changed_at: '2026-09-04 11:00:00.000',
+            notes: 'Go',
+          },
+        ]),
+      );
+
+    const history = await service.listStatusHistory(orderId, orgId, orgUser);
+    expect(history).toHaveLength(2);
+    expect(history[0].fromStatus).toBeNull();
+    expect(history[1].toStatus).toBe('sent');
   });
 });
