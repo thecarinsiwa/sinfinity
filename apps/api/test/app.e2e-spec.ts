@@ -118,6 +118,7 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/ping']).toBeDefined();
     expect(body.paths['/api/v1/health']).toBeDefined();
     expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
+    expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
         type: 'http',

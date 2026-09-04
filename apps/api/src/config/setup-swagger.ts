@@ -19,6 +19,10 @@ export function setupSwagger(
     .setVersion('1.0')
     .addServer(`http://localhost:${port}`, 'Local')
     .addTag('Health', 'Liveness and readiness')
+    .addTag(
+      'Settings',
+      'Global reference data: geography, currencies, taxes, units, commercial terms',
+    )
     .addBearerAuth(
       {
         type: 'http',
