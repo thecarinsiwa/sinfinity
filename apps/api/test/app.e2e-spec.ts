@@ -152,6 +152,19 @@ describe('AppController (e2e)', () => {
     expect(
       body.paths['/api/v1/products/{productId}/services/{linkId}'],
     ).toBeDefined();
+    expect(body.paths['/api/v1/customer-categories']).toBeDefined();
+    expect(body.paths['/api/v1/customers']).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/contacts']).toBeDefined();
+    expect(
+      body.paths['/api/v1/customers/{id}/contacts/{contactId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/addresses']).toBeDefined();
+    expect(
+      body.paths['/api/v1/customers/{id}/addresses/{addressId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/notes']).toBeDefined();
+    expect(body.paths['/api/v1/customers/{id}/notes/{noteId}']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
