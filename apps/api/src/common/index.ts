@@ -19,6 +19,7 @@ export {
 } from './dto/paginated-response.dto';
 export { PaginationQueryDto } from './dto/pagination-query.dto';
 export { Public, IS_PUBLIC_KEY } from './decorators/public.decorator';
+export { SkipAudit, SKIP_AUDIT_KEY } from './decorators/skip-audit.decorator';
 export { HttpExceptionFilter } from './filters/http-exception.filter';
 export { PermissionsGuard } from './guards/permissions.guard';
 export { LoggingInterceptor } from './interceptors/logging.interceptor';

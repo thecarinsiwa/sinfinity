@@ -20,6 +20,7 @@ import {
   CurrentUser,
   ErrorResponseDto,
   Public,
+  SkipAudit,
   type AuthUser,
 } from '../../common';
 import { SWAGGER_BEARER_AUTH } from '../../config/constants';
@@ -34,6 +35,7 @@ import { SetPasswordDto } from './dto/set-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('Auth')
+@SkipAudit()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
