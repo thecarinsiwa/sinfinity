@@ -9,3 +9,5 @@ process.env.JWT_REFRESH_TTL ??= '7d';
 process.env.JWT_PASSWORD_RESET_TTL ??= '1h';
 process.env.CORS_ORIGINS ??=
   'http://localhost:3000,http://localhost:3001,http://localhost:3002';
+process.env.STORAGE_DRIVER ??= 'local';
+process.env.STORAGE_LOCAL_ROOT ??= './storage/uploads-test';

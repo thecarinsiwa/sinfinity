@@ -103,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET) smoke: Phase 0–2 tags and security scheme', async () => {
+  it('/docs-json (GET) smoke: Phase 0–3 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -121,6 +121,17 @@ describe('AppController (e2e)', () => {
     expect(body.info.version).toBe('1.0');
     expect(body.paths['/api/v1/ping']).toBeDefined();
     expect(body.paths['/api/v1/health']).toBeDefined();
+    expect(body.paths['/api/v1/document-types']).toBeDefined();
+    expect(body.paths['/api/v1/documents']).toBeDefined();
+    expect(body.paths['/api/v1/documents/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/documents/{id}/download']).toBeDefined();
+    expect(body.paths['/api/v1/documents/{id}/versions']).toBeDefined();
+    expect(body.paths['/api/v1/document-links']).toBeDefined();
+    expect(body.paths['/api/v1/document-links/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/contracts']).toBeDefined();
+    expect(body.paths['/api/v1/contracts/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/contracts/{id}/items']).toBeDefined();
+    expect(body.paths['/api/v1/contracts/{id}/items/{itemId}']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -128,6 +139,7 @@ describe('AppController (e2e)', () => {
         'Auth',
         'Organisation',
         'Sécurité',
+        'Documents',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(

@@ -26,6 +26,8 @@ export const envSchema = z.object({
   JWT_REFRESH_TTL: z.string().min(1).default('7d'),
   JWT_PASSWORD_RESET_TTL: z.string().min(1).default('1h'),
   CORS_ORIGINS: corsOriginsSchema,
+  STORAGE_DRIVER: z.enum(['local']).default('local'),
+  STORAGE_LOCAL_ROOT: z.string().min(1).default('./storage/uploads'),
 });
 
 export type Env = z.infer<typeof envSchema>;

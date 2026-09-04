@@ -79,6 +79,29 @@ pnpm --filter @sinfinity/api seed:rbac
 
 SQL bootstrap minimal (optionnel) : [`database/sql/seeds/01_rbac.sql`](../../../database/sql/seeds/01_rbac.sql).
 
+## Seeds document types
+
+Types système (`QUOTE`, `INVOICE`, `BL`, `CONTRACT`, …) :
+
+```bash
+pnpm --filter @sinfinity/api seed:document-types
+```
+
+## Stockage fichiers
+
+Par défaut disque local (`STORAGE_DRIVER=local`, `STORAGE_LOCAL_ROOT=./storage/uploads`).
+Le dossier `storage/` est gitignored. Interface `StorageService` prête pour un driver S3 ultérieur.
+
+## Document links
+
+`POST/DELETE /document-links` + `GET /document-links?entityType&entityId`.
+`entity_type` et `role` sont validés contre une allowlist (`document-links.catalog.ts`).
+
+## Contracts
+
+`CRUD /contracts` + `/contracts/:id/items`. Statuts `draft|active|expired|terminated`.
+`contract_number` unique par org. Permissions `contracts.read` / `contracts.write`.
+
 ## Workflow après un changement de schéma
 
 Toujours dans cet ordre — **jamais l’inverse** :
