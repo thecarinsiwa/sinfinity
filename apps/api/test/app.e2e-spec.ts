@@ -166,6 +166,7 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/customers/{id}/notes']).toBeDefined();
     expect(body.paths['/api/v1/customers/{id}/notes/{noteId}']).toBeDefined();
     expect(body.paths['/api/v1/lead-sources']).toBeDefined();
+    expect(body.paths['/api/v1/lead-sources/{id}']).toBeDefined();
     expect(body.paths['/api/v1/leads']).toBeDefined();
     expect(body.paths['/api/v1/leads/{id}']).toBeDefined();
     expect(body.paths['/api/v1/leads/{id}/convert']).toBeDefined();
@@ -176,6 +177,7 @@ describe('AppController (e2e)', () => {
       body.paths['/api/v1/opportunities/{id}/items/{itemId}'],
     ).toBeDefined();
     expect(body.paths['/api/v1/activity-types']).toBeDefined();
+    expect(body.paths['/api/v1/activity-types/{id}']).toBeDefined();
     expect(body.paths['/api/v1/sales-activities']).toBeDefined();
     expect(body.paths['/api/v1/sales-activities/{id}']).toBeDefined();
     expect(body.paths['/api/v1/supplier-categories']).toBeDefined();
