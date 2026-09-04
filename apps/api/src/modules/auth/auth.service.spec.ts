@@ -2,6 +2,10 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
+import {
+  UNIT_TEST_PASSWORD,
+  UNIT_TEST_PASSWORD_ALT,
+} from '../../test-fixtures/passwords';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { PermissionsLoader } from './permissions.loader';
@@ -95,7 +99,7 @@ describe('AuthService', () => {
 
     const result = await service.login(
       'Admin@Sinfinity.cd',
-      'ChangeMe123!',
+      UNIT_TEST_PASSWORD,
       req,
     );
 
@@ -111,7 +115,7 @@ describe('AuthService', () => {
     passwords.verify.mockResolvedValue(false);
 
     await expect(
-      service.login('admin@sinfinity.cd', 'wrong-password', req),
+      service.login('admin@sinfinity.cd', UNIT_TEST_PASSWORD_ALT, req),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(db.insert).toHaveBeenCalled();
   });
@@ -147,9 +151,9 @@ describe('AuthService', () => {
     db.select.mockReturnValue(thenable([{ id: userRow.id }]));
     passwords.hash.mockResolvedValue('new-hash');
 
-    await service.setPassword('reset.jwt', 'NewPass123!');
+    await service.setPassword('reset.jwt', UNIT_TEST_PASSWORD_ALT);
 
-    expect(passwords.hash).toHaveBeenCalledWith('NewPass123!');
+    expect(passwords.hash).toHaveBeenCalledWith(UNIT_TEST_PASSWORD_ALT);
     expect(db.update).toHaveBeenCalled();
   });
 
@@ -157,7 +161,7 @@ describe('AuthService', () => {
     jwt.verifyAsync.mockRejectedValue(new Error('jwt expired'));
 
     await expect(
-      service.setPassword('bad.jwt', 'NewPass123!'),
+      service.setPassword('bad.jwt', UNIT_TEST_PASSWORD_ALT),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

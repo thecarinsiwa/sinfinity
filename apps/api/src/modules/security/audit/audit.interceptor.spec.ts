@@ -66,7 +66,7 @@ describe('AuditInterceptor', () => {
       path: '/api/v1/users',
       url: '/api/v1/users',
       params: {},
-      body: { email: 'a@b.co', password: 'secret' },
+      body: { email: 'a@b.co', password: 'x' },
       headers: {},
       ip: '127.0.0.1',
       user: {

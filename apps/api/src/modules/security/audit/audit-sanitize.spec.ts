@@ -4,7 +4,7 @@ describe('sanitizeAuditPayload', () => {
   it('redacts sensitive keys recursively', () => {
     const result = sanitizeAuditPayload({
       email: 'a@b.co',
-      password: 'secret',
+      password: 'unit-test-only',
       nested: { refreshToken: 'abc', name: 'Ada' },
     });
 

@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PasswordService } from '../../auth/password.service';
+import { UNIT_TEST_PASSWORD } from '../../../test-fixtures/passwords';
 import { UsersService } from './users.service';
 
 type Thenable<T> = PromiseLike<T> & Record<string, unknown>;
@@ -128,13 +129,13 @@ describe('UsersService', () => {
         email: 'Jane.Doe@Sinfinity.cd',
         firstName: 'Jane',
         lastName: 'Doe',
-        password: 'ChangeMe123!',
+        password: UNIT_TEST_PASSWORD,
       },
       orgId,
       orgUser,
     );
 
-    expect(passwords.hash).toHaveBeenCalledWith('ChangeMe123!');
+    expect(passwords.hash).toHaveBeenCalledWith(UNIT_TEST_PASSWORD);
     expect(created.email).toBe(row.email);
     expect(created).not.toHaveProperty('password_hash');
     expect(created.setPasswordToken).toBeUndefined();
@@ -173,7 +174,7 @@ describe('UsersService', () => {
           email: 'jane.doe@sinfinity.cd',
           firstName: 'Jane',
           lastName: 'Doe',
-          password: 'ChangeMe123!',
+          password: UNIT_TEST_PASSWORD,
         },
         orgId,
         orgUser,
