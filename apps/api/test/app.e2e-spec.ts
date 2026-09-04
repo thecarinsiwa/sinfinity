@@ -306,6 +306,15 @@ describe('AppController (e2e)', () => {
     expect(
       body.paths['/api/v1/procurement-requests/{requestId}/approvals'],
     ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/comparisons']?.post
+        ?.responses?.['201'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/procurement-requests/{requestId}/approvals']?.post
+        ?.responses?.['201'],
+    ).toBeDefined();
+    expect(body.components?.schemas?.ProcurementRequestResponseDto).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',

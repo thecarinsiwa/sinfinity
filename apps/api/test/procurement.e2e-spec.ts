@@ -12,6 +12,7 @@ import { SWAGGER_TAG, SWAGGER_TAG_DEFINITIONS } from '../src/config/swagger-tags
 import { MYSQL_POOL } from '../src/database/database.constants';
 import { JwtAuthGuard } from '../src/modules/auth/jwt-auth.guard';
 import {
+  expectImplementedResponse,
   expectTagDefined,
   expectTaggedOperation,
   type OpenApiDocument,
@@ -74,6 +75,21 @@ describe('Phase 9 OpenAPI — Sourcing (e2e)', () => {
     );
   });
 
+  it('documents procurement response schemas', () => {
+    expect(
+      document.components?.schemas?.ProcurementRequestResponseDto,
+    ).toBeDefined();
+    expect(
+      document.components?.schemas?.ProcurementQuoteResponseDto,
+    ).toBeDefined();
+    expect(
+      document.components?.schemas?.ProcurementComparisonResponseDto,
+    ).toBeDefined();
+    expect(
+      document.components?.schemas?.ProcurementApprovalResponseDto,
+    ).toBeDefined();
+  });
+
   it('tags procurement-requests CRUD and transition under Sourcing', () => {
     expectTaggedOperation(
       document.paths['/api/v1/procurement-requests'],
@@ -85,9 +101,24 @@ describe('Phase 9 OpenAPI — Sourcing (e2e)', () => {
       'post',
       SWAGGER_TAG.Sourcing,
     );
+    expectImplementedResponse(
+      document.paths['/api/v1/procurement-requests'],
+      'post',
+      '201',
+    );
     expectTaggedOperation(
       document.paths['/api/v1/procurement-requests/{id}'],
       'get',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{id}'],
+      'patch',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{id}'],
+      'delete',
       SWAGGER_TAG.Sourcing,
     );
     expectTaggedOperation(
@@ -95,14 +126,32 @@ describe('Phase 9 OpenAPI — Sourcing (e2e)', () => {
       'post',
       SWAGGER_TAG.Sourcing,
     );
+  });
+
+  it('tags request items under Sourcing', () => {
     expectTaggedOperation(
       document.paths['/api/v1/procurement-requests/{id}/items'],
       'get',
       SWAGGER_TAG.Sourcing,
     );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{id}/items'],
+      'post',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{id}/items/{itemId}'],
+      'patch',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{id}/items/{itemId}'],
+      'delete',
+      SWAGGER_TAG.Sourcing,
+    );
   });
 
-  it('tags nested quotes under Sourcing', () => {
+  it('tags nested quotes and quote items under Sourcing', () => {
     expectTaggedOperation(
       document.paths['/api/v1/procurement-requests/{requestId}/quotes'],
       'get',
@@ -111,6 +160,26 @@ describe('Phase 9 OpenAPI — Sourcing (e2e)', () => {
     expectTaggedOperation(
       document.paths['/api/v1/procurement-requests/{requestId}/quotes'],
       'post',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectImplementedResponse(
+      document.paths['/api/v1/procurement-requests/{requestId}/quotes'],
+      'post',
+      '201',
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{requestId}/quotes/{quoteId}'],
+      'get',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{requestId}/quotes/{quoteId}'],
+      'patch',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/procurement-requests/{requestId}/quotes/{quoteId}'],
+      'delete',
       SWAGGER_TAG.Sourcing,
     );
     expectTaggedOperation(
@@ -127,9 +196,30 @@ describe('Phase 9 OpenAPI — Sourcing (e2e)', () => {
       'get',
       SWAGGER_TAG.Sourcing,
     );
+    expectTaggedOperation(
+      document.paths[
+        '/api/v1/procurement-requests/{requestId}/quotes/{quoteId}/items'
+      ],
+      'post',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths[
+        '/api/v1/procurement-requests/{requestId}/quotes/{quoteId}/items/{itemId}'
+      ],
+      'patch',
+      SWAGGER_TAG.Sourcing,
+    );
+    expectTaggedOperation(
+      document.paths[
+        '/api/v1/procurement-requests/{requestId}/quotes/{quoteId}/items/{itemId}'
+      ],
+      'delete',
+      SWAGGER_TAG.Sourcing,
+    );
   });
 
-  it('tags comparisons and approvals under Sourcing', () => {
+  it('tags comparisons and approvals as implemented Sourcing ops (201)', () => {
     expectTaggedOperation(
       document.paths['/api/v1/procurement-requests/{requestId}/comparisons'],
       'get',
@@ -140,6 +230,12 @@ describe('Phase 9 OpenAPI — Sourcing (e2e)', () => {
       'post',
       SWAGGER_TAG.Sourcing,
     );
+    expectImplementedResponse(
+      document.paths['/api/v1/procurement-requests/{requestId}/comparisons'],
+      'post',
+      '201',
+    );
+
     expectTaggedOperation(
       document.paths['/api/v1/procurement-requests/{requestId}/approvals'],
       'get',
@@ -149,6 +245,11 @@ describe('Phase 9 OpenAPI — Sourcing (e2e)', () => {
       document.paths['/api/v1/procurement-requests/{requestId}/approvals'],
       'post',
       SWAGGER_TAG.Sourcing,
+    );
+    expectImplementedResponse(
+      document.paths['/api/v1/procurement-requests/{requestId}/approvals'],
+      'post',
+      '201',
     );
   });
 });
