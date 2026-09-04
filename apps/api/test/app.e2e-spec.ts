@@ -7,14 +7,26 @@ import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/config/configure-app';
 import { Env } from './../src/config/env.validation';
 import { setupSwagger } from './../src/config/setup-swagger';
+import { MYSQL_POOL } from './../src/database/database.constants';
+import { readPackageVersion } from './../src/health/package-version';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  const poolQuery = jest.fn().mockResolvedValue([[{ 1: 1 }]]);
 
   beforeEach(async () => {
+    poolQuery.mockReset();
+    poolQuery.mockResolvedValue([[{ 1: 1 }]]);
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MYSQL_POOL)
+      .useValue({
+        query: poolQuery,
+        end: jest.fn().mockResolvedValue(undefined),
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     const config = app.get(ConfigService<Env, true>);
@@ -28,6 +40,32 @@ describe('AppController (e2e)', () => {
       .get('/api/v1/ping')
       .expect(200)
       .expect({ status: 'ok' });
+  });
+
+  it('/api/v1/health (GET)', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/health')
+      .expect(200);
+
+    expect(res.body).toEqual({
+      status: 'up',
+      database: 'up',
+      version: readPackageVersion(),
+    });
+    expect(poolQuery).toHaveBeenCalledWith('SELECT 1');
+  });
+
+  it('/api/v1/health (GET) returns 503 when MySQL is down', async () => {
+    poolQuery.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+
+    await request(app.getHttpServer())
+      .get('/api/v1/health')
+      .expect(503)
+      .expect({
+        statusCode: 503,
+        message: 'Database unavailable',
+        error: 'Service Unavailable',
+      });
   });
 
   it('/docs (GET) is outside the /api/v1 prefix', async () => {
@@ -78,6 +116,7 @@ describe('AppController (e2e)', () => {
     expect(body.info.title).toBe('Sinfinity API');
     expect(body.info.version).toBe('1.0');
     expect(body.paths['/api/v1/ping']).toBeDefined();
+    expect(body.paths['/api/v1/health']).toBeDefined();
     expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
