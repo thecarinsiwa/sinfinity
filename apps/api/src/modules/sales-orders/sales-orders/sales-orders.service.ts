@@ -68,15 +68,21 @@ import {
 } from './dto/sales-order-item.dto';
 import { SalesOrderResponseDto } from './dto/sales-order-response.dto';
 import { UpdateSalesOrderDto } from './dto/update-sales-order.dto';
+import { SalesOrderStatusHistoryResponseDto } from './dto/sales-order-status-history.dto';
+import { TransitionSalesOrderDto } from './dto/transition-sales-order.dto';
 import {
+  assertDeliveryQtyInvariants,
+  assertSalesOrderTransition,
   SALES_ORDER_STATUS,
   type SalesOrderStatus,
 } from './sales-order-statuses';
 import {
   toSalesOrderItemResponse,
   toSalesOrderResponse,
+  toSalesOrderStatusHistoryResponse,
   type SalesOrderItemRow,
   type SalesOrderRow,
+  type SalesOrderStatusHistoryRow,
 } from './sales-orders.mapper';
 
 type Tx = Parameters<Parameters<DrizzleDB['transaction']>[0]>[0];
@@ -497,6 +503,92 @@ export class SalesOrdersService {
       .delete(sales_order_items)
       .where(eq(sales_order_items.id, itemId));
     await this.recalculateTotals(orderId, user?.id ?? null);
+  }
+
+  // --- Workflow ---
+
+  async transition(
+    id: string,
+    dto: TransitionSalesOrderDto,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<SalesOrderResponseDto> {
+    const order = await this.requireOrderAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+    const fromStatus = order.status;
+    const toStatus = dto.toStatus;
+
+    try {
+      assertSalesOrderTransition(fromStatus, toStatus);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid status transition',
+      );
+    }
+
+    if (
+      toStatus === SALES_ORDER_STATUS.PARTIALLY_DELIVERED ||
+      toStatus === SALES_ORDER_STATUS.DELIVERED
+    ) {
+      const items = await this.loadItems(id);
+      try {
+        assertDeliveryQtyInvariants(
+          toStatus,
+          items.map((item) => ({
+            quantity: item.quantity,
+            quantityDelivered: item.quantity_delivered,
+          })),
+        );
+      } catch (error) {
+        throw new BadRequestException(
+          error instanceof Error
+            ? error.message
+            : 'Delivery quantity invariants failed',
+        );
+      }
+    }
+
+    await this.db
+      .update(sales_orders)
+      .set({
+        status: toStatus,
+        updated_at: nowMysqlDateTime(),
+        updated_by: user?.id ?? null,
+      })
+      .where(eq(sales_orders.id, id));
+
+    await this.insertStatusHistory(
+      this.db,
+      id,
+      fromStatus,
+      toStatus,
+      user?.id ?? null,
+      dto.notes,
+    );
+
+    return this.findOne(id, currentOrganizationId, user);
+  }
+
+  async listStatusHistory(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<SalesOrderStatusHistoryResponseDto[]> {
+    await this.requireOrderAccess(id, currentOrganizationId, user);
+    const rows = await this.db
+      .select()
+      .from(sales_order_status_history)
+      .where(eq(sales_order_status_history.sales_order_id, id))
+      .orderBy(
+        asc(sales_order_status_history.changed_at),
+        asc(sales_order_status_history.id),
+      );
+    return (rows as SalesOrderStatusHistoryRow[]).map(
+      toSalesOrderStatusHistoryResponse,
+    );
   }
 
   // --- Convert ---

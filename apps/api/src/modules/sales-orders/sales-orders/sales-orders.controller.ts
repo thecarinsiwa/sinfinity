@@ -43,6 +43,8 @@ import {
   UpdateSalesOrderItemDto,
 } from './dto/sales-order-item.dto';
 import { SalesOrderResponseDto } from './dto/sales-order-response.dto';
+import { SalesOrderStatusHistoryResponseDto } from './dto/sales-order-status-history.dto';
+import { TransitionSalesOrderDto } from './dto/transition-sales-order.dto';
 import { UpdateSalesOrderDto } from './dto/update-sales-order.dto';
 import { SalesOrdersService } from './sales-orders.service';
 
@@ -125,6 +127,39 @@ export class SalesOrdersController {
     @CurrentUser() user?: AuthUser,
   ): Promise<void> {
     return this.salesOrdersService.remove(id, organizationId, user);
+  }
+
+  @Post(':id/transition')
+  @RequirePermissions('sales_orders.write')
+  @ApiOperation({
+    summary: 'Transition sales order status',
+    description:
+      'Forward-only: pending → confirmed → in_progress → partially_delivered → delivered (+ cancelled except from delivered). Writes status history. Delivery statuses enforce quantityDelivered invariants.',
+  })
+  @ApiOkResponse({ type: SalesOrderResponseDto })
+  transition(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: TransitionSalesOrderDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<SalesOrderResponseDto> {
+    return this.salesOrdersService.transition(id, dto, organizationId, user);
+  }
+
+  @Get(':id/status-history')
+  @RequirePermissions('sales_orders.read')
+  @ApiOperation({ summary: 'List sales order status history (oldest first)' })
+  @ApiOkResponse({ type: [SalesOrderStatusHistoryResponseDto] })
+  listStatusHistory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<SalesOrderStatusHistoryResponseDto[]> {
+    return this.salesOrdersService.listStatusHistory(
+      id,
+      organizationId,
+      user,
+    );
   }
 
   @Get(':id/items')

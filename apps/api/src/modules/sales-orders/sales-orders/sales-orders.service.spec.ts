@@ -252,4 +252,105 @@ describe('SalesOrdersService', () => {
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
+
+  it('rejects illegal status transitions', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([{ ...orderRow, status: 'confirmed' }]),
+    );
+
+    await expect(
+      service.transition(
+        orderId,
+        { toStatus: 'pending' },
+        orgId,
+        orgUser,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects delivered when quantities are incomplete', async () => {
+    db.select
+      .mockReturnValueOnce(
+        thenable([{ ...orderRow, status: 'partially_delivered' }]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: 'soi-1',
+            sales_order_id: orderId,
+            product_id: null,
+            service_id: null,
+            description: 'Line',
+            quantity: '10.0000',
+            quantity_delivered: '4.0000',
+            unit_price: '1.0000',
+            tax_id: null,
+            line_total: '10.0000',
+            created_at: '2026-09-04 10:00:00.000',
+            updated_at: '2026-09-04 10:00:00.000',
+          },
+        ]),
+      );
+
+    await expect(
+      service.transition(
+        orderId,
+        { toStatus: 'delivered' },
+        orgId,
+        orgUser,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('transitions and writes status history', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([orderRow]))
+      .mockReturnValueOnce(
+        thenable([{ ...orderRow, status: 'confirmed' }]),
+      )
+      .mockReturnValueOnce(thenable([]));
+
+    const result = await service.transition(
+      orderId,
+      { toStatus: 'confirmed', notes: 'Go' },
+      orgId,
+      orgUser,
+    );
+
+    expect(db.update).toHaveBeenCalled();
+    expect(db.insert).toHaveBeenCalled();
+    expect(result.status).toBe('confirmed');
+  });
+
+  it('lists status history oldest first', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([orderRow]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: 'h1',
+            sales_order_id: orderId,
+            from_status: null,
+            to_status: 'pending',
+            changed_by: 'user-1',
+            changed_at: '2026-09-04 10:00:00.000',
+            notes: null,
+          },
+          {
+            id: 'h2',
+            sales_order_id: orderId,
+            from_status: 'pending',
+            to_status: 'confirmed',
+            changed_by: 'user-1',
+            changed_at: '2026-09-04 11:00:00.000',
+            notes: 'ok',
+          },
+        ]),
+      );
+
+    const history = await service.listStatusHistory(orderId, orgId, orgUser);
+    expect(history).toHaveLength(2);
+    expect(history[0].fromStatus).toBeNull();
+    expect(history[1].toStatus).toBe('confirmed');
+  });
 });

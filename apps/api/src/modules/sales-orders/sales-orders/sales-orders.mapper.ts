@@ -1,6 +1,7 @@
 import type { SalesOrderStatus } from './sales-order-statuses';
 import type { SalesOrderItemResponseDto } from './dto/sales-order-item.dto';
 import type { SalesOrderResponseDto } from './dto/sales-order-response.dto';
+import type { SalesOrderStatusHistoryResponseDto } from './dto/sales-order-status-history.dto';
 
 export type SalesOrderRow = {
   id: string;
@@ -82,5 +83,29 @@ export function toSalesOrderResponse(
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     ...(items !== undefined ? { items } : {}),
+  };
+}
+
+export type SalesOrderStatusHistoryRow = {
+  id: string;
+  sales_order_id: string;
+  from_status: string | null;
+  to_status: string;
+  changed_by: string | null;
+  changed_at: string;
+  notes: string | null;
+};
+
+export function toSalesOrderStatusHistoryResponse(
+  row: SalesOrderStatusHistoryRow,
+): SalesOrderStatusHistoryResponseDto {
+  return {
+    id: row.id,
+    salesOrderId: row.sales_order_id,
+    fromStatus: row.from_status as SalesOrderStatus | null,
+    toStatus: row.to_status as SalesOrderStatus,
+    changedBy: row.changed_by,
+    changedAt: row.changed_at,
+    notes: row.notes,
   };
 }
