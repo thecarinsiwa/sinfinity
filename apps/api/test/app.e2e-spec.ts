@@ -326,6 +326,12 @@ describe('AppController (e2e)', () => {
     expect(
       body.paths['/api/v1/purchase-orders/{id}/status-history'],
     ).toBeDefined();
+    expect(
+      body.paths['/api/v1/purchase-orders/{orderId}/payments'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/purchase-orders/{orderId}/payments/{paymentId}'],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
