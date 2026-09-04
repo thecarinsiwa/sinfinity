@@ -103,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET) smoke: Phase 0–3 tags and security scheme', async () => {
+  it('/docs-json (GET) smoke: Phase 0–4 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -140,6 +140,7 @@ describe('AppController (e2e)', () => {
         'Organisation',
         'Sécurité',
         'Documents',
+        'Catalogue',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(
