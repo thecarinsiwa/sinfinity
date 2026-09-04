@@ -11,8 +11,10 @@ import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { CrmModule } from './modules/crm/crm.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganisationModule } from './modules/organisation/organisation.module';
+import { QuotationsModule } from './modules/quotations/quotations.module';
 import { SecurityModule } from './modules/security/security.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { SuppliersModule } from './modules/suppliers/suppliers.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { SettingsModule } from './modules/settings/settings.module';
     DocumentsModule,
     CatalogueModule,
     CrmModule,
+    SuppliersModule,
+    QuotationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

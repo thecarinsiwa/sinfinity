@@ -103,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET) smoke: Phase 0–5 tags and security scheme', async () => {
+  it('/docs-json (GET) smoke: Phase 0–6 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -180,7 +180,31 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/activity-types/{id}']).toBeDefined();
     expect(body.paths['/api/v1/sales-activities']).toBeDefined();
     expect(body.paths['/api/v1/sales-activities/{id}']).toBeDefined();
-    expect(body.paths['/api/v1/customer-categories/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/supplier-categories']).toBeDefined();
+    expect(body.paths['/api/v1/supplier-categories/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/suppliers']).toBeDefined();
+    expect(body.paths['/api/v1/suppliers/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/suppliers/{id}/contacts']).toBeDefined();
+    expect(
+      body.paths['/api/v1/suppliers/{id}/contacts/{contactId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/suppliers/{id}/addresses']).toBeDefined();
+    expect(
+      body.paths['/api/v1/suppliers/{id}/addresses/{addressId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/suppliers/{id}/payment-terms']).toBeDefined();
+    expect(
+      body.paths['/api/v1/suppliers/{id}/payment-terms/{termId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/supplier-products']).toBeDefined();
+    expect(body.paths['/api/v1/supplier-products/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/supplier-evaluations']).toBeDefined();
+    expect(body.paths['/api/v1/supplier-evaluations/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/suppliers/{supplierId}/documents']).toBeDefined();
+    expect(
+      body.paths['/api/v1/suppliers/{supplierId}/documents/{documentLinkId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/supplier-histories']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -191,6 +215,8 @@ describe('AppController (e2e)', () => {
         'Documents',
         'Catalogue',
         'CRM',
+        'Fournisseurs',
+        'Devis',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(

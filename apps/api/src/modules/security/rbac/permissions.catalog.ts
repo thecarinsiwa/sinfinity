@@ -131,6 +131,7 @@ const SALES_PERMS = [
   'activities.write',
   'quotations.read',
   'quotations.write',
+  'quotations.approve',
   'sales_orders.read',
   'sales_orders.write',
   'catalog.read',
