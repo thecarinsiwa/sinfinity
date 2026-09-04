@@ -7,8 +7,14 @@ import { CurrenciesController } from './currencies/currencies.controller';
 import { CurrenciesService } from './currencies/currencies.service';
 import { ExchangeRatesController } from './exchange-rates/exchange-rates.controller';
 import { ExchangeRatesService } from './exchange-rates/exchange-rates.service';
+import { PaymentTermsController } from './payment-terms/payment-terms.controller';
+import { PaymentTermsService } from './payment-terms/payment-terms.service';
+import { ShippingTermsController } from './shipping-terms/shipping-terms.controller';
+import { ShippingTermsService } from './shipping-terms/shipping-terms.service';
 import { TaxesController } from './taxes/taxes.controller';
 import { TaxesService } from './taxes/taxes.service';
+import { UnitsController } from './units/units.controller';
+import { UnitsService } from './units/units.service';
 
 /**
  * Global reference data (countries, currencies, taxes, units, terms…).
@@ -20,6 +26,9 @@ import { TaxesService } from './taxes/taxes.service';
     CurrenciesController,
     ExchangeRatesController,
     TaxesController,
+    UnitsController,
+    PaymentTermsController,
+    ShippingTermsController,
   ],
   providers: [
     CountriesService,
@@ -27,6 +36,9 @@ import { TaxesService } from './taxes/taxes.service';
     CurrenciesService,
     ExchangeRatesService,
     TaxesService,
+    UnitsService,
+    PaymentTermsService,
+    ShippingTermsService,
   ],
 })
 export class SettingsModule {}
