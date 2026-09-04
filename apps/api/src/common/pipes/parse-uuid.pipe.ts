@@ -2,6 +2,7 @@ import {
   ArgumentMetadata,
   BadRequestException,
   Injectable,
+  Optional,
   PipeTransform,
 } from '@nestjs/common';
 
@@ -23,7 +24,11 @@ export class ParseUUIDPipe implements PipeTransform<
   string,
   string | undefined
 > {
-  constructor(private readonly options: ParseUUIDPipeOptions = {}) {}
+  private readonly options: ParseUUIDPipeOptions;
+
+  constructor(@Optional() options?: ParseUUIDPipeOptions) {
+    this.options = options ?? {};
+  }
 
   transform(value: string, metadata: ArgumentMetadata): string | undefined {
     if (value === undefined || value === null || value === '') {
