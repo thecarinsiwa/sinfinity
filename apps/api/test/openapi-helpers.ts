@@ -1,21 +1,35 @@
 import { SWAGGER_BEARER_AUTH } from '../src/config/constants';
 import type { SwaggerTagName } from '../src/config/swagger-tags';
 
-export type OpenApiPathItem = Record<
-  string,
-  {
-    tags?: string[];
-    security?: Array<Record<string, unknown[]>>;
-  }
->;
+export type OpenApiOperation = {
+  tags?: string[];
+  security?: Array<Record<string, unknown[]>>;
+  responses?: Record<string, { description?: string; content?: unknown }>;
+};
+
+export type OpenApiPathItem = Record<string, OpenApiOperation | undefined>;
 
 export type OpenApiDocument = {
   tags?: { name: string; description?: string }[];
   paths: Record<string, OpenApiPathItem>;
   components?: {
     securitySchemes?: Record<string, { type: string; scheme: string }>;
+    schemas?: Record<string, unknown>;
   };
 };
+
+/** Assert POST (or other) documents a success status and not HTTP 501. */
+export function expectImplementedResponse(
+  pathItem: OpenApiPathItem | undefined,
+  method: string,
+  successStatus: string,
+): void {
+  expect(pathItem).toBeDefined();
+  const operation = pathItem?.[method];
+  expect(operation).toBeDefined();
+  expect(operation?.responses?.[successStatus]).toBeDefined();
+  expect(operation?.responses?.['501']).toBeUndefined();
+}
 
 export function expectTaggedOperation(
   pathItem: OpenApiPathItem | undefined,

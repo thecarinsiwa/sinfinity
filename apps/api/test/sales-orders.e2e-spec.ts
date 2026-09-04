@@ -12,6 +12,7 @@ import { SWAGGER_TAG, SWAGGER_TAG_DEFINITIONS } from '../src/config/swagger-tags
 import { MYSQL_POOL } from '../src/database/database.constants';
 import { JwtAuthGuard } from '../src/modules/auth/jwt-auth.guard';
 import {
+  expectImplementedResponse,
   expectTagDefined,
   expectTaggedOperation,
   type OpenApiDocument,
@@ -74,7 +75,13 @@ describe('Phase 8 OpenAPI — Commandes clients (e2e)', () => {
     );
   });
 
-  it('tags sales-orders CRUD under Commandes clients', () => {
+  it('documents SalesOrderResponseDto schema', () => {
+    expect(
+      document.components?.schemas?.SalesOrderResponseDto,
+    ).toBeDefined();
+  });
+
+  it('tags sales-orders CRUD under Commandes clients with bearer', () => {
     expectTaggedOperation(
       document.paths['/api/v1/sales-orders'],
       'get',
@@ -102,7 +109,7 @@ describe('Phase 8 OpenAPI — Commandes clients (e2e)', () => {
     );
   });
 
-  it('tags items, transition and status-history', () => {
+  it('tags items, transition and status-history under Commandes clients', () => {
     expectTaggedOperation(
       document.paths['/api/v1/sales-orders/{id}/items'],
       'get',
@@ -116,6 +123,11 @@ describe('Phase 8 OpenAPI — Commandes clients (e2e)', () => {
     expectTaggedOperation(
       document.paths['/api/v1/sales-orders/{id}/items/{itemId}'],
       'patch',
+      SWAGGER_TAG.CommandesClients,
+    );
+    expectTaggedOperation(
+      document.paths['/api/v1/sales-orders/{id}/items/{itemId}'],
+      'delete',
       SWAGGER_TAG.CommandesClients,
     );
     expectTaggedOperation(
@@ -177,16 +189,17 @@ describe('Phase 8 OpenAPI — Commandes clients (e2e)', () => {
     );
   });
 
-  it('tags convert routes under Commandes clients', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/convert-to-order'],
-      'post',
-      SWAGGER_TAG.CommandesClients,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/convert'],
-      'post',
-      SWAGGER_TAG.CommandesClients,
-    );
+  it('tags convert routes as implemented Commandes clients operations (201, not 501)', () => {
+    for (const path of [
+      '/api/v1/quotations/{id}/convert-to-order',
+      '/api/v1/quotations/{id}/convert',
+    ] as const) {
+      expectTaggedOperation(
+        document.paths[path],
+        'post',
+        SWAGGER_TAG.CommandesClients,
+      );
+      expectImplementedResponse(document.paths[path], 'post', '201');
+    }
   });
 });

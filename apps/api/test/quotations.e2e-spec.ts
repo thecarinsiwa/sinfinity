@@ -12,6 +12,7 @@ import { SWAGGER_TAG, SWAGGER_TAG_DEFINITIONS } from '../src/config/swagger-tags
 import { MYSQL_POOL } from '../src/database/database.constants';
 import { JwtAuthGuard } from '../src/modules/auth/jwt-auth.guard';
 import {
+  expectImplementedResponse,
   expectTagDefined,
   expectTaggedOperation,
   type OpenApiDocument,
@@ -49,8 +50,9 @@ describe('Phase 7 OpenAPI — Devis (e2e)', () => {
     await app.close();
   });
 
-  it('registers Devis tag with description among Phase 0–7 tags', () => {
+  it('registers Devis tag with description among Phase 0–8 tags', () => {
     expectTagDefined(document, SWAGGER_TAG.Devis);
+    expectTagDefined(document, SWAGGER_TAG.CommandesClients);
     const devisTag = SWAGGER_TAG_DEFINITIONS.find(
       (tag) => tag.name === SWAGGER_TAG.Devis,
     );
@@ -212,16 +214,19 @@ describe('Phase 7 OpenAPI — Devis (e2e)', () => {
     );
   });
 
-  it('documents convert and convert-to-order under Commandes clients', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/convert-to-order'],
-      'post',
-      SWAGGER_TAG.CommandesClients,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/quotations/{id}/convert'],
-      'post',
-      SWAGGER_TAG.CommandesClients,
-    );
+  it('documents convert and convert-to-order as real Commandes clients ops (201, not 501 stub)', () => {
+    for (const path of [
+      '/api/v1/quotations/{id}/convert-to-order',
+      '/api/v1/quotations/{id}/convert',
+    ] as const) {
+      expectTaggedOperation(
+        document.paths[path],
+        'post',
+        SWAGGER_TAG.CommandesClients,
+      );
+      expectImplementedResponse(document.paths[path], 'post', '201');
+      // Still under quotations path but not the Devis tag alone as a stub.
+      expect(document.paths[path]?.post?.tags).not.toEqual(['Devis']);
+    }
   });
 });
