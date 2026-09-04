@@ -126,8 +126,10 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/units']).toBeDefined();
     expect(body.paths['/api/v1/payment-terms']).toBeDefined();
     expect(body.paths['/api/v1/shipping-terms']).toBeDefined();
+    expect(body.paths['/api/v1/organizations']).toBeDefined();
     expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
+    expect(body.tags?.some((tag) => tag.name === 'Organisation')).toBe(true);
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
         type: 'http',

@@ -23,6 +23,10 @@ export function setupSwagger(
       'Settings',
       'Global reference data: geography, currencies, taxes, units, commercial terms',
     )
+    .addTag(
+      'Organisation',
+      'Tenants, branches, users and organization-level settings',
+    )
     .addBearerAuth(
       {
         type: 'http',

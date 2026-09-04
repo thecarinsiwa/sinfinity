@@ -6,6 +6,7 @@ import { CommonModule } from './common/common.module';
 import { validateEnv } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
+import { OrganisationModule } from './modules/organisation/organisation.module';
 import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     DatabaseModule,
     HealthModule,
     SettingsModule,
+    OrganisationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

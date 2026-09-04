@@ -7,6 +7,9 @@ export type AuthUser = {
   organizationId: string;
   email?: string;
   permissions?: string[];
+  /** Platform operator — required for creating organizations. */
+  isSuperAdmin?: boolean;
+  sessionId?: string;
 };
 
 export type AuthenticatedRequest = {
