@@ -107,4 +107,24 @@ describe('CountriesService', () => {
       service.create({ code: 'CD', name: 'X' }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
+
+  it('updates a country', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([countryRow]))
+      .mockReturnValueOnce(
+        thenable([{ ...countryRow, name: 'DR Congo', phone_code: '+243' }]),
+      );
+    db.update.mockReturnValue(thenable(undefined));
+
+    const updated = await service.update(countryRow.id, { name: 'DR Congo' });
+    expect(updated.name).toBe('DR Congo');
+  });
+
+  it('removes a country', async () => {
+    db.select.mockReturnValue(thenable([countryRow]));
+    db.delete.mockReturnValue(thenable(undefined));
+
+    await service.remove(countryRow.id);
+    expect(db.delete).toHaveBeenCalled();
+  });
 });

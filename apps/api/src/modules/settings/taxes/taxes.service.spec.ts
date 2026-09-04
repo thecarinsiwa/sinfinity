@@ -94,4 +94,15 @@ describe('TaxesService', () => {
       NotFoundException,
     );
   });
+
+  it('updates a tax rate as string', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([taxRow]))
+      .mockReturnValueOnce(thenable([{ ...taxRow, rate: '18.0000' }]));
+    db.update.mockReturnValue(thenable(undefined));
+
+    const updated = await service.update(taxRow.id, { rate: '18.0000' });
+    expect(updated.rate).toBe('18.0000');
+    expect(typeof updated.rate).toBe('string');
+  });
 });

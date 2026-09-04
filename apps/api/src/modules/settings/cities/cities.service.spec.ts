@@ -7,8 +7,7 @@ function thenable<T>(value: T): Thenable<T> {
   const chain: Thenable<T> = {
     then: (onFulfilled, onRejected) =>
       Promise.resolve(value).then(onFulfilled, onRejected),
-  };
-
+  } as Thenable<T>;
   const self = () => chain;
   chain.from = jest.fn(self);
   chain.where = jest.fn(self);
@@ -49,6 +48,22 @@ describe('CitiesService', () => {
       delete: jest.fn(),
     };
     service = new CitiesService(db as never);
+  });
+
+  it('lists cities filtered by countryId', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([cityRow]))
+      .mockReturnValueOnce(thenable([{ total: 1 }]));
+
+    const result = await service.findAll({
+      page: 1,
+      pageSize: 20,
+      order: 'asc',
+      countryId,
+    });
+
+    expect(result.data[0].countryId).toBe(countryId);
+    expect(result.meta.total).toBe(1);
   });
 
   it('lists cities filtered by countryCode via join', async () => {
@@ -100,5 +115,31 @@ describe('CitiesService', () => {
 
     expect(created.countryId).toBe(countryId);
     expect(created.region).toBeNull();
+  });
+
+  it('updates a city', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([cityRow]))
+      .mockReturnValueOnce(thenable([]))
+      .mockReturnValueOnce(
+        thenable([{ ...cityRow, name: 'Lubumbashi', region: 'Haut-Katanga' }]),
+      );
+    db.update.mockReturnValue(thenable(undefined));
+
+    const updated = await service.update(cityRow.id, {
+      name: 'Lubumbashi',
+      region: 'Haut-Katanga',
+    });
+
+    expect(updated.name).toBe('Lubumbashi');
+    expect(updated.region).toBe('Haut-Katanga');
+  });
+
+  it('removes a city', async () => {
+    db.select.mockReturnValue(thenable([cityRow]));
+    db.delete.mockReturnValue(thenable(undefined));
+
+    await service.remove(cityRow.id);
+    expect(db.delete).toHaveBeenCalled();
   });
 });
