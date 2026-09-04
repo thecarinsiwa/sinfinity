@@ -31,4 +31,11 @@ describe('permissions.catalog', () => {
       PERMISSION_CATALOG.length,
     );
   });
+
+  it('gives SALES catalog.read and catalog.write', () => {
+    const sales = SYSTEM_ROLES.find((r) => r.code === 'SALES')!;
+    const codes = new Set(resolveRolePermissionCodes(sales));
+    expect(codes.has('catalog.read')).toBe(true);
+    expect(codes.has('catalog.write')).toBe(true);
+  });
 });
