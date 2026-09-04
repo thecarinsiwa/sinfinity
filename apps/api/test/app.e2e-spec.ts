@@ -196,6 +196,13 @@ describe('AppController (e2e)', () => {
     ).toBeDefined();
     expect(body.paths['/api/v1/supplier-products']).toBeDefined();
     expect(body.paths['/api/v1/supplier-products/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/supplier-evaluations']).toBeDefined();
+    expect(body.paths['/api/v1/supplier-evaluations/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/suppliers/{supplierId}/documents']).toBeDefined();
+    expect(
+      body.paths['/api/v1/suppliers/{supplierId}/documents/{documentLinkId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/supplier-histories']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
