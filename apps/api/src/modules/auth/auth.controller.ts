@@ -24,6 +24,7 @@ import {
   type AuthUser,
 } from '../../common';
 import { SWAGGER_BEARER_AUTH } from '../../config/constants';
+import { SWAGGER_TAG } from '../../config/swagger-tags';
 import { AuthService } from './auth.service';
 import {
   AuthMeResponseDto,
@@ -34,7 +35,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
-@ApiTags('Auth')
+@ApiTags(SWAGGER_TAG.Auth)
 @SkipAudit()
 @Controller('auth')
 export class AuthController {

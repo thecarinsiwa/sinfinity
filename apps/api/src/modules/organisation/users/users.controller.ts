@@ -35,6 +35,7 @@ import {
   type PaginatedResponseDto,
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
+import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -45,7 +46,7 @@ import {
 } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
-@ApiTags('Organisation')
+@ApiTags(SWAGGER_TAG.Organisation)
 @ApiBearerAuth(SWAGGER_BEARER_AUTH)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')

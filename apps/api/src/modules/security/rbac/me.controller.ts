@@ -14,6 +14,7 @@ import {
   type AuthUser,
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
+import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { PermissionsLoader } from '../../auth/permissions.loader';
 
 export class MePermissionsResponseDto {
@@ -21,7 +22,7 @@ export class MePermissionsResponseDto {
   permissions!: string[];
 }
 
-@ApiTags('Sécurité')
+@ApiTags(SWAGGER_TAG.Securite)
 @ApiBearerAuth(SWAGGER_BEARER_AUTH)
 @UseGuards(JwtAuthGuard)
 @Controller('me')

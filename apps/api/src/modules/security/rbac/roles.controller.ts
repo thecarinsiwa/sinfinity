@@ -36,6 +36,7 @@ import {
   type PaginatedResponseDto,
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
+import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { ListRolesQueryDto } from './dto/list-roles-query.dto';
 import {
@@ -46,7 +47,7 @@ import { SetRolePermissionsDto } from './dto/set-role-permissions.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { RolesService } from './roles.service';
 
-@ApiTags('Sécurité')
+@ApiTags(SWAGGER_TAG.Securite)
 @ApiBearerAuth(SWAGGER_BEARER_AUTH)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller()

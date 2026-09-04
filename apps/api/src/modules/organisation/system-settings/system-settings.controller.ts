@@ -34,6 +34,7 @@ import {
   type PaginatedResponseDto,
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
+import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { ListSystemSettingsQueryDto } from './dto/list-system-settings-query.dto';
 import { SystemSettingResponseDto } from './dto/system-setting-response.dto';
 import {
@@ -53,7 +54,7 @@ class SystemSettingKeyParam {
   key!: string;
 }
 
-@ApiTags('Organisation')
+@ApiTags(SWAGGER_TAG.Organisation)
 @ApiBearerAuth(SWAGGER_BEARER_AUTH)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('system-settings')

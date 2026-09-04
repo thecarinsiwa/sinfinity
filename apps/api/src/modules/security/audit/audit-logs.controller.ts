@@ -17,11 +17,12 @@ import {
   type PaginatedResponseDto,
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
+import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { AuditService } from './audit.service';
 import { AuditLogResponseDto } from './dto/audit-log-response.dto';
 import { ListAuditLogsQueryDto } from './dto/list-audit-logs-query.dto';
 
-@ApiTags('Sécurité')
+@ApiTags(SWAGGER_TAG.Securite)
 @ApiBearerAuth(SWAGGER_BEARER_AUTH)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('audit-logs')

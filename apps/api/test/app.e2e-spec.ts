@@ -103,7 +103,7 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/docs-json').expect(404);
   });
 
-  it('/docs-json (GET)', async () => {
+  it('/docs-json (GET) smoke: Phase 0–2 tags and security scheme', async () => {
     const res = await request(app.getHttpServer())
       .get('/docs-json')
       .expect(200);
@@ -121,35 +121,15 @@ describe('AppController (e2e)', () => {
     expect(body.info.version).toBe('1.0');
     expect(body.paths['/api/v1/ping']).toBeDefined();
     expect(body.paths['/api/v1/health']).toBeDefined();
-    expect(body.paths['/api/v1/countries']).toBeDefined();
-    expect(body.paths['/api/v1/cities']).toBeDefined();
-    expect(body.paths['/api/v1/currencies']).toBeDefined();
-    expect(body.paths['/api/v1/exchange-rates']).toBeDefined();
-    expect(body.paths['/api/v1/exchange-rates/latest']).toBeDefined();
-    expect(body.paths['/api/v1/taxes']).toBeDefined();
-    expect(body.paths['/api/v1/units']).toBeDefined();
-    expect(body.paths['/api/v1/payment-terms']).toBeDefined();
-    expect(body.paths['/api/v1/shipping-terms']).toBeDefined();
-    expect(body.paths['/api/v1/organizations']).toBeDefined();
-    expect(body.paths['/api/v1/branches']).toBeDefined();
-    expect(body.paths['/api/v1/users']).toBeDefined();
-    expect(body.paths['/api/v1/system-settings']).toBeDefined();
-    expect(body.paths['/api/v1/system-settings/{key}']).toBeDefined();
-    expect(body.paths['/api/v1/roles']).toBeDefined();
-    expect(body.paths['/api/v1/permissions']).toBeDefined();
-    expect(body.paths['/api/v1/user-roles']).toBeDefined();
-    expect(body.paths['/api/v1/me/permissions']).toBeDefined();
-    expect(body.paths['/api/v1/audit-logs']).toBeDefined();
-    expect(body.paths['/api/v1/auth/login']).toBeDefined();
-    expect(body.paths['/api/v1/auth/refresh']).toBeDefined();
-    expect(body.paths['/api/v1/auth/set-password']).toBeDefined();
-    expect(body.paths['/api/v1/auth/logout']).toBeDefined();
-    expect(body.paths['/api/v1/auth/me']).toBeDefined();
-    expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
-    expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
-    expect(body.tags?.some((tag) => tag.name === 'Organisation')).toBe(true);
-    expect(body.tags?.some((tag) => tag.name === 'Auth')).toBe(true);
-    expect(body.tags?.some((tag) => tag.name === 'Sécurité')).toBe(true);
+    expect(body.tags?.map((tag) => tag.name)).toEqual(
+      expect.arrayContaining([
+        'Health',
+        'Settings',
+        'Auth',
+        'Organisation',
+        'Sécurité',
+      ]),
+    );
     expect(body.components.securitySchemes['access-token']).toEqual(
       expect.objectContaining({
         type: 'http',

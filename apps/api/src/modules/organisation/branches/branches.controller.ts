@@ -35,13 +35,14 @@ import {
   type PaginatedResponseDto,
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
+import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { BranchesService } from './branches.service';
 import { BranchResponseDto } from './dto/branch-response.dto';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { ListBranchesQueryDto } from './dto/list-branches-query.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 
-@ApiTags('Organisation')
+@ApiTags(SWAGGER_TAG.Organisation)
 @ApiBearerAuth(SWAGGER_BEARER_AUTH)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('branches')

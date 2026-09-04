@@ -34,11 +34,12 @@ import {
   type PaginatedResponseDto,
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
+import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { ListUserRolesQueryDto } from './dto/list-user-roles-query.dto';
 import { CreateUserRoleDto, UserRoleResponseDto } from './dto/user-role.dto';
 import { UserRolesService } from './user-roles.service';
 
-@ApiTags('Sécurité')
+@ApiTags(SWAGGER_TAG.Securite)
 @ApiBearerAuth(SWAGGER_BEARER_AUTH)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('user-roles')
