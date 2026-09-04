@@ -205,6 +205,30 @@ describe('AppController (e2e)', () => {
       body.paths['/api/v1/suppliers/{supplierId}/documents/{documentLinkId}'],
     ).toBeDefined();
     expect(body.paths['/api/v1/supplier-histories']).toBeDefined();
+    expect(body.paths['/api/v1/quotation-statuses']).toBeDefined();
+    expect(body.paths['/api/v1/quotation-statuses/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/quotations']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/items']).toBeDefined();
+    expect(
+      body.paths['/api/v1/quotations/{id}/items/{itemId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/terms']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/versions']).toBeDefined();
+    expect(
+      body.paths['/api/v1/quotations/{id}/versions/{versionNumber}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/revise']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/approvals']).toBeDefined();
+    expect(
+      body.paths['/api/v1/quotations/{id}/submit-for-approval'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/approve']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/reject']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/send']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/mark-accepted']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/mark-rejected']).toBeDefined();
+    expect(body.paths['/api/v1/quotations/{id}/convert']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
