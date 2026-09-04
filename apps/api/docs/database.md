@@ -97,6 +97,11 @@ Le dossier `storage/` est gitignored. Interface `StorageService` prête pour un 
 `POST/DELETE /document-links` + `GET /document-links?entityType&entityId`.
 `entity_type` et `role` sont validés contre une allowlist (`document-links.catalog.ts`).
 
+## Contracts
+
+`CRUD /contracts` + `/contracts/:id/items`. Statuts `draft|active|expired|terminated`.
+`contract_number` unique par org. Permissions `contracts.read` / `contracts.write`.
+
 ## Workflow après un changement de schéma
 
 Toujours dans cet ordre — **jamais l’inverse** :

@@ -133,6 +133,7 @@ const SALES_PERMS = [
   'documents.read',
   'documents.write',
   'contracts.read',
+  'contracts.write',
   'tasks.read',
   'tasks.write',
 ];
@@ -151,6 +152,8 @@ const PROCUREMENT_PERMS = [
   'catalog.read',
   'documents.read',
   'documents.write',
+  'contracts.read',
+  'contracts.write',
   'tasks.read',
   'tasks.write',
 ];

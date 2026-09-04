@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import type { Env } from '../../config/env.validation';
+import { ContractsController } from './contracts/contracts.controller';
+import { ContractsService } from './contracts/contracts.service';
 import { DocumentTypesController } from './document-types/document-types.controller';
 import { DocumentTypesSeedService } from './document-types/document-types-seed.service';
 import { DocumentTypesService } from './document-types/document-types.service';
@@ -17,12 +19,14 @@ import { STORAGE_SERVICE } from './storage/storage.types';
     DocumentTypesController,
     DocumentsController,
     DocumentLinksController,
+    ContractsController,
   ],
   providers: [
     DocumentTypesService,
     DocumentTypesSeedService,
     DocumentsService,
     DocumentLinksService,
+    ContractsService,
     LocalDiskStorageService,
     {
       provide: STORAGE_SERVICE,
@@ -44,6 +48,7 @@ import { STORAGE_SERVICE } from './storage/storage.types';
     DocumentTypesSeedService,
     DocumentsService,
     DocumentLinksService,
+    ContractsService,
     STORAGE_SERVICE,
   ],
 })
