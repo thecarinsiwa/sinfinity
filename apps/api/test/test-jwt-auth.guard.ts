@@ -1,6 +1,9 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 
-/** E2e stub: injects a privileged user without verifying JWT. */
+/**
+ * E2e stub: injects a privileged user without verifying JWT.
+ * Permissions cover Phase 1–3 surfaces exercised under JwtAuthGuard + PermissionsGuard.
+ */
 export class TestJwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<{
@@ -24,6 +27,7 @@ export class TestJwtAuthGuard implements CanActivate {
         'audit.read',
         'system_settings.read',
         'system_settings.write',
+        // Phase 3 — Documents
         'documents.read',
         'documents.write',
         'contracts.read',
