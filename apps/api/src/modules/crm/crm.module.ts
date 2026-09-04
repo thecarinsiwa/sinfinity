@@ -7,6 +7,8 @@ import { LeadSourcesController } from './lead-sources/lead-sources.controller';
 import { LeadSourcesService } from './lead-sources/lead-sources.service';
 import { LeadsController } from './leads/leads.controller';
 import { LeadsService } from './leads/leads.service';
+import { OpportunitiesController } from './opportunities/opportunities.controller';
+import { OpportunitiesService } from './opportunities/opportunities.service';
 
 @Module({
   controllers: [
@@ -14,18 +16,21 @@ import { LeadsService } from './leads/leads.service';
     CustomersController,
     LeadSourcesController,
     LeadsController,
+    OpportunitiesController,
   ],
   providers: [
     CustomerCategoriesService,
     CustomersService,
     LeadSourcesService,
     LeadsService,
+    OpportunitiesService,
   ],
   exports: [
     CustomerCategoriesService,
     CustomersService,
     LeadSourcesService,
     LeadsService,
+    OpportunitiesService,
   ],
 })
 export class CrmModule {}
