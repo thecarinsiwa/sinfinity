@@ -14,7 +14,11 @@ import { DRIZZLE } from '../../database/database.constants';
 import type { DrizzleDB } from '../../database/database.types';
 import { login_logs, user_sessions, users } from '../../database/schema';
 import { nowMysqlDateTime } from '../settings/utils/mysql-datetime';
-import type { AccessTokenPayload } from './auth.types';
+import {
+  PASSWORD_RESET_PURPOSE,
+  type AccessTokenPayload,
+  type PasswordResetTokenPayload,
+} from './auth.types';
 import {
   AuthMeResponseDto,
   AuthTokensResponseDto,
@@ -165,6 +169,47 @@ export class AuthService {
       permissions,
       isSuperAdmin: user.isSuperAdmin === true,
     };
+  }
+
+  async setPassword(token: string, password: string): Promise<void> {
+    let payload: PasswordResetTokenPayload;
+    try {
+      payload = await this.jwt.verifyAsync<PasswordResetTokenPayload>(token, {
+        secret: this.config.get('JWT_ACCESS_SECRET', { infer: true }),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired set-password token');
+    }
+
+    if (payload.purpose !== PASSWORD_RESET_PURPOSE || !payload.sub) {
+      throw new UnauthorizedException('Invalid set-password token');
+    }
+
+    const [row] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, payload.sub), isNull(users.deleted_at)))
+      .limit(1);
+
+    if (!row) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const passwordHash = await this.passwords.hash(password);
+    await this.db
+      .update(users)
+      .set({
+        password_hash: passwordHash,
+        updated_at: nowMysqlDateTime(),
+      })
+      .where(eq(users.id, row.id));
+
+    await this.db
+      .update(user_sessions)
+      .set({ revoked_at: nowMysqlDateTime() })
+      .where(
+        and(eq(user_sessions.user_id, row.id), isNull(user_sessions.revoked_at)),
+      );
   }
 
   async buildAuthUserFromAccessToken(

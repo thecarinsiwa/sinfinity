@@ -132,8 +132,10 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/shipping-terms']).toBeDefined();
     expect(body.paths['/api/v1/organizations']).toBeDefined();
     expect(body.paths['/api/v1/branches']).toBeDefined();
+    expect(body.paths['/api/v1/users']).toBeDefined();
     expect(body.paths['/api/v1/auth/login']).toBeDefined();
     expect(body.paths['/api/v1/auth/refresh']).toBeDefined();
+    expect(body.paths['/api/v1/auth/set-password']).toBeDefined();
     expect(body.paths['/api/v1/auth/logout']).toBeDefined();
     expect(body.paths['/api/v1/auth/me']).toBeDefined();
     expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);

@@ -30,6 +30,7 @@ import {
 } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @ApiTags('Auth')
@@ -61,6 +62,18 @@ export class AuthController {
     @Req() request: Request,
   ): Promise<AuthTokensResponseDto> {
     return this.authService.refresh(dto.refreshToken, request);
+  }
+
+  @Public()
+  @Post('set-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Set password with invite / reset token',
+    description: 'Accepts a JWT with purpose=password_reset. Revokes sessions.',
+  })
+  @ApiUnauthorizedResponse({ type: ErrorResponseDto })
+  setPassword(@Body() dto: SetPasswordDto): Promise<void> {
+    return this.authService.setPassword(dto.token, dto.password);
   }
 
   @UseGuards(JwtAuthGuard)

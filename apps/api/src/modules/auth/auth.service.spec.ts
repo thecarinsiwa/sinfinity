@@ -136,4 +136,28 @@ describe('AuthService', () => {
     });
     expect(me).not.toHaveProperty('password_hash');
   });
+
+  it('sets password from a valid reset token and revokes sessions', async () => {
+    jwt.verifyAsync.mockResolvedValue({
+      sub: userRow.id,
+      organizationId: userRow.organization_id,
+      email: userRow.email,
+      purpose: 'password_reset',
+    });
+    db.select.mockReturnValue(thenable([{ id: userRow.id }]));
+    passwords.hash.mockResolvedValue('new-hash');
+
+    await service.setPassword('reset.jwt', 'NewPass123!');
+
+    expect(passwords.hash).toHaveBeenCalledWith('NewPass123!');
+    expect(db.update).toHaveBeenCalled();
+  });
+
+  it('rejects invalid set-password tokens', async () => {
+    jwt.verifyAsync.mockRejectedValue(new Error('jwt expired'));
+
+    await expect(
+      service.setPassword('bad.jwt', 'NewPass123!'),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
 });

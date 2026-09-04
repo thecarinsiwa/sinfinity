@@ -11,7 +11,10 @@ import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
 import type { AuthenticatedRequest } from '../../common/types/auth-user.type';
 import type { Env } from '../../config/env.validation';
 import { AuthService } from './auth.service';
-import type { AccessTokenPayload } from './auth.types';
+import {
+  PASSWORD_RESET_PURPOSE,
+  type AccessTokenPayload,
+} from './auth.types';
 
 /**
  * Validates Bearer JWT access tokens and populates `request.user`.
@@ -45,13 +48,21 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing bearer token');
     }
 
-    let payload: AccessTokenPayload;
+    let payload: AccessTokenPayload & { purpose?: string };
     try {
-      payload = await this.jwt.verifyAsync<AccessTokenPayload>(token, {
+      payload = await this.jwt.verifyAsync<
+        AccessTokenPayload & { purpose?: string }
+      >(token, {
         secret: this.config.get('JWT_ACCESS_SECRET', { infer: true }),
       });
     } catch {
       throw new UnauthorizedException('Invalid or expired access token');
+    }
+
+    if (payload.purpose === PASSWORD_RESET_PURPOSE) {
+      throw new UnauthorizedException(
+        'Password reset tokens cannot be used as access tokens',
+      );
     }
 
     request.user = await this.authService.buildAuthUserFromAccessToken(payload);
