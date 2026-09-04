@@ -127,6 +127,7 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/payment-terms']).toBeDefined();
     expect(body.paths['/api/v1/shipping-terms']).toBeDefined();
     expect(body.paths['/api/v1/organizations']).toBeDefined();
+    expect(body.paths['/api/v1/branches']).toBeDefined();
     expect(body.tags?.some((tag) => tag.name === 'Health')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Settings')).toBe(true);
     expect(body.tags?.some((tag) => tag.name === 'Organisation')).toBe(true);
