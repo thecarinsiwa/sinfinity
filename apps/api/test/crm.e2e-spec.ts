@@ -45,6 +45,21 @@ const CRM_CRUD = [
   },
 ] as const;
 
+const CUSTOMER_NESTED = [
+  {
+    collection: '/api/v1/customers/{id}/contacts',
+    item: '/api/v1/customers/{id}/contacts/{contactId}',
+  },
+  {
+    collection: '/api/v1/customers/{id}/addresses',
+    item: '/api/v1/customers/{id}/addresses/{addressId}',
+  },
+  {
+    collection: '/api/v1/customers/{id}/notes',
+    item: '/api/v1/customers/{id}/notes/{noteId}',
+  },
+] as const;
+
 describe('Phase 5 OpenAPI — CRM (e2e)', () => {
   let app: INestApplication<App>;
   let document: OpenApiDocument;
@@ -84,9 +99,13 @@ describe('Phase 5 OpenAPI — CRM (e2e)', () => {
     expect(crmTag).toBeDefined();
     const tag = document.tags?.find((entry) => entry.name === SWAGGER_TAG.Crm);
     expect(tag?.description).toBe(crmTag?.description);
+
+    for (const def of SWAGGER_TAG_DEFINITIONS) {
+      expectTagDefined(document, def.name);
+    }
   });
 
-  it('exposes bearer security scheme', () => {
+  it('exposes bearer access-token security scheme', () => {
     expect(document.components?.securitySchemes?.[SWAGGER_BEARER_AUTH]).toEqual(
       expect.objectContaining({
         type: 'http',
@@ -95,82 +114,99 @@ describe('Phase 5 OpenAPI — CRM (e2e)', () => {
     );
   });
 
-  it.each(CRM_CRUD)(
-    'tags CRUD $collection under CRM with bearer',
-    ({ collection, item }) => {
-      expectTaggedOperation(document.paths[collection], 'get', SWAGGER_TAG.Crm);
-      expectTaggedOperation(document.paths[collection], 'post', SWAGGER_TAG.Crm);
-      expectTaggedOperation(document.paths[item], 'get', SWAGGER_TAG.Crm);
-      expectTaggedOperation(document.paths[item], 'patch', SWAGGER_TAG.Crm);
-      expectTaggedOperation(document.paths[item], 'delete', SWAGGER_TAG.Crm);
-    },
-  );
-
-  it('tags customer nested contacts/addresses/notes under CRM', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/customers/{id}/contacts'],
-      'get',
-      SWAGGER_TAG.Crm,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/customers/{id}/contacts/{contactId}'],
-      'patch',
-      SWAGGER_TAG.Crm,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/customers/{id}/addresses'],
-      'post',
-      SWAGGER_TAG.Crm,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/customers/{id}/notes/{noteId}'],
-      'delete',
-      SWAGGER_TAG.Crm,
+  describe('core collections', () => {
+    it.each(CRM_CRUD)(
+      'documents CRUD $collection with CRM tag and Bearer',
+      ({ collection, item }) => {
+        expectTaggedOperation(
+          document.paths[collection],
+          'get',
+          SWAGGER_TAG.Crm,
+        );
+        expectTaggedOperation(
+          document.paths[collection],
+          'post',
+          SWAGGER_TAG.Crm,
+        );
+        expectTaggedOperation(document.paths[item], 'get', SWAGGER_TAG.Crm);
+        expectTaggedOperation(document.paths[item], 'patch', SWAGGER_TAG.Crm);
+        expectTaggedOperation(document.paths[item], 'delete', SWAGGER_TAG.Crm);
+      },
     );
   });
 
-  it('tags lead convert under CRM with bearer', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/leads/{id}/convert'],
-      'post',
-      SWAGGER_TAG.Crm,
+  describe('customers nested', () => {
+    it.each(CUSTOMER_NESTED)(
+      'documents nested $collection with CRM tag and Bearer',
+      ({ collection, item }) => {
+        expectTaggedOperation(
+          document.paths[collection],
+          'get',
+          SWAGGER_TAG.Crm,
+        );
+        expectTaggedOperation(
+          document.paths[collection],
+          'post',
+          SWAGGER_TAG.Crm,
+        );
+        expectTaggedOperation(document.paths[item], 'patch', SWAGGER_TAG.Crm);
+        expectTaggedOperation(document.paths[item], 'delete', SWAGGER_TAG.Crm);
+      },
     );
   });
 
-  it('tags opportunity items under CRM', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/opportunities/{id}/items'],
-      'get',
-      SWAGGER_TAG.Crm,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/opportunities/{id}/items'],
-      'post',
-      SWAGGER_TAG.Crm,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/opportunities/{id}/items/{itemId}'],
-      'patch',
-      SWAGGER_TAG.Crm,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/opportunities/{id}/items/{itemId}'],
-      'delete',
-      SWAGGER_TAG.Crm,
-    );
+  describe('leads convert', () => {
+    it('documents POST /leads/{id}/convert with CRM tag and Bearer', () => {
+      expectTaggedOperation(
+        document.paths['/api/v1/leads/{id}/convert'],
+        'post',
+        SWAGGER_TAG.Crm,
+      );
+    });
   });
 
-  it('tags activity-types as read-only under CRM', () => {
-    expectTaggedOperation(
-      document.paths['/api/v1/activity-types'],
-      'get',
-      SWAGGER_TAG.Crm,
-    );
-    expectTaggedOperation(
-      document.paths['/api/v1/activity-types/{id}'],
-      'get',
-      SWAGGER_TAG.Crm,
-    );
-    expect(document.paths['/api/v1/activity-types']?.post).toBeUndefined();
+  describe('opportunity items', () => {
+    it('documents nested items CRUD with CRM tag and Bearer', () => {
+      expectTaggedOperation(
+        document.paths['/api/v1/opportunities/{id}/items'],
+        'get',
+        SWAGGER_TAG.Crm,
+      );
+      expectTaggedOperation(
+        document.paths['/api/v1/opportunities/{id}/items'],
+        'post',
+        SWAGGER_TAG.Crm,
+      );
+      expectTaggedOperation(
+        document.paths['/api/v1/opportunities/{id}/items/{itemId}'],
+        'patch',
+        SWAGGER_TAG.Crm,
+      );
+      expectTaggedOperation(
+        document.paths['/api/v1/opportunities/{id}/items/{itemId}'],
+        'delete',
+        SWAGGER_TAG.Crm,
+      );
+    });
+  });
+
+  describe('activity types', () => {
+    it('documents activity-types as read-only under CRM with Bearer', () => {
+      expectTaggedOperation(
+        document.paths['/api/v1/activity-types'],
+        'get',
+        SWAGGER_TAG.Crm,
+      );
+      expectTaggedOperation(
+        document.paths['/api/v1/activity-types/{id}'],
+        'get',
+        SWAGGER_TAG.Crm,
+      );
+      expect(document.paths['/api/v1/activity-types']?.post).toBeUndefined();
+      expect(document.paths['/api/v1/activity-types/{id}']?.patch).toBeUndefined();
+      expect(
+        document.paths['/api/v1/activity-types/{id}']?.delete,
+      ).toBeUndefined();
+    });
   });
 });
