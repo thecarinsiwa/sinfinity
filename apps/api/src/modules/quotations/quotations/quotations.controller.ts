@@ -21,6 +21,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import {
@@ -37,6 +38,11 @@ import {
 } from '../../../common';
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
 import { SWAGGER_TAG } from '../../../config/swagger-tags';
+import {
+  ConvertNotImplementedDto,
+  DecisionCommentsDto,
+  QuotationApprovalResponseDto,
+} from '../quotation-approvals/dto/quotation-approval.dto';
 import {
   QuotationVersionResponseDto,
   QuotationVersionSummaryDto,
@@ -191,6 +197,130 @@ export class QuotationsController {
     @CurrentUser() user?: AuthUser,
   ): Promise<QuotationResponseDto> {
     return this.quotationsService.revise(id, dto, organizationId, user);
+  }
+
+  // --- Approvals & workflow ---
+
+  @Get(':id/approvals')
+  @RequirePermissions('quotations.read')
+  @ApiOperation({ summary: 'List quotation approval decisions' })
+  @ApiOkResponse({ type: [QuotationApprovalResponseDto] })
+  listApprovals(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto[]> {
+    return this.quotationsService.listApprovals(id, organizationId, user);
+  }
+
+  @Post(':id/submit-for-approval')
+  @RequirePermissions('quotations.write')
+  @ApiOperation({
+    summary: 'Submit quotation for internal approval',
+    description: 'DRAFT only. Fails if a pending approval already exists.',
+  })
+  @ApiCreatedResponse({ type: QuotationApprovalResponseDto })
+  @ApiConflictResponse({ type: ErrorResponseDto })
+  submitForApproval(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto> {
+    return this.quotationsService.submitForApproval(
+      id,
+      organizationId,
+      user,
+    );
+  }
+
+  @Post(':id/approve')
+  @RequirePermissions('quotations.approve')
+  @ApiOperation({ summary: 'Approve the pending quotation approval' })
+  @ApiOkResponse({ type: QuotationApprovalResponseDto })
+  approve(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: DecisionCommentsDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto> {
+    return this.quotationsService.approve(id, dto, organizationId, user);
+  }
+
+  @Post(':id/reject')
+  @RequirePermissions('quotations.approve')
+  @ApiOperation({
+    summary: 'Reject the pending quotation approval',
+    description: 'Internal rejection (not client mark-rejected).',
+  })
+  @ApiOkResponse({ type: QuotationApprovalResponseDto })
+  rejectApproval(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: DecisionCommentsDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto> {
+    return this.quotationsService.rejectApproval(
+      id,
+      dto,
+      organizationId,
+      user,
+    );
+  }
+
+  @Post(':id/send')
+  @RequirePermissions('quotations.write')
+  @ApiOperation({
+    summary: 'Send quotation to customer',
+    description:
+      'DRAFT → SENT. Freezes exchangeRate and sets issueDate (today if omitted). Blocked while approval is pending.',
+  })
+  @ApiOkResponse({ type: QuotationResponseDto })
+  send(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    return this.quotationsService.send(id, organizationId, user);
+  }
+
+  @Post(':id/mark-accepted')
+  @RequirePermissions('quotations.write')
+  @ApiOperation({ summary: 'Mark SENT quotation as ACCEPTED by customer' })
+  @ApiOkResponse({ type: QuotationResponseDto })
+  markAccepted(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    return this.quotationsService.markAccepted(id, organizationId, user);
+  }
+
+  @Post(':id/mark-rejected')
+  @RequirePermissions('quotations.write')
+  @ApiOperation({ summary: 'Mark SENT quotation as REJECTED by customer' })
+  @ApiOkResponse({ type: QuotationResponseDto })
+  markRejected(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    return this.quotationsService.markRejected(id, organizationId, user);
+  }
+
+  @Post(':id/convert')
+  @RequirePermissions('quotations.write')
+  @HttpCode(HttpStatus.NOT_IMPLEMENTED)
+  @ApiOperation({
+    summary: 'Convert accepted quotation to sales order (stub)',
+    description: 'Returns 501 until Phase 8 (sales orders).',
+  })
+  @ApiResponse({ status: 501, type: ConvertNotImplementedDto })
+  convert(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<never> {
+    return this.quotationsService.convert(id, organizationId, user);
   }
 
   // --- Items ---

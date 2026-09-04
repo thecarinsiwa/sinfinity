@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -25,8 +27,11 @@ import { DRIZZLE } from '../../../database/database.constants';
 import type { DrizzleDB } from '../../../database/database.types';
 import {
   customers,
+  exchange_rates,
   opportunities,
+  organizations,
   products,
+  quotation_approvals,
   quotation_items,
   quotation_statuses,
   quotation_terms,
@@ -40,7 +45,18 @@ import {
   throwDuplicateOrRethrow,
   throwFkOrRethrow,
 } from '../../settings/utils/mysql-errors';
-import { nowMysqlDateTime } from '../../settings/utils/mysql-datetime';
+import {
+  nowMysqlDateTime,
+  todayMysqlDate,
+} from '../../settings/utils/mysql-datetime';
+import {
+  DecisionCommentsDto,
+  QuotationApprovalResponseDto,
+} from '../quotation-approvals/dto/quotation-approval.dto';
+import {
+  toQuotationApprovalResponse,
+  type QuotationApprovalRow,
+} from '../quotation-approvals/quotation-approvals.mapper';
 import {
   QUOTATION_STATUS_CODE,
 } from '../quotation-statuses/quotation-statuses.catalog';
@@ -658,6 +674,328 @@ export class QuotationsService {
     });
 
     return this.findOne(quotationId, currentOrganizationId, user);
+  }
+
+  // --- Approvals & workflow ---
+
+  async listApprovals(
+    quotationId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto[]> {
+    await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    const rows = await this.db
+      .select()
+      .from(quotation_approvals)
+      .where(eq(quotation_approvals.quotation_id, quotationId))
+      .orderBy(desc(quotation_approvals.created_at), asc(quotation_approvals.id));
+    return (rows as QuotationApprovalRow[]).map(toQuotationApprovalResponse);
+  }
+
+  async submitForApproval(
+    quotationId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto> {
+    const quotation = await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    await this.assertDraft(quotation);
+
+    const pending = await this.findPendingApproval(quotationId);
+    if (pending) {
+      throw new ConflictException(
+        'A pending approval already exists for this quotation',
+      );
+    }
+
+    const id = createId();
+    await this.db.insert(quotation_approvals).values({
+      id,
+      quotation_id: quotationId,
+      status: 'pending',
+      approver_id: null,
+      decision_at: null,
+      comments: null,
+    });
+
+    return this.requireApproval(quotationId, id);
+  }
+
+  async approve(
+    quotationId: string,
+    dto: DecisionCommentsDto,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto> {
+    await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    const pending = await this.findPendingApproval(quotationId);
+    if (!pending) {
+      throw new BadRequestException(
+        'No pending approval found for this quotation',
+      );
+    }
+
+    await this.db
+      .update(quotation_approvals)
+      .set({
+        status: 'approved',
+        approver_id: user?.id ?? null,
+        decision_at: nowMysqlDateTime(),
+        comments: dto.comments ?? null,
+        updated_at: nowMysqlDateTime(),
+      })
+      .where(eq(quotation_approvals.id, pending.id));
+
+    return this.requireApproval(quotationId, pending.id);
+  }
+
+  async rejectApproval(
+    quotationId: string,
+    dto: DecisionCommentsDto,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationApprovalResponseDto> {
+    await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    const pending = await this.findPendingApproval(quotationId);
+    if (!pending) {
+      throw new BadRequestException(
+        'No pending approval found for this quotation',
+      );
+    }
+
+    await this.db
+      .update(quotation_approvals)
+      .set({
+        status: 'rejected',
+        approver_id: user?.id ?? null,
+        decision_at: nowMysqlDateTime(),
+        comments: dto.comments ?? null,
+        updated_at: nowMysqlDateTime(),
+      })
+      .where(eq(quotation_approvals.id, pending.id));
+
+    return this.requireApproval(quotationId, pending.id);
+  }
+
+  async send(
+    quotationId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    const quotation = await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    await this.assertDraft(quotation);
+
+    const pending = await this.findPendingApproval(quotationId);
+    if (pending) {
+      throw new BadRequestException(
+        'Cannot send while an approval is still pending',
+      );
+    }
+
+    const exchangeRate = await this.resolveExchangeRateForSend(quotation);
+    const issueDate = quotation.issue_date ?? todayMysqlDate();
+    const sentStatusId = await this.requireStatusIdByCode(
+      QUOTATION_STATUS_CODE.SENT,
+    );
+
+    await this.db
+      .update(quotations)
+      .set({
+        status_id: sentStatusId,
+        exchange_rate: exchangeRate,
+        issue_date: issueDate,
+        updated_at: nowMysqlDateTime(),
+        updated_by: user?.id ?? null,
+      })
+      .where(eq(quotations.id, quotationId));
+
+    return this.findOne(quotationId, currentOrganizationId, user);
+  }
+
+  async markAccepted(
+    quotationId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    return this.transitionFromSent(
+      quotationId,
+      QUOTATION_STATUS_CODE.ACCEPTED,
+      currentOrganizationId,
+      user,
+    );
+  }
+
+  async markRejected(
+    quotationId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    return this.transitionFromSent(
+      quotationId,
+      QUOTATION_STATUS_CODE.REJECTED,
+      currentOrganizationId,
+      user,
+    );
+  }
+
+  async convert(
+    quotationId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<never> {
+    await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    throw new HttpException(
+      {
+        message:
+          'Quotation to sales order conversion is not implemented yet (Phase 8)',
+        code: 'NOT_IMPLEMENTED',
+      },
+      HttpStatus.NOT_IMPLEMENTED,
+    );
+  }
+
+  private async transitionFromSent(
+    quotationId: string,
+    targetCode: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<QuotationResponseDto> {
+    const quotation = await this.requireQuotationAccess(
+      quotationId,
+      currentOrganizationId,
+      user,
+    );
+    const status = await this.loadStatus(quotation.status_id);
+    if (status?.code !== QUOTATION_STATUS_CODE.SENT) {
+      throw new BadRequestException(
+        `Quotation must be SENT to mark as ${targetCode}`,
+      );
+    }
+
+    const statusId = await this.requireStatusIdByCode(targetCode);
+    await this.db
+      .update(quotations)
+      .set({
+        status_id: statusId,
+        updated_at: nowMysqlDateTime(),
+        updated_by: user?.id ?? null,
+      })
+      .where(eq(quotations.id, quotationId));
+
+    return this.findOne(quotationId, currentOrganizationId, user);
+  }
+
+  private async resolveExchangeRateForSend(
+    quotation: QuotationRow,
+  ): Promise<string> {
+    if (quotation.exchange_rate != null && quotation.exchange_rate !== '') {
+      return quotation.exchange_rate;
+    }
+
+    if (!quotation.currency_id) {
+      return '1.00000000';
+    }
+
+    const [org] = await this.db
+      .select({
+        default_currency_id: organizations.default_currency_id,
+      })
+      .from(organizations)
+      .where(
+        and(
+          eq(organizations.id, quotation.organization_id),
+          isNull(organizations.deleted_at),
+        ),
+      )
+      .limit(1);
+
+    if (
+      org?.default_currency_id &&
+      org.default_currency_id === quotation.currency_id
+    ) {
+      return '1.00000000';
+    }
+
+    if (org?.default_currency_id) {
+      const [rate] = await this.db
+        .select({ rate: exchange_rates.rate })
+        .from(exchange_rates)
+        .where(
+          and(
+            eq(exchange_rates.from_currency_id, quotation.currency_id),
+            eq(exchange_rates.to_currency_id, org.default_currency_id),
+          ),
+        )
+        .orderBy(desc(exchange_rates.rate_date))
+        .limit(1);
+      if (rate?.rate) {
+        return rate.rate;
+      }
+    }
+
+    throw new BadRequestException(
+      'exchangeRate is required before send when currency differs from organization default and no rate is available',
+    );
+  }
+
+  private async findPendingApproval(
+    quotationId: string,
+  ): Promise<QuotationApprovalRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(quotation_approvals)
+      .where(
+        and(
+          eq(quotation_approvals.quotation_id, quotationId),
+          eq(quotation_approvals.status, 'pending'),
+        ),
+      )
+      .orderBy(desc(quotation_approvals.created_at))
+      .limit(1);
+    return (row as QuotationApprovalRow | undefined) ?? null;
+  }
+
+  private async requireApproval(
+    quotationId: string,
+    approvalId: string,
+  ): Promise<QuotationApprovalResponseDto> {
+    const [row] = await this.db
+      .select()
+      .from(quotation_approvals)
+      .where(
+        and(
+          eq(quotation_approvals.id, approvalId),
+          eq(quotation_approvals.quotation_id, quotationId),
+        ),
+      )
+      .limit(1);
+    if (!row) {
+      throw new NotFoundException(`Quotation approval ${approvalId} not found`);
+    }
+    return toQuotationApprovalResponse(row as QuotationApprovalRow);
   }
 
   private async recordVersion(

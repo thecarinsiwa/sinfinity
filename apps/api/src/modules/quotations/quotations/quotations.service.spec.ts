@@ -245,4 +245,99 @@ describe('QuotationsService', () => {
     expect(result[0].versionNumber).toBe(2);
     expect(result[0]).not.toHaveProperty('snapshot');
   });
+
+  it('submits for approval and blocks duplicate pending', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([quoteRow]))
+      .mockReturnValueOnce(thenable([draftStatus]))
+      .mockReturnValueOnce(thenable([]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: 'appr-1',
+            quotation_id: quoteId,
+            approver_id: null,
+            status: 'pending',
+            decision_at: null,
+            comments: null,
+            created_at: '2026-09-04 10:00:00.000',
+            updated_at: '2026-09-04 10:00:00.000',
+          },
+        ]),
+      );
+
+    const created = await service.submitForApproval(quoteId, orgId, orgUser);
+    expect(created.status).toBe('pending');
+
+    db.select
+      .mockReturnValueOnce(thenable([quoteRow]))
+      .mockReturnValueOnce(thenable([draftStatus]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: 'appr-1',
+            quotation_id: quoteId,
+            status: 'pending',
+          },
+        ]),
+      );
+
+    await expect(
+      service.submitForApproval(quoteId, orgId, orgUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('sends a draft quotation and freezes exchange rate to 1 without currency', async () => {
+    const sentStatusId = '0191e6b8-4c3a-7b2d-9f1e-statussent0001';
+    const sentQuote = {
+      ...quoteRow,
+      status_id: sentStatusId,
+      exchange_rate: '1.00000000',
+      issue_date: '2026-09-04',
+    };
+    const sentStatus = {
+      ...draftStatus,
+      id: sentStatusId,
+      code: 'SENT',
+      name: 'Sent',
+    };
+
+    db.select
+      .mockReturnValueOnce(thenable([quoteRow]))
+      .mockReturnValueOnce(thenable([draftStatus]))
+      // findPendingApproval
+      .mockReturnValueOnce(thenable([]))
+      // requireStatusIdByCode SENT
+      .mockReturnValueOnce(thenable([{ id: sentStatusId }]));
+    mockFindOneSelects(db, sentQuote, sentStatus);
+
+    const result = await service.send(quoteId, orgId, orgUser);
+    expect(db.update).toHaveBeenCalled();
+    expect(result.status?.code).toBe('SENT');
+    expect(result.exchangeRate).toBe('1.00000000');
+  });
+
+  it('blocks send while approval is pending', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([quoteRow]))
+      .mockReturnValueOnce(thenable([draftStatus]))
+      .mockReturnValueOnce(
+        thenable([{ id: 'appr-1', status: 'pending' }]),
+      );
+
+    await expect(
+      service.send(quoteId, orgId, orgUser),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('returns 501 on convert stub', async () => {
+    db.select.mockReturnValueOnce(thenable([quoteRow]));
+
+    await expect(
+      service.convert(quoteId, orgId, orgUser),
+    ).rejects.toMatchObject({
+      status: 501,
+      response: expect.objectContaining({ code: 'NOT_IMPLEMENTED' }),
+    });
+  });
 });
