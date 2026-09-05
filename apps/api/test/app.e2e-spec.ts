@@ -317,6 +317,23 @@ describe('AppController (e2e)', () => {
         ?.responses?.['201'],
     ).toBeDefined();
     expect(body.components?.schemas?.ProcurementRequestResponseDto).toBeDefined();
+    expect(body.paths['/api/v1/purchase-orders']).toBeDefined();
+    expect(body.paths['/api/v1/purchase-orders/from-quote']).toBeDefined();
+    expect(body.paths['/api/v1/purchase-orders/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/purchase-orders/{id}/items']).toBeDefined();
+    expect(
+      body.paths['/api/v1/purchase-orders/{id}/items/{itemId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/purchase-orders/{id}/transition']).toBeDefined();
+    expect(
+      body.paths['/api/v1/purchase-orders/{id}/status-history'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/purchase-orders/{orderId}/payments'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/purchase-orders/{orderId}/payments/{paymentId}'],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -331,6 +348,7 @@ describe('AppController (e2e)', () => {
         'Devis',
         'Commandes clients',
         'Sourcing',
+        'Achats',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(
