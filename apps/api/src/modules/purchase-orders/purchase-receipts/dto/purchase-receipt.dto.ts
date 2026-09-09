@@ -100,6 +100,17 @@ export class ConfirmPurchaseReceiptLineDto {
   @ApiProperty({ example: '2.0000', description: 'Qty received on this confirm' })
   @Matches(DECIMAL_REGEX, { message: 'quantity must be a decimal string' })
   quantity!: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'Required when the PO line product is serialized; length must equal quantity',
+    example: ['SN-001', 'SN-002'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  serialNumbers?: string[];
 }
 
 export class ConfirmPurchaseReceiptDto {

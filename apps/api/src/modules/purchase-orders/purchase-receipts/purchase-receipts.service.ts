@@ -310,6 +310,7 @@ export class PurchaseReceiptsService {
         purchaseOrderItemId: string;
         productId: string | null;
         quantity: string;
+        serialNumbers?: string[];
       }> = [];
 
       for (const line of dto.lines) {
@@ -358,6 +359,7 @@ export class PurchaseReceiptsService {
           purchaseOrderItemId: line.purchaseOrderItemId,
           productId: (item as any).product_id ?? null,
           quantity: formatDecimal(inc),
+          serialNumbers: line.serialNumbers,
         });
       }
 
@@ -421,7 +423,7 @@ export class PurchaseReceiptsService {
         })
         .where(eq(purchase_receipts.id, id));
 
-      // Port side-effect: inventory movements (no-op provider for now)
+      // Port side-effect: inventory movements via StockInventoryPortAdapter
       await this.inventoryPort.recordInbound({
         organizationId: (receipt as PurchaseReceiptRow).organization_id,
         warehouseId: (receipt as PurchaseReceiptRow).warehouse_id ?? null,

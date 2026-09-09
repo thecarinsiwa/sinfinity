@@ -19,6 +19,7 @@ import { LogisticsModule } from './modules/logistics/logistics.module';
 import { SalesOrdersModule } from './modules/sales-orders/sales-orders.module';
 import { SecurityModule } from './modules/security/security.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { StockModule } from './modules/stock/stock.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
 
 @Module({
@@ -47,6 +48,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
     PurchaseOrdersModule,
     LogisticsModule,
     LandedCostsModule,
+    StockModule,
   ],
   controllers: [AppController],
   providers: [AppService],

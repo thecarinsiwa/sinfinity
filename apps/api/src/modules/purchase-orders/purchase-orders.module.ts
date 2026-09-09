@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
+import { StockModule } from '../stock/stock.module';
+import { StockInventoryPortAdapter } from '../stock/inventory/inventory-port.adapter';
 import { INVENTORY_PORT } from './inventory/inventory.port';
-import { NoopInventoryPort } from './inventory/noop-inventory.port';
 import { PurchaseOrderPaymentsController } from './purchase-order-payments/purchase-order-payments.controller';
 import { PurchaseOrderPaymentsService } from './purchase-order-payments/purchase-order-payments.service';
 import { PurchaseOrdersController } from './purchase-orders/purchase-orders.controller';
@@ -9,6 +10,7 @@ import { PurchaseReceiptsController } from './purchase-receipts/purchase-receipt
 import { PurchaseReceiptsService } from './purchase-receipts/purchase-receipts.service';
 
 @Module({
+  imports: [StockModule],
   controllers: [
     PurchaseOrdersController,
     PurchaseOrderPaymentsController,
@@ -18,7 +20,7 @@ import { PurchaseReceiptsService } from './purchase-receipts/purchase-receipts.s
     PurchaseOrdersService,
     PurchaseOrderPaymentsService,
     PurchaseReceiptsService,
-    { provide: INVENTORY_PORT, useClass: NoopInventoryPort },
+    { provide: INVENTORY_PORT, useExisting: StockInventoryPortAdapter },
   ],
   exports: [
     PurchaseOrdersService,
