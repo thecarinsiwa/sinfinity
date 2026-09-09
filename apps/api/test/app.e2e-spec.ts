@@ -350,6 +350,7 @@ describe('AppController (e2e)', () => {
         'Commandes clients',
         'Sourcing',
         'Achats',
+        'Logistique',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(
