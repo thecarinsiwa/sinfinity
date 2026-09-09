@@ -64,6 +64,10 @@ describe('PurchaseOrdersService', () => {
   };
 
   let service: PurchaseOrdersService;
+  let ledger: {
+    upsertPayable: jest.Mock;
+    cancelPayableForPurchaseOrder: jest.Mock;
+  };
   let db: {
     select: jest.Mock;
     insert: jest.Mock;
@@ -80,7 +84,11 @@ describe('PurchaseOrdersService', () => {
       delete: jest.fn().mockReturnValue(thenable(undefined)),
       transaction: jest.fn(),
     };
-    service = new PurchaseOrdersService(db as never);
+    ledger = {
+      upsertPayable: jest.fn().mockResolvedValue(undefined),
+      cancelPayableForPurchaseOrder: jest.fn().mockResolvedValue(undefined),
+    };
+    service = new PurchaseOrdersService(db as never, ledger as never);
   });
 
   it('creates a draft PO with history', async () => {
