@@ -28,6 +28,7 @@ import {
   deliveries,
   delivery_addresses,
   delivery_items,
+  delivery_tracking,
   inventory,
   products,
   sales_order_items,
@@ -72,8 +73,10 @@ import {
 import {
   CreateDeliveryDto,
   CreateDeliveryItemDto,
+  CreateDeliveryTrackingDto,
   DeliveryItemResponseDto,
   DeliveryResponseDto,
+  DeliveryTrackingResponseDto,
   ListDeliveriesQueryDto,
   UpdateDeliveryDto,
   UpdateDeliveryItemDto,
@@ -82,8 +85,10 @@ import {
   parseSerialIds,
   toDeliveryItemResponse,
   toDeliveryResponse,
+  toDeliveryTrackingResponse,
   type DeliveryItemRow,
   type DeliveryRow,
+  type DeliveryTrackingRow,
 } from './deliveries.mapper';
 
 function toMysqlDateTime(value: string | null | undefined): string | null {
@@ -732,6 +737,89 @@ export class DeliveriesService {
       currentOrganizationId,
       user,
     );
+  }
+
+  async listTracking(
+    deliveryId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryTrackingResponseDto[]> {
+    await this.requireDeliveryAccess(
+      deliveryId,
+      currentOrganizationId,
+      user,
+    );
+    const rows = await this.db
+      .select()
+      .from(delivery_tracking)
+      .where(eq(delivery_tracking.delivery_id, deliveryId))
+      .orderBy(
+        asc(delivery_tracking.recorded_at),
+        asc(delivery_tracking.id),
+      );
+    return (rows as DeliveryTrackingRow[]).map(toDeliveryTrackingResponse);
+  }
+
+  async addTracking(
+    deliveryId: string,
+    dto: CreateDeliveryTrackingDto,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryTrackingResponseDto> {
+    const delivery = await this.requireDeliveryAccess(
+      deliveryId,
+      currentOrganizationId,
+      user,
+    );
+    if (
+      delivery.status !== DELIVERY_STATUS.IN_TRANSIT &&
+      delivery.status !== DELIVERY_STATUS.DELIVERED
+    ) {
+      throw new BadRequestException(
+        'Tracking points can only be added when delivery is in_transit or delivered',
+      );
+    }
+
+    const hasLat = dto.latitude != null && dto.latitude !== '';
+    const hasLng = dto.longitude != null && dto.longitude !== '';
+    if (hasLat !== hasLng) {
+      throw new BadRequestException(
+        'latitude and longitude must be provided together',
+      );
+    }
+    if (hasLat) {
+      const lat = Number(dto.latitude);
+      const lng = Number(dto.longitude);
+      if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+        throw new BadRequestException('latitude must be between -90 and 90');
+      }
+      if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+        throw new BadRequestException('longitude must be between -180 and 180');
+      }
+    }
+
+    const id = createId();
+    const recordedAt = dto.recordedAt
+      ? toMysqlDateTime(dto.recordedAt)!
+      : nowMysqlDateTime();
+
+    await this.db.insert(delivery_tracking).values({
+      id,
+      delivery_id: deliveryId,
+      status: dto.status.trim(),
+      latitude: hasLat ? dto.latitude! : null,
+      longitude: hasLng ? dto.longitude! : null,
+      location_label: dto.locationLabel ?? null,
+      recorded_at: recordedAt,
+      notes: dto.notes ?? null,
+    });
+
+    const [row] = await this.db
+      .select()
+      .from(delivery_tracking)
+      .where(eq(delivery_tracking.id, id))
+      .limit(1);
+    return toDeliveryTrackingResponse(row as DeliveryTrackingRow);
   }
 
   private async terminalTransition(

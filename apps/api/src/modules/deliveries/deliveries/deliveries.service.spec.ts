@@ -262,4 +262,91 @@ describe('DeliveriesService', () => {
       /without line items/,
     );
   });
+
+  it('adds a tracking point with GPS and lists timeline oldest first', async () => {
+    const inTransit = {
+      id: deliveryId,
+      organization_id: orgId,
+      delivery_number: 'DLV-1',
+      sales_order_id: soId,
+      customer_id: customerId,
+      warehouse_id: warehouseId,
+      delivery_address_id: null,
+      scheduled_at: null,
+      delivered_at: null,
+      driver_user_id: null,
+      status: DELIVERY_STATUS.IN_TRANSIT,
+      notes: null,
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+      created_by: null,
+      updated_by: null,
+      deleted_at: null,
+    };
+    const point = {
+      id: '0191e6b8-4c3a-7b2d-9f1e-trktrktrktrkt',
+      delivery_id: deliveryId,
+      status: 'en_route',
+      latitude: '-4.3276000',
+      longitude: '15.3133000',
+      location_label: 'Gombe',
+      recorded_at: '2026-09-09 14:30:00.000',
+      notes: null,
+    };
+
+    db.select
+      .mockReturnValueOnce(thenable([inTransit]))
+      .mockReturnValueOnce(thenable([point]));
+
+    const created = await service.addTracking(
+      deliveryId,
+      {
+        status: 'en_route',
+        latitude: '-4.3276000',
+        longitude: '15.3133000',
+        locationLabel: 'Gombe',
+        recordedAt: '2026-09-09T14:30:00.000Z',
+      },
+      orgId,
+    );
+    expect(created.latitude).toBe('-4.3276000');
+    expect(db.insert).toHaveBeenCalled();
+
+    db.select
+      .mockReturnValueOnce(thenable([inTransit]))
+      .mockReturnValueOnce(thenable([point]));
+    const timeline = await service.listTracking(deliveryId, orgId);
+    expect(timeline).toHaveLength(1);
+    expect(timeline[0].status).toBe('en_route');
+  });
+
+  it('rejects tracking when delivery is still planned', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([
+        {
+          id: deliveryId,
+          organization_id: orgId,
+          delivery_number: 'DLV-1',
+          sales_order_id: soId,
+          customer_id: customerId,
+          warehouse_id: warehouseId,
+          delivery_address_id: null,
+          scheduled_at: null,
+          delivered_at: null,
+          driver_user_id: null,
+          status: DELIVERY_STATUS.PLANNED,
+          notes: null,
+          created_at: '2026-01-01 00:00:00.000',
+          updated_at: '2026-01-01 00:00:00.000',
+          created_by: null,
+          updated_by: null,
+          deleted_at: null,
+        },
+      ]),
+    );
+
+    await expect(
+      service.addTracking(deliveryId, { status: 'departed' }, orgId),
+    ).rejects.toThrow(/in_transit or delivered/);
+  });
 });

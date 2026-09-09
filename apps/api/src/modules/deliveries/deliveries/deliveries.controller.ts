@@ -39,8 +39,10 @@ import { DeliveriesService } from './deliveries.service';
 import {
   CreateDeliveryDto,
   CreateDeliveryItemDto,
+  CreateDeliveryTrackingDto,
   DeliveryItemResponseDto,
   DeliveryResponseDto,
+  DeliveryTrackingResponseDto,
   ListDeliveriesQueryDto,
   UpdateDeliveryDto,
   UpdateDeliveryItemDto,
@@ -256,5 +258,37 @@ export class DeliveriesController {
     @CurrentUser() user?: AuthUser,
   ): Promise<DeliveryResponseDto> {
     return this.deliveriesService.cancel(id, organizationId, user);
+  }
+
+  @Get(':id/tracking')
+  @RequirePermissions('deliveries.read')
+  @ApiOperation({
+    summary: 'List delivery GPS / status timeline',
+    description: 'Oldest first by recordedAt.',
+  })
+  @ApiOkResponse({ type: [DeliveryTrackingResponseDto] })
+  listTracking(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryTrackingResponseDto[]> {
+    return this.deliveriesService.listTracking(id, organizationId, user);
+  }
+
+  @Post(':id/tracking')
+  @RequirePermissions('deliveries.write')
+  @ApiOperation({
+    summary: 'Append a tracking point',
+    description:
+      'GPS lat/long (optional, both or neither), locationLabel, free-form status. Allowed when in_transit or delivered.',
+  })
+  @ApiCreatedResponse({ type: DeliveryTrackingResponseDto })
+  addTracking(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateDeliveryTrackingDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryTrackingResponseDto> {
+    return this.deliveriesService.addTracking(id, dto, organizationId, user);
   }
 }

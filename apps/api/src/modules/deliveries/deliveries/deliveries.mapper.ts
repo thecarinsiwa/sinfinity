@@ -1,6 +1,7 @@
 import type {
   DeliveryItemResponseDto,
   DeliveryResponseDto,
+  DeliveryTrackingResponseDto,
 } from './dto/delivery.dto';
 import type { DeliveryStatus } from '../delivery-statuses';
 
@@ -33,6 +34,17 @@ export type DeliveryItemRow = {
   serial_number_ids: unknown;
   created_at: string;
   updated_at: string;
+};
+
+export type DeliveryTrackingRow = {
+  id: string;
+  delivery_id: string;
+  status: string;
+  latitude: string | null;
+  longitude: string | null;
+  location_label: string | null;
+  recorded_at: string;
+  notes: string | null;
 };
 
 function parseSerialIds(value: unknown): string[] | null {
@@ -91,5 +103,20 @@ export function toDeliveryItemResponse(
     serialNumberIds: parseSerialIds(row.serial_number_ids),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+export function toDeliveryTrackingResponse(
+  row: DeliveryTrackingRow,
+): DeliveryTrackingResponseDto {
+  return {
+    id: row.id,
+    deliveryId: row.delivery_id,
+    status: row.status,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    locationLabel: row.location_label,
+    recordedAt: row.recorded_at,
+    notes: row.notes,
   };
 }
