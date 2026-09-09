@@ -162,4 +162,38 @@ describe('CommentsService', () => {
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
+
+  it('findThread returns nested tree for entity', async () => {
+    const root = {
+      id: 'root',
+      organization_id: orgId,
+      entity_type: 'ticket',
+      entity_id: entityId,
+      author_id: null,
+      body: 'Root',
+      parent_comment_id: null,
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+      deleted_at: null,
+    };
+    const reply = {
+      ...root,
+      id: 'reply',
+      body: 'Reply',
+      parent_comment_id: 'root',
+      created_at: '2026-01-02',
+    };
+
+    db.select.mockReturnValueOnce(thenable([reply, root]));
+
+    const tree = await service.findThread(
+      { entityType: 'ticket', entityId, page: 1, pageSize: 20 } as never,
+      orgId,
+    );
+
+    expect(tree).toHaveLength(1);
+    expect(tree[0].body).toBe('Root');
+    expect(tree[0].children).toHaveLength(1);
+    expect(tree[0].children[0].body).toBe('Reply');
+  });
 });

@@ -100,6 +100,34 @@ describe('NotificationsService', () => {
     expect(db.insert).not.toHaveBeenCalled();
   });
 
+  it('notify sms is a no-op', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([{ id: orgId }]))
+      .mockReturnValueOnce(
+        thenable([{ id: userId, organization_id: orgId }]),
+      );
+
+    const result = await service.notify({
+      organizationId: orgId,
+      userId,
+      channel: 'sms',
+      title: 'Ping',
+    });
+
+    expect(result).toBeNull();
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
+  it('notify rejects empty title', async () => {
+    await expect(
+      service.notify({
+        organizationId: orgId,
+        userId,
+        title: '   ',
+      }),
+    ).rejects.toThrow(/title is required/);
+  });
+
   it('markRead sets is_read', async () => {
     db.select
       .mockReturnValueOnce(thenable([unreadRow]))

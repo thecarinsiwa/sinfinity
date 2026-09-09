@@ -124,4 +124,70 @@ describe('AppointmentsService', () => {
     expect(result.title).toBe('Ok');
     expect(db.insert).toHaveBeenCalled();
   });
+
+  const scheduledRow = {
+    id: apptId,
+    organization_id: orgId,
+    title: 'Visit',
+    description: null,
+    start_at: '2026-04-15 09:00:00.000',
+    end_at: '2026-04-15 10:00:00.000',
+    location: null,
+    meeting_type: 'in_person',
+    organizer_id: userId,
+    customer_id: null,
+    status: 'scheduled',
+    created_at: '2026-04-01',
+    updated_at: '2026-04-01',
+    deleted_at: null,
+  };
+
+  it('transitions scheduled → completed', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([scheduledRow]))
+      .mockReturnValueOnce(
+        thenable([{ ...scheduledRow, status: 'completed' }]),
+      );
+
+    const result = await service.transition(
+      apptId,
+      { toStatus: 'completed' },
+      orgId,
+    );
+
+    expect(result.status).toBe('completed');
+    expect(db.update).toHaveBeenCalled();
+  });
+
+  it('rejects illegal appointment transition', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([{ ...scheduledRow, status: 'completed' }]),
+    );
+
+    await expect(
+      service.transition(apptId, { toStatus: 'scheduled' }, orgId),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects update when reschedule overlaps another appointment', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([scheduledRow]))
+      .mockReturnValueOnce(
+        thenable([{ id: userId, organization_id: orgId }]),
+      )
+      .mockReturnValueOnce(
+        thenable([{ id: 'other', title: 'Blocking slot' }]),
+      );
+
+    await expect(
+      service.update(
+        apptId,
+        {
+          startAt: '2026-04-15T09:30:00.000Z',
+          endAt: '2026-04-15T10:30:00.000Z',
+        },
+        orgId,
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
 });

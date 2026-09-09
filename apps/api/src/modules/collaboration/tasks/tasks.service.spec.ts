@@ -104,6 +104,21 @@ describe('TasksService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('transitions todo → cancelled', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([todoRow]))
+      .mockReturnValueOnce(
+        thenable([{ ...todoRow, status: 'cancelled' }]),
+      );
+
+    const result = await service.transition(
+      taskId,
+      { toStatus: 'cancelled' },
+      orgId,
+    );
+    expect(result.status).toBe('cancelled');
+  });
+
   it('rejects entityType without entityId', async () => {
     db.select.mockReturnValueOnce(thenable([{ id: orgId }]));
 
