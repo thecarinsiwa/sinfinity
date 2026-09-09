@@ -83,12 +83,21 @@ export const PERMISSION_CATALOG: PermissionDef[] = [
   perm('deliveries', 'read', 'Read deliveries'),
   perm('deliveries', 'write', 'Manage deliveries'),
 
-  // Projects / support
+  // Projects / support / maintenance
   perm('projects', 'read', 'Read projects'),
   perm('projects', 'write', 'Manage projects'),
   perm('tickets', 'read', 'Read tickets'),
   perm('tickets', 'write', 'Manage tickets'),
   perm('tickets', 'assign', 'Assign tickets'),
+  perm('maintenance', 'read', 'Read maintenance contracts and interventions'),
+  perm(
+    'maintenance',
+    'write',
+    'Manage maintenance contracts and interventions',
+  ),
+  perm('warranties', 'read', 'Read warranties'),
+  perm('warranties', 'write', 'Manage warranties'),
+  perm('warranties', 'claim', 'Submit and transition warranty claims'),
   perm('tasks', 'read', 'Read tasks'),
   perm('tasks', 'write', 'Manage tasks'),
 
@@ -197,6 +206,11 @@ const TECHNICAL_PERMS = [
   'tickets.read',
   'tickets.write',
   'tickets.assign',
+  'maintenance.read',
+  'maintenance.write',
+  'warranties.read',
+  'warranties.write',
+  'warranties.claim',
   'catalog.read',
   'customers.read',
   'documents.read',
@@ -263,9 +277,7 @@ export const SYSTEM_ROLES: SystemRoleDef[] = [
   },
 ];
 
-export function resolveRolePermissionCodes(
-  role: SystemRoleDef,
-): string[] {
+export function resolveRolePermissionCodes(role: SystemRoleDef): string[] {
   if (role.permissions === '*') {
     return PERMISSION_CATALOG.map((p) => p.code);
   }
