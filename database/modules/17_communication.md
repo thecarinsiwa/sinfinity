@@ -22,6 +22,8 @@ Activités commerciales (vue transverse ; peut chevaucher `sales_activities`).
 | `status` | ENUM | planned / done / cancelled |
 
 > **Note conception :** si une seule table d'activités suffit, fusionner avec `sales_activities` du module CRM.
+>
+> **Décision Phase 18 (API) :** pas de CRUD sur `activities`. Source de vérité = CRM `sales_activities` (`/sales-activities`). Alias lecture seule : `GET /activities` (tag Collaboration). Voir `apps/api/src/modules/collaboration/activities/ACTIVITIES_FUSION.ts`.
 
 ---
 
