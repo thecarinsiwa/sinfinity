@@ -8,9 +8,11 @@ import { ServiceRequestsController } from './tickets/service-requests.controller
 import { ServiceRequestsService } from './tickets/service-requests.service';
 import { SupportTicketsController } from './tickets/support-tickets.controller';
 import { SupportTicketsService } from './tickets/support-tickets.service';
+import { WarrantiesController } from './warranties/warranties.controller';
+import { WarrantiesService } from './warranties/warranties.service';
 
 /**
- * Phase 16 — Maintenance (tickets, contracts, interventions; warranties next).
+ * Phase 16 — Maintenance et support (tickets, contracts, interventions, warranties).
  */
 @Module({
   imports: [StockModule],
@@ -19,18 +21,21 @@ import { SupportTicketsService } from './tickets/support-tickets.service';
     ServiceRequestsController,
     MaintenanceContractsController,
     MaintenanceInterventionsController,
+    WarrantiesController,
   ],
   providers: [
     SupportTicketsService,
     ServiceRequestsService,
     MaintenanceContractsService,
     MaintenanceInterventionsService,
+    WarrantiesService,
   ],
   exports: [
     SupportTicketsService,
     ServiceRequestsService,
     MaintenanceContractsService,
     MaintenanceInterventionsService,
+    WarrantiesService,
   ],
 })
 export class MaintenanceModule {}
