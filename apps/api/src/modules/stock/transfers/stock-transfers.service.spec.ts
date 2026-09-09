@@ -136,4 +136,66 @@ describe('StockTransfersService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(inventoryMovementsService.applyMovement).not.toHaveBeenCalled();
   });
+
+  it('draft → in_transit → completed applies out then in', async () => {
+    const base = {
+      id: transferId,
+      organization_id: orgId,
+      transfer_number: 'TRF-1',
+      from_warehouse_id: fromWh,
+      to_warehouse_id: toWh,
+      transferred_at: null,
+      requested_by: null,
+      approved_by: null,
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+    };
+    const draft = { ...base, status: STOCK_TRANSFER_STATUS.DRAFT };
+    const inTransit = {
+      ...base,
+      status: STOCK_TRANSFER_STATUS.IN_TRANSIT,
+    };
+    const completed = {
+      ...base,
+      status: STOCK_TRANSFER_STATUS.COMPLETED,
+    };
+    const lines = [{ productId, quantity: '3' }];
+
+    db.select
+      .mockReturnValueOnce(thenable([draft]))
+      .mockReturnValueOnce(thenable([inTransit]))
+      .mockReturnValueOnce(thenable([inTransit]))
+      .mockReturnValueOnce(thenable([completed]));
+
+    await service.transition(
+      transferId,
+      { toStatus: 'in_transit', lines },
+      orgId,
+    );
+    await service.transition(
+      transferId,
+      { toStatus: 'completed', lines },
+      orgId,
+    );
+
+    expect(inventoryMovementsService.applyMovement).toHaveBeenCalledTimes(2);
+    expect(inventoryMovementsService.applyMovement).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        movementType: 'out',
+        warehouseId: fromWh,
+        quantity: '3.0000',
+      }),
+      db,
+    );
+    expect(inventoryMovementsService.applyMovement).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        movementType: 'in',
+        warehouseId: toWh,
+        quantity: '3.0000',
+      }),
+      db,
+    );
+  });
 });

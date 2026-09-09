@@ -34,6 +34,14 @@ describe('inventory-quantities', () => {
     expect(state.quantityAvailable).toBe('0.0000');
   });
 
+  it('unreserves back to available', () => {
+    let state = applyQuantityDelta(empty, 'in', '10');
+    state = applyQuantityDelta(state, 'reserve', '4');
+    state = applyQuantityDelta(state, 'unreserve', '4');
+    expect(state.quantityReserved).toBe('0.0000');
+    expect(state.quantityAvailable).toBe('10.0000');
+  });
+
   it('rejects out when available is insufficient', () => {
     const state = applyQuantityDelta(empty, 'in', '5');
     const reserved = applyQuantityDelta(state, 'reserve', '3');
@@ -42,10 +50,38 @@ describe('inventory-quantities', () => {
     );
   });
 
+  it('rejects reserve when available is insufficient', () => {
+    const state = applyQuantityDelta(empty, 'in', '2');
+    expect(() => applyQuantityDelta(state, 'reserve', '3')).toThrow(
+      /Insufficient available quantity to reserve/,
+    );
+  });
+
+  it('rejects unreserve above reserved', () => {
+    const state = applyQuantityDelta(empty, 'in', '5');
+    expect(() => applyQuantityDelta(state, 'unreserve', '1')).toThrow(
+      /Insufficient reserved/,
+    );
+  });
+
   it('applies signed adjustment', () => {
     const state = applyQuantityDelta(empty, 'in', '20');
     const next = applyQuantityDelta(state, 'adjustment', '-5');
     expect(next.quantityOnHand).toBe('15.0000');
+  });
+
+  it('rejects adjustment that would go below reserved', () => {
+    let state = applyQuantityDelta(empty, 'in', '10');
+    state = applyQuantityDelta(state, 'reserve', '6');
+    expect(() => applyQuantityDelta(state, 'adjustment', '-5')).toThrow(
+      /less than reserved/,
+    );
+  });
+
+  it('rejects zero adjustment', () => {
+    expect(() => applyQuantityDelta(empty, 'adjustment', '0')).toThrow(
+      /non-zero/,
+    );
   });
 
   it('formats decimals to 4 dp', () => {
