@@ -171,6 +171,65 @@ describe('LandedCostsService', () => {
     ).rejects.toThrow('currencyId is required');
   });
 
+  it('rejects calculate when posted', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([
+        { ...headerRow, status: 'posted', currency_id: usdId },
+      ]),
+    );
+
+    await expect(
+      service.calculate(landedCostId, 'value', orgId, orgUser),
+    ).rejects.toThrow('Posted landed costs are immutable');
+  });
+
+  it('rejects calculate when CDF→USD exchange rate is missing', async () => {
+    const header = { ...headerRow, currency_id: usdId };
+    const itemA = {
+      id: 'item-a',
+      landed_cost_id: landedCostId,
+      product_id: null,
+      purchase_order_item_id: null,
+      quantity: '1.0000',
+      goods_cost: '100.0000',
+      allocated_costs: '0.0000',
+      unit_landed_cost: '0.0000',
+      total_landed_cost: '0.0000',
+      created_at: '2026-09-09 10:00:00.000',
+      updated_at: '2026-09-09 10:00:00.000',
+    };
+
+    db.select
+      .mockReturnValueOnce(thenable([header]))
+      .mockReturnValueOnce(thenable([itemA]))
+      .mockReturnValueOnce(thenable([])) // shipping
+      .mockReturnValueOnce(
+        thenable([
+          {
+            duties_amount: '27500.0000',
+            vat_amount: '0.0000',
+            other_fees: '0.0000',
+            currency_id: cdfId,
+          },
+        ]),
+      )
+      .mockReturnValueOnce(thenable([])); // no FX rate
+
+    await expect(
+      service.calculate(landedCostId, 'value', orgId, orgUser),
+    ).rejects.toThrow(/No exchange rate/);
+  });
+
+  it('rejects soft-delete when posted', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([{ ...headerRow, status: 'posted', currency_id: usdId }]),
+    );
+
+    await expect(
+      service.remove(landedCostId, orgId, orgUser),
+    ).rejects.toThrow('Posted landed costs are immutable');
+  });
+
   it('calculates USD goods + USD shipping + CDF customs (value allocation)', async () => {
     const header = { ...headerRow, currency_id: usdId };
     const itemA = {

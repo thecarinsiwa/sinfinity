@@ -148,6 +148,24 @@ describe('landed-costs-engine', () => {
       ),
     ).toThrow(/basis is zero/);
   });
+
+  it('rejects zero quantity on allocated lines', () => {
+    expect(() =>
+      allocateAdditionalCosts(
+        [
+          {
+            id: 'a',
+            quantity: '0',
+            goodsCost: '100',
+            weightBasis: '0',
+            volumeBasis: '0',
+          },
+        ],
+        '10',
+        'value',
+      ),
+    ).toThrow(/quantity must be greater than zero/);
+  });
 });
 
 function formatSum(value: number): string {
