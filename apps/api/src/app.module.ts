@@ -14,6 +14,7 @@ import { OrganisationModule } from './modules/organisation/organisation.module';
 import { QuotationsModule } from './modules/quotations/quotations.module';
 import { ProcurementModule } from './modules/procurement/procurement.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
+import { LandedCostsModule } from './modules/landed-costs/landed-costs.module';
 import { LogisticsModule } from './modules/logistics/logistics.module';
 import { SalesOrdersModule } from './modules/sales-orders/sales-orders.module';
 import { SecurityModule } from './modules/security/security.module';
@@ -45,6 +46,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
     ProcurementModule,
     PurchaseOrdersModule,
     LogisticsModule,
+    LandedCostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
