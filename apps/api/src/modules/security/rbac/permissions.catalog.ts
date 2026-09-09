@@ -105,6 +105,11 @@ export const PERMISSION_CATALOG: PermissionDef[] = [
   perm('invoices', 'read', 'Read invoices'),
   perm('invoices', 'write', 'Manage invoices'),
   perm('invoices', 'issue', 'Issue invoices'),
+  perm('payments', 'read', 'Read payments and payment methods'),
+  perm('payments', 'write', 'Manage payments and payment methods'),
+  perm('payments', 'confirm', 'Confirm customer payments'),
+  perm('expenses', 'read', 'Read expenses and categories'),
+  perm('expenses', 'write', 'Manage expenses and categories'),
   perm('finance', 'ledger.read', 'Read finance ledger'),
 ];
 
@@ -226,6 +231,11 @@ const FINANCE_PERMS = [
   'invoices.read',
   'invoices.write',
   'invoices.issue',
+  'payments.read',
+  'payments.write',
+  'payments.confirm',
+  'expenses.read',
+  'expenses.write',
   'finance.ledger.read',
   'customers.read',
   'sales_orders.read',
