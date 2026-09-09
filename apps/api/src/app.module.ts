@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { CrmModule } from './modules/crm/crm.module';
+import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganisationModule } from './modules/organisation/organisation.module';
 import { QuotationsModule } from './modules/quotations/quotations.module';
@@ -49,6 +50,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
     LogisticsModule,
     LandedCostsModule,
     StockModule,
+    DeliveriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

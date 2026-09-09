@@ -25,7 +25,7 @@ export const SALES_ORDER_STATUS_TRANSITIONS: Record<
 > = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['in_progress', 'cancelled'],
-  in_progress: ['partially_delivered', 'cancelled'],
+  in_progress: ['partially_delivered', 'delivered', 'cancelled'],
   partially_delivered: ['delivered', 'cancelled'],
   delivered: [],
   cancelled: [],
@@ -60,14 +60,17 @@ export function assertDeliveryQtyInvariants(
   }
 
   if (toStatus === SALES_ORDER_STATUS.PARTIALLY_DELIVERED) {
-    const hasPartial = lines.some((line) => {
-      const delivered = Number(line.quantityDelivered);
-      const quantity = Number(line.quantity);
-      return delivered > 0 && delivered < quantity;
-    });
-    if (!hasPartial) {
+    const anyProgress = lines.some(
+      (line) => Number(line.quantityDelivered) > 0,
+    );
+    const allComplete =
+      lines.length > 0 &&
+      lines.every(
+        (line) => Number(line.quantityDelivered) >= Number(line.quantity),
+      );
+    if (!anyProgress || allComplete) {
       throw new Error(
-        'partially_delivered requires at least one line with 0 < quantityDelivered < quantity',
+        'partially_delivered requires some progress without all lines complete',
       );
     }
     return;
