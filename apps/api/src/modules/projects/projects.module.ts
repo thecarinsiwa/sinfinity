@@ -4,12 +4,13 @@ import { InstallationsController } from './installations/installations.controlle
 import { InstallationsService } from './installations/installations.service';
 import { ProjectsController } from './projects/projects.controller';
 import { ProjectsService } from './projects/projects.service';
+import { InstallationQaController } from './qa/installation-qa.controller';
+import { InstallationQaService } from './qa/installation-qa.service';
 import { TechniciansController } from './technicians/technicians.controller';
 import { TechniciansService } from './technicians/technicians.service';
 
 /**
- * Phase 15 — Projets techniques (CRUD projects/items, technicians, installations).
- * QA (reports / commissioning) added in the next slice.
+ * Phase 15 — Projets techniques (projects, technicians, installations, QA).
  */
 @Module({
   imports: [StockModule],
@@ -17,8 +18,19 @@ import { TechniciansService } from './technicians/technicians.service';
     ProjectsController,
     TechniciansController,
     InstallationsController,
+    InstallationQaController,
   ],
-  providers: [ProjectsService, TechniciansService, InstallationsService],
-  exports: [ProjectsService, TechniciansService, InstallationsService],
+  providers: [
+    ProjectsService,
+    TechniciansService,
+    InstallationsService,
+    InstallationQaService,
+  ],
+  exports: [
+    ProjectsService,
+    TechniciansService,
+    InstallationsService,
+    InstallationQaService,
+  ],
 })
 export class ProjectsModule {}
