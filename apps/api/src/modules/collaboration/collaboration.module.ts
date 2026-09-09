@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
+import { TasksController } from './tasks/tasks.controller';
+import { TasksService } from './tasks/tasks.service';
 
 /**
  * Phase 18 — Communication et tâches (Collaboration).
- * Controllers (tasks, appointments, comments, notifications, activities alias)
- * will be registered in subsequent slices.
  */
 @Module({
-  controllers: [],
-  providers: [],
-  exports: [],
+  controllers: [TasksController],
+  providers: [TasksService],
+  exports: [TasksService],
 })
 export class CollaborationModule {}
