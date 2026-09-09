@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { ExpenseCategoriesController } from './expenses/expense-categories.controller';
+import { ExpenseCategoriesService } from './expenses/expense-categories.service';
+import { ExpensesController } from './expenses/expenses.controller';
+import { ExpensesService } from './expenses/expenses.service';
 import { InvoicesController } from './invoices/invoices.controller';
 import { InvoicesService } from './invoices/invoices.service';
 import { AccountsLedgerService } from './ledger/accounts-ledger.service';
@@ -15,18 +19,24 @@ import { PaymentsService } from './payments/payments.service';
     InvoicesController,
     PaymentMethodsController,
     PaymentsController,
+    ExpenseCategoriesController,
+    ExpensesController,
   ],
   providers: [
     InvoicesService,
     AccountsLedgerService,
     PaymentMethodsService,
     PaymentsService,
+    ExpenseCategoriesService,
+    ExpensesService,
   ],
   exports: [
     InvoicesService,
     AccountsLedgerService,
     PaymentMethodsService,
     PaymentsService,
+    ExpenseCategoriesService,
+    ExpensesService,
   ],
 })
 export class FinancesModule {}
