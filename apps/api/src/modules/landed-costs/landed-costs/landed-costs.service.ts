@@ -584,6 +584,47 @@ export class LandedCostsService {
     return row as LandedCostRow;
   }
 
+  /** Public access helper for nested fee-component services. */
+  async requireAccess(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<LandedCostRow> {
+    return this.requireLandedCostAccess(id, currentOrganizationId, user);
+  }
+
+  /** Access + refuse when posted (for fee writes). */
+  async requireMutableAccess(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<LandedCostRow> {
+    const header = await this.requireLandedCostAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+    this.assertMutable(header.status);
+    return header;
+  }
+
+  /**
+   * After a fee row write: reset header to draft and clear item allocations
+   * (totals stay stale until calculate).
+   */
+  async markDraftAfterFeeChange(landedCostId: string): Promise<void> {
+    await this.db
+      .update(landed_costs)
+      .set({
+        status: LANDED_COST_STATUS.DRAFT,
+        calculated_at: null,
+        calculated_by: null,
+        updated_at: nowMysqlDateTime(),
+      })
+      .where(eq(landed_costs.id, landedCostId));
+    await this.clearItemAllocations(landedCostId);
+  }
+
   private assertMutable(status: LandedCostStatus): void {
     if (status === LANDED_COST_STATUS.POSTED) {
       throw new BadRequestException(
