@@ -335,7 +335,10 @@ export class StockTransfersService {
         transfer.status === STOCK_TRANSFER_STATUS.IN_TRANSIT &&
         dto.toStatus === STOCK_TRANSFER_STATUS.CANCELLED
       ) {
-        const lines = await this.loadOutLinesAsTransferLines(id);
+        const lines =
+          dto.lines?.length
+            ? dto.lines
+            : await this.loadOutLinesAsTransferLines(id);
         await this.applyReturnToFrom(tx, transfer, lines, user);
       }
       // draft → cancelled: no movements
@@ -384,6 +387,7 @@ export class StockTransfersService {
           referenceId: transfer.id,
           movedBy: user?.id ?? null,
           notes: `Transfer out → ${transfer.to_warehouse_id}`,
+          serialIds: line.serialIds,
         },
         tx,
       );
@@ -410,6 +414,7 @@ export class StockTransfersService {
           referenceId: transfer.id,
           movedBy: user?.id ?? null,
           notes: `Transfer in ← ${transfer.from_warehouse_id}`,
+          serialIds: line.serialIds,
         },
         tx,
       );
@@ -436,6 +441,7 @@ export class StockTransfersService {
           referenceId: transfer.id,
           movedBy: user?.id ?? null,
           notes: 'Transfer cancelled — return to source',
+          serialIds: line.serialIds,
         },
         tx,
       );

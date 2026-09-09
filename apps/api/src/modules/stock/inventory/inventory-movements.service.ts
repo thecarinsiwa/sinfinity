@@ -27,7 +27,16 @@ import {
   products,
   warehouses,
 } from '../../../database/schema';
-import { nowMysqlDateTime } from '../../settings/utils/mysql-datetime';
+import {
+  nowMysqlDateTime,
+  toBool,
+} from '../../settings/utils/mysql-datetime';
+import {
+  assertSerialCount,
+  parseIntegerQuantity,
+} from '../serials/serial-enforcement';
+import { SERIAL_NUMBER_STATUS } from '../serials/serial-number-statuses';
+import { SerialNumbersService } from '../serials/serial-numbers.service';
 import {
   assertOrgAccess,
   requireScopeOrgId,
@@ -64,6 +73,12 @@ export type ApplyMovementInput = {
   movedAt?: string;
   movedBy?: string | null;
   notes?: string | null;
+  /** New serial strings to create (inbound / positive adjustment). */
+  serialNumbers?: string[];
+  /** Existing serial UUIDs (out / reserve / unreserve / transfer / neg adjustment). */
+  serialIds?: string[];
+  purchaseOrderItemId?: string | null;
+  salesOrderItemId?: string | null;
 };
 
 export type ApplyMovementResult = {
@@ -81,7 +96,10 @@ type DbLike = DrizzleDB | Tx;
  */
 @Injectable()
 export class InventoryMovementsService {
-  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: DrizzleDB,
+    private readonly serialNumbersService: SerialNumbersService,
+  ) {}
 
   async findInventory(
     query: ListInventoryQueryDto,
@@ -256,7 +274,13 @@ export class InventoryMovementsService {
       input.warehouseId,
       input.organizationId,
     );
-    await this.ensureProductInOrg(db, input.productId, input.organizationId);
+    const product = await this.requireProductInOrg(
+      db,
+      input.productId,
+      input.organizationId,
+    );
+    const isSerialized = toBool(product.is_serialized);
+    this.assertSerialPayload(isSerialized, input);
 
     const locationId = input.locationId ?? null;
     const batchId = input.batchId ?? null;
@@ -354,6 +378,10 @@ export class InventoryMovementsService {
       created_at: now,
     });
 
+    if (isSerialized) {
+      await this.applySerializedSideEffects(db, input, now);
+    }
+
     return {
       inventory: toInventoryResponse({
         ...row,
@@ -364,6 +392,178 @@ export class InventoryMovementsService {
       }),
       movementId,
     };
+  }
+
+  private assertSerialPayload(
+    isSerialized: boolean,
+    input: ApplyMovementInput,
+  ): void {
+    const hasSerials =
+      (input.serialNumbers?.length ?? 0) > 0 ||
+      (input.serialIds?.length ?? 0) > 0;
+    if (!isSerialized) {
+      if (hasSerials) {
+        throw new BadRequestException(
+          'Product is not serialized; omit serialNumbers/serialIds',
+        );
+      }
+      return;
+    }
+
+    try {
+      const qtyAbs =
+        input.movementType === 'adjustment'
+          ? Math.abs(parseIntegerQuantity(input.quantity))
+          : parseIntegerQuantity(input.quantity);
+      if (qtyAbs <= 0) {
+        throw new Error('Serialized movement quantity must be positive');
+      }
+
+      const isTransferIn =
+        input.movementType === 'in' &&
+        input.referenceType === 'stock_transfer';
+      const createsSerials =
+        (input.movementType === 'in' && !isTransferIn) ||
+        (input.movementType === 'adjustment' && Number(input.quantity) > 0);
+
+      if (createsSerials) {
+        assertSerialCount(qtyAbs, input.serialNumbers, 'serialNumbers');
+      } else {
+        assertSerialCount(qtyAbs, input.serialIds, 'serialIds');
+      }
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid serial payload',
+      );
+    }
+  }
+
+  private async applySerializedSideEffects(
+    db: DbLike,
+    input: ApplyMovementInput,
+    now: string,
+  ): Promise<void> {
+    const isTransfer =
+      input.referenceType === 'stock_transfer';
+    const qty = Number(input.quantity);
+
+    if (
+      input.movementType === 'in' &&
+      !isTransfer &&
+      input.serialNumbers?.length
+    ) {
+      await this.serialNumbersService.createInboundSerials(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        batchId: input.batchId,
+        serialNumbers: input.serialNumbers,
+        purchaseOrderItemId: input.purchaseOrderItemId,
+        now,
+      });
+      return;
+    }
+
+    if (
+      input.movementType === 'adjustment' &&
+      qty > 0 &&
+      input.serialNumbers?.length
+    ) {
+      await this.serialNumbersService.createInboundSerials(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        batchId: input.batchId,
+        serialNumbers: input.serialNumbers,
+        now,
+      });
+      return;
+    }
+
+    if (!input.serialIds?.length) {
+      return;
+    }
+
+    if (input.movementType === 'in' && isTransfer) {
+      await this.serialNumbersService.applySerialIdsForMovement(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        serialIds: input.serialIds,
+        expectedStatus: SERIAL_NUMBER_STATUS.IN_STOCK,
+        nextWarehouseId: input.warehouseId,
+        skipWarehouseCheck: true,
+        now,
+      });
+      return;
+    }
+
+    if (input.movementType === 'out' && isTransfer) {
+      await this.serialNumbersService.applySerialIdsForMovement(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        serialIds: input.serialIds,
+        expectedStatus: SERIAL_NUMBER_STATUS.IN_STOCK,
+        now,
+      });
+      return;
+    }
+
+    if (input.movementType === 'reserve') {
+      await this.serialNumbersService.applySerialIdsForMovement(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        serialIds: input.serialIds,
+        expectedStatus: SERIAL_NUMBER_STATUS.IN_STOCK,
+        nextStatus: SERIAL_NUMBER_STATUS.RESERVED,
+        salesOrderItemId: input.salesOrderItemId,
+        now,
+      });
+      return;
+    }
+
+    if (input.movementType === 'unreserve') {
+      await this.serialNumbersService.applySerialIdsForMovement(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        serialIds: input.serialIds,
+        expectedStatus: SERIAL_NUMBER_STATUS.RESERVED,
+        nextStatus: SERIAL_NUMBER_STATUS.IN_STOCK,
+        salesOrderItemId: null,
+        now,
+      });
+      return;
+    }
+
+    if (input.movementType === 'out') {
+      await this.serialNumbersService.applySerialIdsForMovement(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        serialIds: input.serialIds,
+        expectedStatus: SERIAL_NUMBER_STATUS.IN_STOCK,
+        nextStatus: SERIAL_NUMBER_STATUS.SHIPPED,
+        salesOrderItemId: input.salesOrderItemId,
+        now,
+      });
+      return;
+    }
+
+    if (input.movementType === 'adjustment' && qty < 0) {
+      await this.serialNumbersService.applySerialIdsForMovement(db, {
+        organizationId: input.organizationId,
+        productId: input.productId,
+        warehouseId: input.warehouseId,
+        serialIds: input.serialIds,
+        expectedStatus: SERIAL_NUMBER_STATUS.IN_STOCK,
+        nextStatus: SERIAL_NUMBER_STATUS.SCRAPPED,
+        nextWarehouseId: null,
+        now,
+      });
+    }
   }
 
   private async findInventoryRow(
@@ -440,16 +640,21 @@ export class InventoryMovementsService {
     }
   }
 
-  private async ensureProductInOrg(
+  private async requireProductInOrg(
     db: DbLike,
     productId: string,
     organizationId: string,
-  ): Promise<void> {
+  ): Promise<{
+    id: string;
+    organization_id: string;
+    is_serialized: number;
+  }> {
     const [row] = await db
       .select({
         id: products.id,
         organization_id: products.organization_id,
         deleted_at: products.deleted_at,
+        is_serialized: products.is_serialized,
       })
       .from(products)
       .where(eq(products.id, productId))
@@ -462,5 +667,10 @@ export class InventoryMovementsService {
         'Product must belong to the same organization',
       );
     }
+    return {
+      id: row.id,
+      organization_id: row.organization_id,
+      is_serialized: row.is_serialized,
+    };
   }
 }

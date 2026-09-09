@@ -33,6 +33,10 @@ describe('InventoryMovementsService', () => {
     update: jest.Mock;
     transaction: jest.Mock;
   };
+  let serialNumbersService: {
+    createInboundSerials: jest.Mock;
+    applySerialIdsForMovement: jest.Mock;
+  };
 
   beforeEach(() => {
     db = {
@@ -41,7 +45,14 @@ describe('InventoryMovementsService', () => {
       update: jest.fn().mockReturnValue(thenable(undefined)),
       transaction: jest.fn(async (fn: (tx: typeof db) => unknown) => fn(db)),
     };
-    service = new InventoryMovementsService(db as never);
+    serialNumbersService = {
+      createInboundSerials: jest.fn().mockResolvedValue(undefined),
+      applySerialIdsForMovement: jest.fn().mockResolvedValue(undefined),
+    };
+    service = new InventoryMovementsService(
+      db as never,
+      serialNumbersService as never,
+    );
   });
 
   it('creates inventory on first in movement', async () => {
@@ -53,7 +64,12 @@ describe('InventoryMovementsService', () => {
       )
       .mockReturnValueOnce(
         thenable([
-          { id: productId, organization_id: orgId, deleted_at: null },
+          {
+            id: productId,
+            organization_id: orgId,
+            deleted_at: null,
+            is_serialized: 0,
+          },
         ]),
       )
       .mockReturnValueOnce(thenable([])); // no inventory yet
@@ -83,7 +99,12 @@ describe('InventoryMovementsService', () => {
       )
       .mockReturnValueOnce(
         thenable([
-          { id: productId, organization_id: orgId, deleted_at: null },
+          {
+            id: productId,
+            organization_id: orgId,
+            deleted_at: null,
+            is_serialized: 0,
+          },
         ]),
       )
       .mockReturnValueOnce(
@@ -125,5 +146,75 @@ describe('InventoryMovementsService', () => {
         quantity: '1',
       }),
     ).rejects.toThrow(/not applied directly/);
+  });
+
+  it('rejects serialized inbound without serialNumbers', async () => {
+    db.select
+      .mockReturnValueOnce(
+        thenable([
+          { id: warehouseId, organization_id: orgId, deleted_at: null },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: productId,
+            organization_id: orgId,
+            deleted_at: null,
+            is_serialized: 1,
+          },
+        ]),
+      );
+
+    await expect(
+      service.applyMovement({
+        organizationId: orgId,
+        productId,
+        warehouseId,
+        movementType: 'in',
+        quantity: '2',
+        referenceType: 'purchase_receipt',
+      }),
+    ).rejects.toThrow(/serialNumbers/);
+    expect(serialNumbersService.createInboundSerials).not.toHaveBeenCalled();
+  });
+
+  it('creates serials on serialized inbound', async () => {
+    db.select
+      .mockReturnValueOnce(
+        thenable([
+          { id: warehouseId, organization_id: orgId, deleted_at: null },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: productId,
+            organization_id: orgId,
+            deleted_at: null,
+            is_serialized: 1,
+          },
+        ]),
+      )
+      .mockReturnValueOnce(thenable([]));
+
+    await service.applyMovement({
+      organizationId: orgId,
+      productId,
+      warehouseId,
+      movementType: 'in',
+      quantity: '2',
+      referenceType: 'purchase_receipt',
+      serialNumbers: ['SN-1', 'SN-2'],
+      purchaseOrderItemId: 'poi-1',
+    });
+
+    expect(serialNumbersService.createInboundSerials).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        serialNumbers: ['SN-1', 'SN-2'],
+        purchaseOrderItemId: 'poi-1',
+      }),
+    );
   });
 });

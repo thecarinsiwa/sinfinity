@@ -17,6 +17,7 @@ import {
   inventory,
   sales_order_items,
   sales_orders,
+  serial_numbers,
   stock_reservations,
 } from '../../../database/schema';
 import { throwFkOrRethrow } from '../../settings/utils/mysql-errors';
@@ -201,6 +202,8 @@ export class StockReservationsService {
           referenceId: id,
           movedAt: now,
           movedBy: user?.id ?? null,
+          serialIds: dto.serialIds,
+          salesOrderItemId: dto.salesOrderItemId,
         },
         tx,
       );
@@ -251,6 +254,12 @@ export class StockReservationsService {
     );
 
     await this.db.transaction(async (tx) => {
+      const serialIds = await this.loadReservedSerialIds(
+        tx,
+        reservation.sales_order_item_id,
+        inv.product_id,
+        Number(reservation.quantity),
+      );
       await this.inventoryMovementsService.applyMovement(
         {
           organizationId: inv.organization_id,
@@ -264,6 +273,7 @@ export class StockReservationsService {
           referenceId: id,
           movedBy: user?.id ?? null,
           notes: 'Reservation released',
+          serialIds,
         },
         tx,
       );
@@ -301,6 +311,12 @@ export class StockReservationsService {
     );
 
     await this.db.transaction(async (tx) => {
+      const serialIds = await this.loadReservedSerialIds(
+        tx,
+        reservation.sales_order_item_id,
+        inv.product_id,
+        Number(reservation.quantity),
+      );
       // Return reserved qty to available, then consume via out.
       await this.inventoryMovementsService.applyMovement(
         {
@@ -315,6 +331,7 @@ export class StockReservationsService {
           referenceId: id,
           movedBy: user?.id ?? null,
           notes: 'Reservation fulfill — unreserve',
+          serialIds,
         },
         tx,
       );
@@ -331,6 +348,8 @@ export class StockReservationsService {
           referenceId: id,
           movedBy: user?.id ?? null,
           notes: 'Reservation fulfill — out',
+          serialIds,
+          salesOrderItemId: reservation.sales_order_item_id,
         },
         tx,
       );
@@ -446,5 +465,34 @@ export class StockReservationsService {
       );
     }
     return { sales_order_id: row.sales_order_id };
+  }
+
+  /**
+   * Returns reserved serial UUIDs for a SO line, or undefined when none
+   * (non-serialized products).
+   */
+  private async loadReservedSerialIds(
+    db: {
+      select: DrizzleDB['select'];
+    },
+    salesOrderItemId: string | null,
+    productId: string,
+    quantity: number,
+  ): Promise<string[] | undefined> {
+    if (!salesOrderItemId) return undefined;
+    const rows = await db
+      .select({ id: serial_numbers.id })
+      .from(serial_numbers)
+      .where(
+        and(
+          eq(serial_numbers.sales_order_item_id, salesOrderItemId),
+          eq(serial_numbers.product_id, productId),
+          eq(serial_numbers.status, 'reserved'),
+        ),
+      )
+      .orderBy(asc(serial_numbers.created_at))
+      .limit(Math.max(1, Math.round(quantity)));
+    if (rows.length === 0) return undefined;
+    return rows.map((r) => r.id);
   }
 }

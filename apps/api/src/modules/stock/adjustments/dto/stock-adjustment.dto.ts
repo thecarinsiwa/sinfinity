@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsIn,
   IsOptional,
   IsString,
@@ -59,6 +60,26 @@ export class CreateStockAdjustmentDto {
   @ApiProperty({ enum: ADJUSTMENT_REASONS, example: 'count' })
   @IsIn([...ADJUSTMENT_REASONS])
   reason!: AdjustmentReason;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'New serial strings when increasing a serialized product (length = delta)',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  serialNumbers?: string[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'Existing serial UUIDs when decreasing a serialized product (length = |delta|)',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  serialIds?: string[];
 
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()

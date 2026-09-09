@@ -9,6 +9,8 @@ export type InventoryInboundLine = {
   purchaseOrderItemId: string;
   productId: string | null;
   quantity: string;
+  /** Required when product.is_serialized — creates in_stock serials on receipt. */
+  serialNumbers?: string[];
 };
 
 export type InventoryInboundInput = {

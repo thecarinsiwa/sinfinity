@@ -207,6 +207,8 @@ export class StockAdjustmentsService {
           movedAt: now,
           movedBy: user?.id ?? null,
           notes: dto.notes ?? `Adjustment reason: ${dto.reason}`,
+          serialNumbers: dto.serialNumbers,
+          serialIds: dto.serialIds,
         },
         tx,
       );

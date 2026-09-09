@@ -43,7 +43,12 @@ describe('StockInventoryPortAdapter', () => {
       movedAt: '2026-09-09 10:00:00.000',
       movedBy: 'user-1',
       lines: [
-        { purchaseOrderItemId: 'poi-1', productId: 'p1', quantity: '2' },
+        {
+          purchaseOrderItemId: 'poi-1',
+          productId: 'p1',
+          quantity: '2',
+          serialNumbers: ['SN-1', 'SN-2'],
+        },
         { purchaseOrderItemId: 'poi-2', productId: null, quantity: '1' },
       ],
     });
@@ -58,6 +63,8 @@ describe('StockInventoryPortAdapter', () => {
         referenceType: 'purchase_receipt',
         referenceId: 'r1',
         warehouseId,
+        serialNumbers: ['SN-1', 'SN-2'],
+        purchaseOrderItemId: 'poi-1',
       }),
       { tag: 'tx' },
     );

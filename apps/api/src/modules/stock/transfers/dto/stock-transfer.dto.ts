@@ -43,6 +43,16 @@ export class StockTransferLineDto {
   @IsOptional()
   @IsUUID('all')
   batchId?: string | null;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'Required when product is serialized; UUIDs of serial_numbers rows',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  serialIds?: string[];
 }
 
 export class CreateStockTransferDto {

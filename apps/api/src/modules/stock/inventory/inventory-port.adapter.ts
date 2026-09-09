@@ -10,6 +10,7 @@ import { InventoryMovementsService } from './inventory-movements.service';
 /**
  * Real InventoryPort: confirms purchase receipts into stock via applyMovement.
  * No-op when warehouseId is null (receipt without warehouse).
+ * Serialized products: pass serialNumbers on each line (enforced in applyMovement).
  */
 @Injectable()
 export class StockInventoryPortAdapter implements InventoryPort {
@@ -41,6 +42,8 @@ export class StockInventoryPortAdapter implements InventoryPort {
             movedAt: input.movedAt,
             movedBy: input.movedBy,
             notes: `PO item ${line.purchaseOrderItemId}`,
+            serialNumbers: line.serialNumbers,
+            purchaseOrderItemId: line.purchaseOrderItemId,
           },
           tx,
         );

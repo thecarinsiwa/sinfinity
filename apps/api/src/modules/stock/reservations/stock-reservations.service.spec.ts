@@ -130,6 +130,7 @@ describe('StockReservationsService', () => {
     db.select
       .mockReturnValueOnce(thenable([active]))
       .mockReturnValueOnce(thenable([invRow]))
+      .mockReturnValueOnce(thenable([])) // loadReservedSerialIds — non-serialized
       .mockReturnValueOnce(thenable([fulfilled]));
 
     await service.fulfill(reservationId, orgId);

@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsIn,
   IsOptional,
   IsString,
@@ -31,6 +32,16 @@ export class CreateStockReservationDto {
   @IsString()
   @Matches(DECIMAL_REGEX, { message: 'quantity must be a decimal string' })
   quantity!: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'Required when inventory product is serialized; UUIDs of in_stock serials',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  serialIds?: string[];
 
   @ApiPropertyOptional({
     nullable: true,

@@ -310,6 +310,7 @@ export class PurchaseReceiptsService {
         purchaseOrderItemId: string;
         productId: string | null;
         quantity: string;
+        serialNumbers?: string[];
       }> = [];
 
       for (const line of dto.lines) {
@@ -358,6 +359,7 @@ export class PurchaseReceiptsService {
           purchaseOrderItemId: line.purchaseOrderItemId,
           productId: (item as any).product_id ?? null,
           quantity: formatDecimal(inc),
+          serialNumbers: line.serialNumbers,
         });
       }
 
