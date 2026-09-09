@@ -100,6 +100,12 @@ export const PERMISSION_CATALOG: PermissionDef[] = [
   perm('warranties', 'claim', 'Submit and transition warranty claims'),
   perm('tasks', 'read', 'Read tasks'),
   perm('tasks', 'write', 'Manage tasks'),
+  perm('appointments', 'read', 'Read appointments'),
+  perm('appointments', 'write', 'Manage appointments'),
+  perm('comments', 'read', 'Read comments'),
+  perm('comments', 'write', 'Manage comments'),
+  perm('notifications', 'read', 'Read notifications'),
+  perm('notifications', 'write', 'Manage notifications (mark read)'),
 
   // Finance
   perm('invoices', 'read', 'Read invoices'),
@@ -158,6 +164,12 @@ const SALES_PERMS = [
   'contracts.write',
   'tasks.read',
   'tasks.write',
+  'appointments.read',
+  'appointments.write',
+  'comments.read',
+  'comments.write',
+  'notifications.read',
+  'notifications.write',
 ];
 
 const PROCUREMENT_PERMS = [
@@ -179,6 +191,12 @@ const PROCUREMENT_PERMS = [
   'contracts.write',
   'tasks.read',
   'tasks.write',
+  'appointments.read',
+  'appointments.write',
+  'comments.read',
+  'comments.write',
+  'notifications.read',
+  'notifications.write',
 ];
 
 const LOGISTICS_PERMS = [
@@ -200,6 +218,12 @@ const LOGISTICS_PERMS = [
   'documents.write',
   'tasks.read',
   'tasks.write',
+  'appointments.read',
+  'appointments.write',
+  'comments.read',
+  'comments.write',
+  'notifications.read',
+  'notifications.write',
 ];
 
 const TECHNICAL_PERMS = [
@@ -222,6 +246,12 @@ const TECHNICAL_PERMS = [
   'documents.write',
   'tasks.read',
   'tasks.write',
+  'appointments.read',
+  'appointments.write',
+  'comments.read',
+  'comments.write',
+  'notifications.read',
+  'notifications.write',
 ];
 
 const FINANCE_PERMS = [
@@ -246,6 +276,12 @@ const FINANCE_PERMS = [
   'audit.read',
   'tasks.read',
   'tasks.write',
+  'appointments.read',
+  'appointments.write',
+  'comments.read',
+  'comments.write',
+  'notifications.read',
+  'notifications.write',
 ];
 
 export const SYSTEM_ROLES: SystemRoleDef[] = [
