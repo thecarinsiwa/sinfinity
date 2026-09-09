@@ -40,5 +40,6 @@ import { UnitsService } from './units/units.service';
     PaymentTermsService,
     ShippingTermsService,
   ],
+  exports: [ExchangeRatesService, CurrenciesService],
 })
 export class SettingsModule {}
