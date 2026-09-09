@@ -1,7 +1,7 @@
 /**
  * Port for stock inbound side-effects from purchase receipt confirm.
- * Real inventory_movements (movement_type: 'in', reference_type: 'purchase_receipt')
- * land in Phase 13 — current provider is a no-op.
+ * Implemented by StockInventoryPortAdapter (Phase 13) via applyMovement
+ * (movement_type: 'in', reference_type: 'purchase_receipt').
  */
 export const INVENTORY_PORT = Symbol('INVENTORY_PORT');
 

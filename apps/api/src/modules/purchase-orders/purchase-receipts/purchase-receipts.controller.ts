@@ -125,7 +125,7 @@ export class PurchaseReceiptsController {
   @ApiOperation({
     summary: 'Confirm a purchase receipt and update PO received quantities',
     description:
-      'Body lines increment purchase_order_items.quantity_received (capped). Sets PO status to partial/received accordingly. Calls InventoryPort (no-op provider until Phase 13).',
+      'Body lines increment purchase_order_items.quantity_received (capped). Sets PO status to partial/received accordingly. Calls InventoryPort → applyMovement(in) when warehouseId is set.',
   })
   @ApiOkResponse({ type: PurchaseReceiptResponseDto })
   confirm(

@@ -421,7 +421,7 @@ export class PurchaseReceiptsService {
         })
         .where(eq(purchase_receipts.id, id));
 
-      // Port side-effect: inventory movements (no-op provider for now)
+      // Port side-effect: inventory movements via StockInventoryPortAdapter
       await this.inventoryPort.recordInbound({
         organizationId: (receipt as PurchaseReceiptRow).organization_id,
         warehouseId: (receipt as PurchaseReceiptRow).warehouse_id ?? null,
