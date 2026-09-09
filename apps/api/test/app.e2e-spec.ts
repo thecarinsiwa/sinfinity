@@ -337,6 +337,37 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/purchase-receipts']).toBeDefined();
     expect(body.paths['/api/v1/purchase-receipts/{id}']).toBeDefined();
     expect(body.paths['/api/v1/purchase-receipts/{id}/confirm']).toBeDefined();
+    expect(body.paths['/api/v1/shipping-methods']).toBeDefined();
+    expect(body.paths['/api/v1/shipping-methods/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/carriers']).toBeDefined();
+    expect(body.paths['/api/v1/carriers/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/shipments']).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}/transition']).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}/items']).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{id}/items/{itemId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}/tracking']).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{id}/tracking/{eventId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/customs-declarations']).toBeDefined();
+    expect(body.paths['/api/v1/customs-declarations/{id}']).toBeDefined();
+    expect(
+      body.paths['/api/v1/customs-declarations/{id}/documents'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/customs-declarations/{id}/documents/{linkId}'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{shipmentId}/import-documents'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{shipmentId}/import-documents/{linkId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/delivery-addresses']).toBeDefined();
+    expect(body.paths['/api/v1/delivery-addresses/{id}']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
@@ -352,6 +383,7 @@ describe('AppController (e2e)', () => {
         'Commandes clients',
         'Sourcing',
         'Achats',
+        'Logistique',
       ]),
     );
     expect(body.components.securitySchemes['access-token']).toEqual(

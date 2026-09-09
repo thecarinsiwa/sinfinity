@@ -63,6 +63,9 @@ export class TestJwtAuthGuard implements CanActivate {
         'purchase_orders.read',
         'purchase_orders.write',
         'purchase_orders.send',
+        // Phase 11 — Logistique
+        'shipments.read',
+        'shipments.write',
       ],
       isSuperAdmin: true,
       sessionId: '0191e6b8-4c3a-7b2d-9f1e-session0001',
