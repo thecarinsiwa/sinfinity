@@ -18,6 +18,7 @@ import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.
 import { LandedCostsModule } from './modules/landed-costs/landed-costs.module';
 import { LogisticsModule } from './modules/logistics/logistics.module';
 import { FinancesModule } from './modules/finances/finances.module';
+import { CollaborationModule } from './modules/collaboration/collaboration.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { SalesOrdersModule } from './modules/sales-orders/sales-orders.module';
@@ -57,6 +58,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
     ProjectsModule,
     MaintenanceModule,
     FinancesModule,
+    CollaborationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

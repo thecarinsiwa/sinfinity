@@ -54,7 +54,8 @@ export class SalesActivitiesController {
   @ApiOperation({
     summary: 'List sales activities',
     description:
-      'Filter by related entity, activity type, user, scheduledAt range.',
+      'Filter by related entity, activity type, user, scheduledAt range. ' +
+      'Read-only Collaboration alias: GET /activities.',
   })
   @ApiPaginatedResponse(SalesActivityResponseDto)
   findAll(

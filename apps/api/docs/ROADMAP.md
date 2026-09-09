@@ -1489,7 +1489,7 @@ Doc métier : [`database/modules/17_communication.md`](../../../database/modules
 | `feat/api-m17-appointments` | `appointments` |
 | `feat/api-m17-comments` | `comments` (threads) |
 | `feat/api-m17-notifications` | `notifications` + helper `notify()` |
-| `feat/api-m17-activities` | `activities` (si distinct de `sales_activities`) |
+| `feat/api-m17-activities` | **Fusion** : alias `GET /activities` → `sales_activities` (pas de CRUD table `activities`) |
 
 ## Prompt branches secondaires
 
@@ -1543,6 +1543,9 @@ Branche : feat/api-m17-activities
 Si sales_activities (CRM) suffit déjà, documenter la fusion et n’exposer qu’un
 alias GET /activities. Sinon CRUD activities génériques. Ne pas dupliquer
 sans raison. Tag « Collaboration ».
+
+Décision livrée : fusion — GET /activities délègue à SalesActivitiesService ;
+écritures uniquement sur /sales-activities. Doc : ACTIVITIES_FUSION.ts.
 ```
 
 ## Explication littéraire (branches secondaires)
