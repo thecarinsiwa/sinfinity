@@ -35,6 +35,7 @@ import {
   suppliers,
 } from '../../../database/schema';
 import { PROCUREMENT_QUOTE_STATUS } from '../../procurement/procurement-quotes/procurement-quote-statuses';
+import { AccountsLedgerService } from '../../finances/ledger/accounts-ledger.service';
 import {
   isMysqlDuplicateError,
   throwDuplicateOrRethrow,
@@ -86,7 +87,10 @@ type Tx = Parameters<Parameters<DrizzleDB['transaction']>[0]>[0];
 
 @Injectable()
 export class PurchaseOrdersService {
-  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: DrizzleDB,
+    private readonly accountsLedger: AccountsLedgerService,
+  ) {}
 
   async findAll(
     query: ListPurchaseOrdersQueryDto,
@@ -671,6 +675,8 @@ export class PurchaseOrdersService {
       dto.notes,
     );
 
+    await this.syncAccountsPayable(order, toStatus);
+
     return this.findOne(id, currentOrganizationId, user);
   }
 
@@ -860,6 +866,35 @@ export class PurchaseOrdersService {
       'purchase order',
     );
     return row as PurchaseOrderRow;
+  }
+
+  private async syncAccountsPayable(
+    order: PurchaseOrderRow,
+    toStatus: PurchaseOrderStatus,
+  ): Promise<void> {
+    if (toStatus === PURCHASE_ORDER_STATUS.CANCELLED) {
+      await this.accountsLedger.cancelPayableForPurchaseOrder(order.id);
+      return;
+    }
+
+    const upsertStatuses: PurchaseOrderStatus[] = [
+      PURCHASE_ORDER_STATUS.SENT,
+      PURCHASE_ORDER_STATUS.CONFIRMED,
+      PURCHASE_ORDER_STATUS.PARTIAL,
+      PURCHASE_ORDER_STATUS.RECEIVED,
+    ];
+    if (!upsertStatuses.includes(toStatus)) {
+      return;
+    }
+
+    await this.accountsLedger.upsertPayable({
+      organizationId: order.organization_id,
+      supplierId: order.supplier_id,
+      purchaseOrderId: order.id,
+      originalAmount: order.total_amount,
+      amountPaid: '0',
+      dueDate: order.expected_date,
+    });
   }
 
   private assertHeaderEditable(status: PurchaseOrderStatus): void {

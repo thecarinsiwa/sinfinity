@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FinancesModule } from '../finances/finances.module';
 import { StockModule } from '../stock/stock.module';
 import { StockInventoryPortAdapter } from '../stock/inventory/inventory-port.adapter';
 import { INVENTORY_PORT } from './inventory/inventory.port';
@@ -10,7 +11,7 @@ import { PurchaseReceiptsController } from './purchase-receipts/purchase-receipt
 import { PurchaseReceiptsService } from './purchase-receipts/purchase-receipts.service';
 
 @Module({
-  imports: [StockModule],
+  imports: [StockModule, FinancesModule],
   controllers: [
     PurchaseOrdersController,
     PurchaseOrderPaymentsController,

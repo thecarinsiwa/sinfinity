@@ -66,7 +66,14 @@ describe('PurchaseReceiptsService', () => {
       transaction: jest.fn(),
     };
     inventoryPort = { recordInbound: jest.fn().mockResolvedValue(undefined) };
-    service = new PurchaseReceiptsService(db as never, inventoryPort as never);
+    const ledger = {
+      upsertPayable: jest.fn().mockResolvedValue(undefined),
+    };
+    service = new PurchaseReceiptsService(
+      db as never,
+      inventoryPort as never,
+      ledger as never,
+    );
   });
 
   it('creates a draft receipt with unique receiptNumber', async () => {

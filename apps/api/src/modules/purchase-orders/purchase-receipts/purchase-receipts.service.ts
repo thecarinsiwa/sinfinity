@@ -35,6 +35,7 @@ import {
   throwFkOrRethrow,
 } from '../../settings/utils/mysql-errors';
 import { nowMysqlDateTime } from '../../settings/utils/mysql-datetime';
+import { AccountsLedgerService } from '../../finances/ledger/accounts-ledger.service';
 import {
   assertOrgAccess,
   ensureOrganizationExists,
@@ -70,6 +71,7 @@ export class PurchaseReceiptsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     @Inject(INVENTORY_PORT) private readonly inventoryPort: InventoryPort,
+    private readonly accountsLedger: AccountsLedgerService,
   ) {}
 
   async findAll(
@@ -411,6 +413,18 @@ export class PurchaseReceiptsService {
             notes: null,
           });
         }
+
+        await this.accountsLedger.upsertPayable(
+          {
+            organizationId: (order as PurchaseOrderRow).organization_id,
+            supplierId: (order as PurchaseOrderRow).supplier_id,
+            purchaseOrderId: (order as PurchaseOrderRow).id,
+            originalAmount: (order as PurchaseOrderRow).total_amount,
+            amountPaid: '0',
+            dueDate: (order as PurchaseOrderRow).expected_date,
+          },
+          tx,
+        );
       }
 
       await tx
