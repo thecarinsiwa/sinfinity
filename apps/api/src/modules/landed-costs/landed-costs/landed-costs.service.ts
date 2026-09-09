@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -12,6 +13,7 @@ import {
   eq,
   isNull,
   like,
+  lte,
   type SQL,
 } from 'drizzle-orm';
 import {
@@ -23,19 +25,39 @@ import {
 import { DRIZZLE } from '../../../database/database.constants';
 import type { DrizzleDB } from '../../../database/database.types';
 import {
+  customs_costs,
+  exchange_rates,
+  handling_costs,
+  inspection_costs,
   landed_cost_items,
   landed_costs,
+  local_transport_costs,
+  other_procurement_costs,
   products,
   purchase_order_items,
   purchase_orders,
+  shipment_items,
   shipments,
+  shipping_costs,
 } from '../../../database/schema';
 import {
   isMysqlDuplicateError,
   throwDuplicateOrRethrow,
   throwFkOrRethrow,
 } from '../../settings/utils/mysql-errors';
-import { nowMysqlDateTime } from '../../settings/utils/mysql-datetime';
+import {
+  nowMysqlDateTime,
+  todayMysqlDate,
+} from '../../settings/utils/mysql-datetime';
+import {
+  convertAmount,
+  customsAmountTotal,
+} from '../fee-components/currency-conversion';
+import {
+  computeLandedCostTotals,
+  type AllocationMethod,
+  type EngineItemInput,
+} from '../landed-costs-engine';
 import {
   assertOrgAccess,
   ensureOrganizationExists,
@@ -424,6 +446,333 @@ export class LandedCostsService {
       .delete(landed_cost_items)
       .where(eq(landed_cost_items.id, itemId));
     await this.recalculateGoodsCost(landedCostId, { resetAllocation: true });
+  }
+
+  /**
+   * Convert fee amounts to header currency, sum totals, allocate to items.
+   * Sets status to `calculated`.
+   */
+  async calculate(
+    id: string,
+    method: AllocationMethod = 'value',
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<LandedCostResponseDto> {
+    const header = await this.requireLandedCostAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+    this.assertMutable(header.status);
+
+    if (!header.currency_id) {
+      throw new BadRequestException(
+        'Landed cost currencyId is required before calculate',
+      );
+    }
+
+    const items = await this.loadItems(id);
+    if (items.length === 0) {
+      throw new BadRequestException(
+        'Landed cost must have at least one item to calculate',
+      );
+    }
+
+    const asOf = todayMysqlDate();
+    const feeAmounts = await this.loadConvertedFeeAmounts(
+      id,
+      header.currency_id,
+      asOf,
+    );
+
+    const engineItems = await this.buildEngineItems(header, items, method);
+
+    let result;
+    try {
+      result = computeLandedCostTotals(engineItems, feeAmounts, method);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Allocation failed',
+      );
+    }
+
+    const now = nowMysqlDateTime();
+    for (const line of result.items) {
+      await this.db
+        .update(landed_cost_items)
+        .set({
+          allocated_costs: line.allocatedCosts,
+          unit_landed_cost: line.unitLandedCost,
+          total_landed_cost: line.totalLandedCost,
+          goods_cost: line.goodsCost,
+          updated_at: now,
+        })
+        .where(eq(landed_cost_items.id, line.id));
+    }
+
+    await this.db
+      .update(landed_costs)
+      .set({
+        goods_cost: result.goodsCost,
+        total_additional_costs: result.totalAdditionalCosts,
+        total_landed_cost: result.totalLandedCost,
+        status: LANDED_COST_STATUS.CALCULATED,
+        calculated_at: now,
+        calculated_by: user?.id ?? null,
+        updated_at: now,
+      })
+      .where(eq(landed_costs.id, id));
+
+    return this.findOne(id, currentOrganizationId, user);
+  }
+
+  /**
+   * Lock a calculated landed cost as posted (immutable afterwards).
+   * Requires `landed_costs.post`.
+   */
+  async post(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<LandedCostResponseDto> {
+    const header = await this.requireLandedCostAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+
+    if (header.status === LANDED_COST_STATUS.POSTED) {
+      throw new BadRequestException('Landed cost is already posted');
+    }
+    if (header.status !== LANDED_COST_STATUS.CALCULATED) {
+      throw new BadRequestException(
+        'Only a calculated landed cost can be posted',
+      );
+    }
+
+    const granted = user?.permissions;
+    if (
+      granted !== undefined &&
+      !granted.includes('landed_costs.post')
+    ) {
+      throw new ForbiddenException('Missing permissions: landed_costs.post');
+    }
+
+    await this.db
+      .update(landed_costs)
+      .set({
+        status: LANDED_COST_STATUS.POSTED,
+        updated_at: nowMysqlDateTime(),
+      })
+      .where(eq(landed_costs.id, id));
+
+    return this.findOne(id, currentOrganizationId, user);
+  }
+
+  private async loadConvertedFeeAmounts(
+    landedCostId: string,
+    headerCurrencyId: string,
+    asOf: string,
+  ): Promise<string[]> {
+    const amounts: string[] = [];
+
+    const shipping = await this.db
+      .select()
+      .from(shipping_costs)
+      .where(eq(shipping_costs.landed_cost_id, landedCostId));
+    for (const row of shipping) {
+      const rate = await this.resolveRate(
+        row.currency_id,
+        headerCurrencyId,
+        asOf,
+      );
+      amounts.push(convertAmount(row.amount, rate));
+    }
+
+    const customs = await this.db
+      .select()
+      .from(customs_costs)
+      .where(eq(customs_costs.landed_cost_id, landedCostId));
+    for (const row of customs) {
+      const rate = await this.resolveRate(
+        row.currency_id,
+        headerCurrencyId,
+        asOf,
+      );
+      amounts.push(
+        convertAmount(
+          customsAmountTotal(row.duties_amount, row.vat_amount, row.other_fees),
+          rate,
+        ),
+      );
+    }
+
+    const local = await this.db
+      .select()
+      .from(local_transport_costs)
+      .where(eq(local_transport_costs.landed_cost_id, landedCostId));
+    for (const row of local) {
+      const rate = await this.resolveRate(
+        row.currency_id,
+        headerCurrencyId,
+        asOf,
+      );
+      amounts.push(convertAmount(row.amount, rate));
+    }
+
+    const inspection = await this.db
+      .select()
+      .from(inspection_costs)
+      .where(eq(inspection_costs.landed_cost_id, landedCostId));
+    for (const row of inspection) {
+      const rate = await this.resolveRate(
+        row.currency_id,
+        headerCurrencyId,
+        asOf,
+      );
+      amounts.push(convertAmount(row.amount, rate));
+    }
+
+    const handling = await this.db
+      .select()
+      .from(handling_costs)
+      .where(eq(handling_costs.landed_cost_id, landedCostId));
+    for (const row of handling) {
+      const rate = await this.resolveRate(
+        row.currency_id,
+        headerCurrencyId,
+        asOf,
+      );
+      amounts.push(convertAmount(row.amount, rate));
+    }
+
+    const other = await this.db
+      .select()
+      .from(other_procurement_costs)
+      .where(eq(other_procurement_costs.landed_cost_id, landedCostId));
+    for (const row of other) {
+      const rate = await this.resolveRate(
+        row.currency_id,
+        headerCurrencyId,
+        asOf,
+      );
+      amounts.push(convertAmount(row.amount, rate));
+    }
+
+    return amounts;
+  }
+
+  private async resolveRate(
+    fromCurrencyId: string | null,
+    toCurrencyId: string,
+    asOf: string,
+  ): Promise<string> {
+    if (!fromCurrencyId || fromCurrencyId === toCurrencyId) {
+      return '1';
+    }
+
+    const [row] = await this.db
+      .select({ rate: exchange_rates.rate })
+      .from(exchange_rates)
+      .where(
+        and(
+          eq(exchange_rates.from_currency_id, fromCurrencyId),
+          eq(exchange_rates.to_currency_id, toCurrencyId),
+          lte(exchange_rates.rate_date, asOf),
+        ),
+      )
+      .orderBy(desc(exchange_rates.rate_date))
+      .limit(1);
+
+    if (!row) {
+      throw new BadRequestException(
+        `No exchange rate from fee currency ${fromCurrencyId} to header currency ${toCurrencyId} on or before ${asOf}`,
+      );
+    }
+    return row.rate;
+  }
+
+  private async buildEngineItems(
+    header: LandedCostRow,
+    items: LandedCostItemRow[],
+    method: AllocationMethod,
+  ): Promise<EngineItemInput[]> {
+    let shipmentLines: Array<{
+      purchase_order_item_id: string | null;
+      product_id: string | null;
+      quantity: string;
+      weight_kg: string | null;
+      volume_cbm: string | null;
+    }> = [];
+
+    if (method === 'weight' || method === 'volume') {
+      if (!header.shipment_id) {
+        throw new BadRequestException(
+          `Allocation method ${method} requires a shipmentId on the landed cost`,
+        );
+      }
+      shipmentLines = await this.db
+        .select({
+          purchase_order_item_id: shipment_items.purchase_order_item_id,
+          product_id: shipment_items.product_id,
+          quantity: shipment_items.quantity,
+          weight_kg: shipment_items.weight_kg,
+          volume_cbm: shipment_items.volume_cbm,
+        })
+        .from(shipment_items)
+        .where(eq(shipment_items.shipment_id, header.shipment_id));
+    }
+
+    return items.map((item) => {
+      let weightBasis = '0.0000';
+      let volumeBasis = '0.0000';
+
+      if (method === 'weight' || method === 'volume') {
+        const matched = this.matchShipmentLine(item, shipmentLines);
+        if (matched) {
+          const factor =
+            Number(item.quantity) /
+            Math.max(Number(matched.quantity) || 1, Number.EPSILON);
+          weightBasis = formatDecimal(
+            Number(matched.weight_kg ?? 0) * factor,
+          );
+          volumeBasis = formatDecimal(
+            Number(matched.volume_cbm ?? 0) * factor,
+          );
+        }
+      }
+
+      return {
+        id: item.id,
+        quantity: item.quantity,
+        goodsCost: item.goods_cost,
+        weightBasis,
+        volumeBasis,
+      };
+    });
+  }
+
+  private matchShipmentLine(
+    item: LandedCostItemRow,
+    lines: Array<{
+      purchase_order_item_id: string | null;
+      product_id: string | null;
+      quantity: string;
+      weight_kg: string | null;
+      volume_cbm: string | null;
+    }>,
+  ) {
+    if (item.purchase_order_item_id) {
+      const byPo = lines.find(
+        (line) =>
+          line.purchase_order_item_id === item.purchase_order_item_id,
+      );
+      if (byPo) return byPo;
+    }
+    if (item.product_id) {
+      return lines.find((line) => line.product_id === item.product_id);
+    }
+    return undefined;
   }
 
   private async insertItem(

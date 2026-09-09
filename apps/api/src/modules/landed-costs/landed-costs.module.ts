@@ -6,8 +6,7 @@ import { LandedCostsController } from './landed-costs/landed-costs.controller';
 import { LandedCostsService } from './landed-costs/landed-costs.service';
 
 /**
- * Phase 12 — Coût rendu (landed costs).
- * Calculate/post engine is added in a subsequent branch.
+ * Phase 12 — Coût rendu (landed costs): header, items, fees, calculate/post.
  */
 @Module({
   imports: [SettingsModule],

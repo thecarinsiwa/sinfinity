@@ -36,6 +36,7 @@ import {
 import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
 import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { CreateLandedCostDto } from './dto/create-landed-cost.dto';
+import { CalculateLandedCostQueryDto } from './dto/calculate-landed-cost-query.dto';
 import {
   CreateLandedCostItemDto,
   LandedCostItemResponseDto,
@@ -130,6 +131,46 @@ export class LandedCostsController {
     @CurrentUser() user?: AuthUser,
   ): Promise<void> {
     return this.landedCostsService.remove(id, organizationId, user);
+  }
+
+  @Post(':id/calculate')
+  @RequirePermissions('landed_costs.write')
+  @ApiOperation({
+    summary: 'Calculate landed cost totals and allocate fees to items',
+    description:
+      'Converts ancillary fees to the header currency_id via exchange_rates, ' +
+      'sets total_additional_costs / total_landed_cost, allocates by method ' +
+      '(value|weight|volume), status → calculated. Not allowed when posted.',
+  })
+  @ApiOkResponse({ type: LandedCostResponseDto })
+  calculate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: CalculateLandedCostQueryDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<LandedCostResponseDto> {
+    return this.landedCostsService.calculate(
+      id,
+      query.method ?? 'value',
+      organizationId,
+      user,
+    );
+  }
+
+  @Post(':id/post')
+  @RequirePermissions('landed_costs.post')
+  @ApiOperation({
+    summary: 'Post a calculated landed cost (immutable afterwards)',
+    description:
+      'Requires status calculated and permission landed_costs.post. After post, header, items and fees cannot be mutated.',
+  })
+  @ApiOkResponse({ type: LandedCostResponseDto })
+  post(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<LandedCostResponseDto> {
+    return this.landedCostsService.post(id, organizationId, user);
   }
 
   @Get(':id/items')

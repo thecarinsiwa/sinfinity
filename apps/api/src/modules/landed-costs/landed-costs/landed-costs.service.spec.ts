@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { LandedCostsService } from './landed-costs.service';
 
 type Thenable<T> = PromiseLike<T> & Record<string, unknown>;
@@ -25,11 +25,17 @@ describe('LandedCostsService', () => {
   const poId = '0191e6b8-4c3a-7b2d-9f1e-popopopopopo';
   const landedCostId = '0191e6b8-4c3a-7b2d-9f1e-lclclclclclc';
   const itemId = '0191e6b8-4c3a-7b2d-9f1e-itemitemitemi';
+  const usdId = '0191e6b8-4c3a-7b2d-9f1e-usdusdusdusdu';
+  const cdfId = '0191e6b8-4c3a-7b2d-9f1e-cdfcdfcdfcdfc';
   const orgUser = {
     id: 'user-1',
     organizationId: orgId,
     isSuperAdmin: false,
-    permissions: ['landed_costs.read', 'landed_costs.write'],
+    permissions: [
+      'landed_costs.read',
+      'landed_costs.write',
+      'landed_costs.post',
+    ],
   };
 
   const headerRow = {
@@ -155,5 +161,134 @@ describe('LandedCostsService', () => {
         orgUser,
       ),
     ).rejects.toThrow('Posted landed costs are immutable');
+  });
+
+  it('rejects calculate without currencyId', async () => {
+    db.select.mockReturnValueOnce(thenable([headerRow]));
+
+    await expect(
+      service.calculate(landedCostId, 'value', orgId, orgUser),
+    ).rejects.toThrow('currencyId is required');
+  });
+
+  it('calculates USD goods + USD shipping + CDF customs (value allocation)', async () => {
+    const header = { ...headerRow, currency_id: usdId };
+    const itemA = {
+      id: 'item-a',
+      landed_cost_id: landedCostId,
+      product_id: null,
+      purchase_order_item_id: null,
+      quantity: '2.0000',
+      goods_cost: '600.0000',
+      allocated_costs: '0.0000',
+      unit_landed_cost: '0.0000',
+      total_landed_cost: '0.0000',
+      created_at: '2026-09-09 10:00:00.000',
+      updated_at: '2026-09-09 10:00:00.000',
+    };
+    const itemB = {
+      ...itemA,
+      id: 'item-b',
+      quantity: '1.0000',
+      goods_cost: '400.0000',
+    };
+    const calculatedHeader = {
+      ...header,
+      status: 'calculated' as const,
+      goods_cost: '1000.0000',
+      total_additional_costs: '21.0000',
+      total_landed_cost: '1021.0000',
+    };
+    const calculatedItems = [
+      {
+        ...itemA,
+        allocated_costs: '12.6000',
+        unit_landed_cost: '306.3000',
+        total_landed_cost: '612.6000',
+      },
+      {
+        ...itemB,
+        allocated_costs: '8.4000',
+        unit_landed_cost: '408.4000',
+        total_landed_cost: '408.4000',
+      },
+    ];
+
+    db.select
+      .mockReturnValueOnce(thenable([header]))
+      .mockReturnValueOnce(thenable([itemA, itemB]))
+      .mockReturnValueOnce(
+        thenable([{ amount: '10.0000', currency_id: usdId }]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            duties_amount: '20000.0000',
+            vat_amount: '5000.0000',
+            other_fees: '2500.0000',
+            currency_id: cdfId,
+          },
+        ]),
+      )
+      .mockReturnValueOnce(thenable([{ rate: '0.0004' }]))
+      .mockReturnValueOnce(thenable([]))
+      .mockReturnValueOnce(thenable([]))
+      .mockReturnValueOnce(thenable([]))
+      .mockReturnValueOnce(thenable([]))
+      .mockReturnValueOnce(thenable([calculatedHeader]))
+      .mockReturnValueOnce(thenable(calculatedItems));
+
+    const result = await service.calculate(
+      landedCostId,
+      'value',
+      orgId,
+      orgUser,
+    );
+
+    expect(result.status).toBe('calculated');
+    expect(result.goodsCost).toBe('1000.0000');
+    expect(result.totalAdditionalCosts).toBe('21.0000');
+    expect(result.totalLandedCost).toBe('1021.0000');
+    expect(result.items?.[0].allocatedCosts).toBe('12.6000');
+    expect(result.items?.[1].allocatedCosts).toBe('8.4000');
+  });
+
+  it('rejects post when not calculated', async () => {
+    db.select.mockReturnValueOnce(thenable([headerRow]));
+
+    await expect(service.post(landedCostId, orgId, orgUser)).rejects.toThrow(
+      'Only a calculated landed cost can be posted',
+    );
+  });
+
+  it('rejects post without landed_costs.post permission', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([{ ...headerRow, status: 'calculated', currency_id: usdId }]),
+    );
+
+    await expect(
+      service.post(landedCostId, orgId, {
+        ...orgUser,
+        permissions: ['landed_costs.write'],
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('posts a calculated landed cost', async () => {
+    const calculated = {
+      ...headerRow,
+      currency_id: usdId,
+      status: 'calculated' as const,
+    };
+    const posted = { ...calculated, status: 'posted' as const };
+
+    db.select
+      .mockReturnValueOnce(thenable([calculated]))
+      .mockReturnValueOnce(thenable([posted]))
+      .mockReturnValueOnce(thenable([]));
+
+    const result = await service.post(landedCostId, orgId, orgUser);
+    expect(result.status).toBe('posted');
+    expect(db.update).toHaveBeenCalled();
   });
 });
