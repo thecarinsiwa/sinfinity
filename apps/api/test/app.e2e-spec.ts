@@ -364,6 +364,8 @@ describe('AppController (e2e)', () => {
     expect(
       body.paths['/api/v1/shipments/{shipmentId}/import-documents/{linkId}'],
     ).toBeDefined();
+    expect(body.paths['/api/v1/delivery-addresses']).toBeDefined();
+    expect(body.paths['/api/v1/delivery-addresses/{id}']).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',

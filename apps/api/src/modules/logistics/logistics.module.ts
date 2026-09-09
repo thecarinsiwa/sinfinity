@@ -5,6 +5,8 @@ import { CustomsDeclarationsController } from './customs/customs-declarations.co
 import { CustomsDeclarationsService } from './customs/customs-declarations.service';
 import { ImportDocumentsController } from './customs/import-documents.controller';
 import { ImportDocumentsService } from './customs/import-documents.service';
+import { DeliveryAddressesController } from './delivery-addresses/delivery-addresses.controller';
+import { DeliveryAddressesService } from './delivery-addresses/delivery-addresses.service';
 import { ShipmentsController } from './shipments/shipments.controller';
 import { ShipmentsService } from './shipments/shipments.service';
 import { ShippingMethodsController } from './shipping-methods/shipping-methods.controller';
@@ -18,6 +20,7 @@ import { ShippingMethodsService } from './shipping-methods/shipping-methods.serv
     ShipmentsController,
     CustomsDeclarationsController,
     ImportDocumentsController,
+    DeliveryAddressesController,
   ],
   providers: [
     ShippingMethodsSeedService,
@@ -26,6 +29,7 @@ import { ShippingMethodsService } from './shipping-methods/shipping-methods.serv
     ShipmentsService,
     CustomsDeclarationsService,
     ImportDocumentsService,
+    DeliveryAddressesService,
   ],
   exports: [
     ShippingMethodsSeedService,
@@ -34,6 +38,7 @@ import { ShippingMethodsService } from './shipping-methods/shipping-methods.serv
     ShipmentsService,
     CustomsDeclarationsService,
     ImportDocumentsService,
+    DeliveryAddressesService,
   ],
 })
 export class LogisticsModule {}
