@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+/** Default Nest HTTP error body (examples tuned for 400 validation). */
 export class ErrorResponseDto {
   @ApiProperty({ example: 400 })
   statusCode!: number;
@@ -17,5 +18,17 @@ export class ErrorResponseDto {
   message!: string | string[];
 
   @ApiProperty({ example: 'Bad Request' })
+  error!: string;
+}
+
+/** Nest `ServiceUnavailableException` body (e.g. health DB ping). */
+export class ServiceUnavailableErrorResponseDto {
+  @ApiProperty({ example: 503 })
+  statusCode!: number;
+
+  @ApiProperty({ example: 'Database unavailable' })
+  message!: string;
+
+  @ApiProperty({ example: 'Service Unavailable' })
   error!: string;
 }

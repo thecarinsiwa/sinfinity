@@ -1,4 +1,3 @@
-import { ServiceUnavailableException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { Pool } from 'mysql2/promise';
 import { MYSQL_POOL } from '../database/database.constants';
@@ -42,8 +41,12 @@ describe('HealthService', () => {
   it('throws 503 when MySQL ping fails', async () => {
     query.mockRejectedValue(new Error('ECONNREFUSED'));
 
-    await expect(service.check()).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(service.check()).rejects.toMatchObject({
+      response: {
+        statusCode: 503,
+        message: 'Database unavailable',
+        error: 'Service Unavailable',
+      },
+    });
   });
 });
