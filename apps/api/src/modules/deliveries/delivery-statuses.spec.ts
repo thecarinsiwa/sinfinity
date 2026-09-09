@@ -25,17 +25,35 @@ describe('delivery-statuses', () => {
     ).not.toThrow();
     expect(() =>
       assertDeliveryTransition(
+        DELIVERY_STATUS.PLANNED,
+        DELIVERY_STATUS.FAILED,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertDeliveryTransition(
         DELIVERY_STATUS.IN_TRANSIT,
         DELIVERY_STATUS.FAILED,
       ),
     ).not.toThrow();
+    expect(() =>
+      assertDeliveryTransition(
+        DELIVERY_STATUS.IN_TRANSIT,
+        DELIVERY_STATUS.CANCELLED,
+      ),
+    ).not.toThrow();
   });
 
-  it('rejects reverse and terminal transitions', () => {
+  it('rejects reverse, skip and terminal transitions', () => {
     expect(() =>
       assertDeliveryTransition(
         DELIVERY_STATUS.IN_TRANSIT,
         DELIVERY_STATUS.PLANNED,
+      ),
+    ).toThrow(/Invalid status transition/);
+    expect(() =>
+      assertDeliveryTransition(
+        DELIVERY_STATUS.PLANNED,
+        DELIVERY_STATUS.DELIVERED,
       ),
     ).toThrow(/Invalid status transition/);
     expect(() =>
@@ -46,9 +64,24 @@ describe('delivery-statuses', () => {
     ).toThrow(/Invalid status transition/);
     expect(() =>
       assertDeliveryTransition(
+        DELIVERY_STATUS.FAILED,
+        DELIVERY_STATUS.IN_TRANSIT,
+      ),
+    ).toThrow(/Invalid status transition/);
+    expect(() =>
+      assertDeliveryTransition(
         DELIVERY_STATUS.CANCELLED,
         DELIVERY_STATUS.PLANNED,
       ),
     ).toThrow(/Invalid status transition/);
+  });
+
+  it('rejects same-status transitions', () => {
+    expect(() =>
+      assertDeliveryTransition(
+        DELIVERY_STATUS.PLANNED,
+        DELIVERY_STATUS.PLANNED,
+      ),
+    ).toThrow(/already "planned"/);
   });
 });

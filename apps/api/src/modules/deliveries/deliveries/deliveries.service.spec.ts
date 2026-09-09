@@ -429,6 +429,213 @@ describe('DeliveriesService', () => {
     expect(db.insert).toHaveBeenCalled();
   });
 
+  it('rejects serialized item without serialNumberIds', async () => {
+    const planned = {
+      id: deliveryId,
+      organization_id: orgId,
+      delivery_number: 'DLV-1',
+      sales_order_id: soId,
+      customer_id: customerId,
+      warehouse_id: warehouseId,
+      delivery_address_id: null,
+      scheduled_at: null,
+      delivered_at: null,
+      driver_user_id: null,
+      status: DELIVERY_STATUS.PLANNED,
+      notes: null,
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+      created_by: null,
+      updated_by: null,
+      deleted_at: null,
+    };
+
+    db.select
+      .mockReturnValueOnce(thenable([planned]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: soItemId,
+            sales_order_id: soId,
+            product_id: productId,
+            quantity: '2.0000',
+            quantity_delivered: '0.0000',
+          },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: productId,
+            organization_id: orgId,
+            deleted_at: null,
+            is_serialized: 1,
+          },
+        ]),
+      )
+      .mockReturnValueOnce(thenable([]));
+
+    await expect(
+      service.createItem(
+        deliveryId,
+        { salesOrderItemId: soItemId, quantity: '2' },
+        orgId,
+      ),
+    ).rejects.toThrow(/serialNumberIds/);
+  });
+
+  it('complete with serials passes serialIds to applyMovement out', async () => {
+    const serialA = '0191e6b8-4c3a-7b2d-9f1e-snsnsnsnsnsna';
+    const serialB = '0191e6b8-4c3a-7b2d-9f1e-snsnsnsnsnsnb';
+    const inTransit = {
+      id: deliveryId,
+      organization_id: orgId,
+      delivery_number: 'DLV-1',
+      sales_order_id: soId,
+      customer_id: customerId,
+      warehouse_id: warehouseId,
+      delivery_address_id: null,
+      scheduled_at: null,
+      delivered_at: null,
+      driver_user_id: null,
+      status: DELIVERY_STATUS.IN_TRANSIT,
+      notes: null,
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+      created_by: null,
+      updated_by: null,
+      deleted_at: null,
+    };
+    const item = {
+      id: '0191e6b8-4c3a-7b2d-9f1e-itemitemitemi',
+      delivery_id: deliveryId,
+      sales_order_item_id: soItemId,
+      product_id: productId,
+      quantity: '2.0000',
+      serial_number_ids: [serialA, serialB],
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+    };
+
+    db.select
+      .mockReturnValueOnce(thenable([inTransit]))
+      .mockReturnValueOnce(thenable([item]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: soId,
+            status: 'in_progress',
+            deleted_at: null,
+            organization_id: orgId,
+          },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          { id: serialA, status: 'in_stock' },
+          { id: serialB, status: 'in_stock' },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: soItemId,
+            quantity: '2.0000',
+            quantity_delivered: '0.0000',
+          },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([{ quantity: '2.0000', quantity_delivered: '2.0000' }]),
+      )
+      .mockReturnValueOnce(
+        thenable([{ ...inTransit, status: DELIVERY_STATUS.DELIVERED }]),
+      )
+      .mockReturnValueOnce(thenable([item]));
+
+    await service.complete(deliveryId, orgId);
+
+    expect(inventoryMovementsService.applyMovement).toHaveBeenCalledWith(
+      expect.objectContaining({
+        movementType: 'out',
+        serialIds: [serialA, serialB],
+        referenceType: 'delivery',
+      }),
+      db,
+    );
+  });
+
+  it('complete syncs SO to partially_delivered when not all lines done', async () => {
+    const inTransit = {
+      id: deliveryId,
+      organization_id: orgId,
+      delivery_number: 'DLV-1',
+      sales_order_id: soId,
+      customer_id: customerId,
+      warehouse_id: warehouseId,
+      delivery_address_id: null,
+      scheduled_at: null,
+      delivered_at: null,
+      driver_user_id: null,
+      status: DELIVERY_STATUS.IN_TRANSIT,
+      notes: null,
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+      created_by: null,
+      updated_by: null,
+      deleted_at: null,
+    };
+    const item = {
+      id: '0191e6b8-4c3a-7b2d-9f1e-itemitemitemi',
+      delivery_id: deliveryId,
+      sales_order_item_id: soItemId,
+      product_id: productId,
+      quantity: '2.0000',
+      serial_number_ids: null,
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+    };
+
+    db.select
+      .mockReturnValueOnce(thenable([inTransit]))
+      .mockReturnValueOnce(thenable([item]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: soId,
+            status: 'in_progress',
+            deleted_at: null,
+            organization_id: orgId,
+          },
+        ]),
+      )
+      .mockReturnValueOnce(thenable([]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: soItemId,
+            quantity: '5.0000',
+            quantity_delivered: '0.0000',
+          },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          { quantity: '5.0000', quantity_delivered: '2.0000' },
+          { quantity: '3.0000', quantity_delivered: '0.0000' },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([{ ...inTransit, status: DELIVERY_STATUS.DELIVERED }]),
+      )
+      .mockReturnValueOnce(thenable([item]));
+
+    await service.complete(deliveryId, orgId);
+
+    expect(db.update).toHaveBeenCalled();
+    expect(db.insert).toHaveBeenCalled(); // SO history partially_delivered
+  });
+
   it('requires remarks for accepted_with_remarks', async () => {
     db.select.mockReturnValueOnce(
       thenable([
