@@ -350,6 +350,20 @@ describe('AppController (e2e)', () => {
     expect(
       body.paths['/api/v1/shipments/{id}/tracking/{eventId}'],
     ).toBeDefined();
+    expect(body.paths['/api/v1/customs-declarations']).toBeDefined();
+    expect(body.paths['/api/v1/customs-declarations/{id}']).toBeDefined();
+    expect(
+      body.paths['/api/v1/customs-declarations/{id}/documents'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/customs-declarations/{id}/documents/{linkId}'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{shipmentId}/import-documents'],
+    ).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{shipmentId}/import-documents/{linkId}'],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
