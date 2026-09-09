@@ -3,6 +3,8 @@ import { AppointmentsController } from './appointments/appointments.controller';
 import { AppointmentsService } from './appointments/appointments.service';
 import { CommentsController } from './comments/comments.controller';
 import { CommentsService } from './comments/comments.service';
+import { NotificationsController } from './notifications/notifications.controller';
+import { NotificationsService } from './notifications/notifications.service';
 import { TasksController } from './tasks/tasks.controller';
 import { TasksService } from './tasks/tasks.service';
 
@@ -14,8 +16,19 @@ import { TasksService } from './tasks/tasks.service';
     TasksController,
     AppointmentsController,
     CommentsController,
+    NotificationsController,
   ],
-  providers: [TasksService, AppointmentsService, CommentsService],
-  exports: [TasksService, AppointmentsService, CommentsService],
+  providers: [
+    TasksService,
+    AppointmentsService,
+    CommentsService,
+    NotificationsService,
+  ],
+  exports: [
+    TasksService,
+    AppointmentsService,
+    CommentsService,
+    NotificationsService,
+  ],
 })
 export class CollaborationModule {}
