@@ -17,6 +17,7 @@ import { ProcurementModule } from './modules/procurement/procurement.module';
 import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { LandedCostsModule } from './modules/landed-costs/landed-costs.module';
 import { LogisticsModule } from './modules/logistics/logistics.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 import { SalesOrdersModule } from './modules/sales-orders/sales-orders.module';
 import { SecurityModule } from './modules/security/security.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -51,6 +52,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
     LandedCostsModule,
     StockModule,
     DeliveriesModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

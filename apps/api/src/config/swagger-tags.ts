@@ -1,5 +1,5 @@
 /**
- * Canonical Swagger / OpenAPI tag names (Phase 0–14).
+ * Canonical Swagger / OpenAPI tag names (Phase 0–15).
  * Controllers and DocumentBuilder must use these exact strings.
  */
 export const SWAGGER_TAG = {
@@ -20,6 +20,7 @@ export const SWAGGER_TAG = {
   CoutRendu: 'Coût rendu',
   Stock: 'Stock',
   Livraison: 'Livraison',
+  Projets: 'Projets',
 } as const;
 
 export type SwaggerTagName = (typeof SWAGGER_TAG)[keyof typeof SWAGGER_TAG];
@@ -111,5 +112,10 @@ export const SWAGGER_TAG_DEFINITIONS: ReadonlyArray<{
     name: SWAGGER_TAG.Livraison,
     description:
       'Customer deliveries, line items, GPS tracking, confirmations and proof of delivery',
+  },
+  {
+    name: SWAGGER_TAG.Projets,
+    description:
+      'Technical projects, technicians, installations, tasks, reports and commissioning',
   },
 ];
