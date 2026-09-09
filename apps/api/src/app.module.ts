@@ -13,6 +13,7 @@ import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganisationModule } from './modules/organisation/organisation.module';
 import { QuotationsModule } from './modules/quotations/quotations.module';
 import { ProcurementModule } from './modules/procurement/procurement.module';
+import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.module';
 import { SalesOrdersModule } from './modules/sales-orders/sales-orders.module';
 import { SecurityModule } from './modules/security/security.module';
 import { SettingsModule } from './modules/settings/settings.module';
@@ -41,6 +42,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
     QuotationsModule,
     SalesOrdersModule,
     ProcurementModule,
+    PurchaseOrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
