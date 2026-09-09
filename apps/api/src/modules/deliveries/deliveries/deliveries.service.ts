@@ -28,9 +28,13 @@ import {
   deliveries,
   delivery_addresses,
   delivery_items,
+  inventory,
   products,
   sales_order_items,
+  sales_order_status_history,
   sales_orders,
+  serial_numbers,
+  stock_reservations,
   warehouses,
 } from '../../../database/schema';
 import {
@@ -42,11 +46,19 @@ import {
   nowMysqlDateTime,
   toBool,
 } from '../../settings/utils/mysql-datetime';
+import {
+  assertDeliveryQtyInvariants,
+  assertSalesOrderTransition,
+  SALES_ORDER_STATUS,
+  type SalesOrderStatus,
+} from '../../sales-orders/sales-orders/sales-order-statuses';
+import { InventoryMovementsService } from '../../stock/inventory/inventory-movements.service';
 import { formatDecimal } from '../../stock/inventory/inventory-quantities';
 import {
   assertSerialCount,
   parseIntegerQuantity,
 } from '../../stock/serials/serial-enforcement';
+import { SERIAL_NUMBER_STATUS } from '../../stock/serials/serial-number-statuses';
 import {
   assertOrgAccess,
   ensureOrganizationExists,
@@ -54,6 +66,7 @@ import {
   requireScopeOrgId,
 } from '../delivery-scope';
 import {
+  assertDeliveryTransition,
   DELIVERY_STATUS,
 } from '../delivery-statuses';
 import {
@@ -66,6 +79,7 @@ import {
   UpdateDeliveryItemDto,
 } from './dto/delivery.dto';
 import {
+  parseSerialIds,
   toDeliveryItemResponse,
   toDeliveryResponse,
   type DeliveryItemRow,
@@ -77,9 +91,14 @@ function toMysqlDateTime(value: string | null | undefined): string | null {
   return value.replace('T', ' ').replace('Z', '').slice(0, 23);
 }
 
+type Tx = Parameters<Parameters<DrizzleDB['transaction']>[0]>[0];
+
 @Injectable()
 export class DeliveriesService {
-  constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DRIZZLE) private readonly db: DrizzleDB,
+    private readonly inventoryMovementsService: InventoryMovementsService,
+  ) {}
 
   async findAll(
     query: ListDeliveriesQueryDto,
@@ -522,6 +541,448 @@ export class DeliveriesService {
     await this.db
       .delete(delivery_items)
       .where(eq(delivery_items.id, itemId));
+  }
+
+  async start(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    const delivery = await this.requireDeliveryAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+    try {
+      assertDeliveryTransition(delivery.status, DELIVERY_STATUS.IN_TRANSIT);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid status transition',
+      );
+    }
+    const items = await this.loadItems(id);
+    if (items.length === 0) {
+      throw new BadRequestException(
+        'Cannot start a delivery without line items',
+      );
+    }
+
+    await this.db
+      .update(deliveries)
+      .set({
+        status: DELIVERY_STATUS.IN_TRANSIT,
+        updated_at: nowMysqlDateTime(),
+        updated_by: user?.id ?? null,
+      })
+      .where(eq(deliveries.id, id));
+
+    return this.findOne(id, currentOrganizationId, user);
+  }
+
+  async complete(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    const delivery = await this.requireDeliveryAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+    try {
+      assertDeliveryTransition(delivery.status, DELIVERY_STATUS.DELIVERED);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid status transition',
+      );
+    }
+    if (!delivery.warehouse_id) {
+      throw new BadRequestException(
+        'Delivery warehouseId is required to complete',
+      );
+    }
+    if (!delivery.sales_order_id) {
+      throw new BadRequestException('Delivery has no sales order');
+    }
+
+    const items = await this.loadItems(id);
+    if (items.length === 0) {
+      throw new BadRequestException(
+        'Cannot complete a delivery without line items',
+      );
+    }
+
+    const [order] = await this.db
+      .select()
+      .from(sales_orders)
+      .where(eq(sales_orders.id, delivery.sales_order_id))
+      .limit(1);
+    if (!order || order.deleted_at != null) {
+      throw new NotFoundException(
+        `Sales order ${delivery.sales_order_id} not found`,
+      );
+    }
+    const soStatus = order.status as SalesOrderStatus;
+    if (
+      soStatus !== SALES_ORDER_STATUS.IN_PROGRESS &&
+      soStatus !== SALES_ORDER_STATUS.PARTIALLY_DELIVERED
+    ) {
+      throw new BadRequestException(
+        `Sales order must be in_progress or partially_delivered to complete a delivery (is "${soStatus}")`,
+      );
+    }
+
+    const warehouseId = delivery.warehouse_id;
+    const now = nowMysqlDateTime();
+
+    await this.db.transaction(async (tx) => {
+      for (const item of items) {
+        if (!item.product_id || !item.sales_order_item_id) {
+          throw new BadRequestException(
+            `Delivery item ${item.id} is missing product or sales order item`,
+          );
+        }
+        const serialIds = parseSerialIds(item.serial_number_ids) ?? undefined;
+        await this.issueStockOut(tx, {
+          organizationId: delivery.organization_id,
+          warehouseId,
+          productId: item.product_id,
+          quantity: item.quantity,
+          deliveryId: id,
+          salesOrderItemId: item.sales_order_item_id,
+          serialIds,
+          movedBy: user?.id ?? null,
+          now,
+        });
+
+        const [soItem] = await tx
+          .select({
+            id: sales_order_items.id,
+            quantity: sales_order_items.quantity,
+            quantity_delivered: sales_order_items.quantity_delivered,
+          })
+          .from(sales_order_items)
+          .where(eq(sales_order_items.id, item.sales_order_item_id))
+          .limit(1);
+        if (!soItem) {
+          throw new NotFoundException(
+            `Sales order item ${item.sales_order_item_id} not found`,
+          );
+        }
+        const nextDelivered = formatDecimal(
+          Number(soItem.quantity_delivered) + Number(item.quantity),
+        );
+        if (Number(nextDelivered) > Number(soItem.quantity) + 1e-12) {
+          throw new BadRequestException(
+            'quantity_delivered cannot exceed quantity',
+          );
+        }
+        await tx
+          .update(sales_order_items)
+          .set({
+            quantity_delivered: nextDelivered,
+            updated_at: now,
+          })
+          .where(eq(sales_order_items.id, item.sales_order_item_id));
+      }
+
+      await tx
+        .update(deliveries)
+        .set({
+          status: DELIVERY_STATUS.DELIVERED,
+          delivered_at: now,
+          updated_at: now,
+          updated_by: user?.id ?? null,
+        })
+        .where(eq(deliveries.id, id));
+
+      await this.syncSalesOrderStatus(
+        tx,
+        delivery.sales_order_id!,
+        soStatus,
+        user?.id ?? null,
+        now,
+      );
+    });
+
+    return this.findOne(id, currentOrganizationId, user);
+  }
+
+  async fail(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    return this.terminalTransition(
+      id,
+      DELIVERY_STATUS.FAILED,
+      currentOrganizationId,
+      user,
+    );
+  }
+
+  async cancel(
+    id: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    return this.terminalTransition(
+      id,
+      DELIVERY_STATUS.CANCELLED,
+      currentOrganizationId,
+      user,
+    );
+  }
+
+  private async terminalTransition(
+    id: string,
+    toStatus: typeof DELIVERY_STATUS.FAILED | typeof DELIVERY_STATUS.CANCELLED,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    const delivery = await this.requireDeliveryAccess(
+      id,
+      currentOrganizationId,
+      user,
+    );
+    try {
+      assertDeliveryTransition(delivery.status, toStatus);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid status transition',
+      );
+    }
+    await this.db
+      .update(deliveries)
+      .set({
+        status: toStatus,
+        updated_at: nowMysqlDateTime(),
+        updated_by: user?.id ?? null,
+      })
+      .where(eq(deliveries.id, id));
+    return this.findOne(id, currentOrganizationId, user);
+  }
+
+  private async issueStockOut(
+    tx: Tx,
+    params: {
+      organizationId: string;
+      warehouseId: string;
+      productId: string;
+      quantity: string;
+      deliveryId: string;
+      salesOrderItemId: string;
+      serialIds?: string[];
+      movedBy: string | null;
+      now: string;
+    },
+  ): Promise<void> {
+    const serialIds = params.serialIds;
+    let locationId: string | null = null;
+    let batchId: string | null = null;
+
+    if (serialIds?.length) {
+      const rows = await tx
+        .select({
+          id: serial_numbers.id,
+          status: serial_numbers.status,
+        })
+        .from(serial_numbers)
+        .where(inArray(serial_numbers.id, serialIds));
+      if (rows.length !== serialIds.length) {
+        throw new BadRequestException(
+          'One or more serialNumberIds were not found',
+        );
+      }
+      const reserved = rows.filter(
+        (r) => r.status === SERIAL_NUMBER_STATUS.RESERVED,
+      );
+      const inStock = rows.filter(
+        (r) => r.status === SERIAL_NUMBER_STATUS.IN_STOCK,
+      );
+      if (reserved.length + inStock.length !== rows.length) {
+        throw new BadRequestException(
+          'Delivery serials must be in_stock or reserved',
+        );
+      }
+      if (reserved.length > 0) {
+        await this.inventoryMovementsService.applyMovement(
+          {
+            organizationId: params.organizationId,
+            productId: params.productId,
+            warehouseId: params.warehouseId,
+            movementType: 'unreserve',
+            quantity: formatDecimal(reserved.length),
+            referenceType: 'delivery',
+            referenceId: params.deliveryId,
+            movedBy: params.movedBy,
+            notes: 'Delivery complete — unreserve',
+            serialIds: reserved.map((r) => r.id),
+            salesOrderItemId: params.salesOrderItemId,
+          },
+          tx,
+        );
+      }
+    } else {
+      const [reservation] = await tx
+        .select()
+        .from(stock_reservations)
+        .where(
+          and(
+            eq(
+              stock_reservations.sales_order_item_id,
+              params.salesOrderItemId,
+            ),
+            eq(stock_reservations.status, 'active'),
+          ),
+        )
+        .limit(1);
+      if (
+        reservation &&
+        Math.abs(Number(reservation.quantity) - Number(params.quantity)) <
+          1e-12
+      ) {
+        const [inv] = await tx
+          .select({
+            warehouse_id: inventory.warehouse_id,
+            location_id: inventory.location_id,
+            batch_id: inventory.batch_id,
+          })
+          .from(inventory)
+          .where(eq(inventory.id, reservation.inventory_id))
+          .limit(1);
+        if (inv) {
+          locationId = inv.location_id;
+          batchId = inv.batch_id;
+        }
+        await this.inventoryMovementsService.applyMovement(
+          {
+            organizationId: params.organizationId,
+            productId: params.productId,
+            warehouseId: inv?.warehouse_id ?? params.warehouseId,
+            locationId,
+            batchId,
+            movementType: 'unreserve',
+            quantity: params.quantity,
+            referenceType: 'delivery',
+            referenceId: params.deliveryId,
+            movedBy: params.movedBy,
+            notes: 'Delivery complete — unreserve reservation',
+            salesOrderItemId: params.salesOrderItemId,
+          },
+          tx,
+        );
+        await tx
+          .update(stock_reservations)
+          .set({
+            status: 'fulfilled',
+            updated_at: params.now,
+          })
+          .where(eq(stock_reservations.id, reservation.id));
+      }
+    }
+
+    await this.inventoryMovementsService.applyMovement(
+      {
+        organizationId: params.organizationId,
+        productId: params.productId,
+        warehouseId: params.warehouseId,
+        locationId,
+        batchId,
+        movementType: 'out',
+        quantity: params.quantity,
+        referenceType: 'delivery',
+        referenceId: params.deliveryId,
+        movedAt: params.now,
+        movedBy: params.movedBy,
+        notes: 'Delivery complete',
+        serialIds,
+        salesOrderItemId: params.salesOrderItemId,
+      },
+      tx,
+    );
+
+    if (serialIds?.length) {
+      await tx
+        .update(stock_reservations)
+        .set({ status: 'fulfilled', updated_at: params.now })
+        .where(
+          and(
+            eq(stock_reservations.sales_order_item_id, params.salesOrderItemId),
+            eq(stock_reservations.status, 'active'),
+            eq(stock_reservations.quantity, params.quantity),
+          ),
+        );
+    }
+  }
+
+  private async syncSalesOrderStatus(
+    tx: Tx,
+    salesOrderId: string,
+    currentStatus: SalesOrderStatus,
+    changedBy: string | null,
+    now: string,
+  ): Promise<void> {
+    const lines = await tx
+      .select({
+        quantity: sales_order_items.quantity,
+        quantity_delivered: sales_order_items.quantity_delivered,
+      })
+      .from(sales_order_items)
+      .where(eq(sales_order_items.sales_order_id, salesOrderId));
+
+    const qtyLines = lines.map((line) => ({
+      quantity: line.quantity,
+      quantityDelivered: line.quantity_delivered,
+    }));
+
+    const allComplete =
+      qtyLines.length > 0 &&
+      qtyLines.every(
+        (line) => Number(line.quantityDelivered) >= Number(line.quantity),
+      );
+    const anyProgress = qtyLines.some(
+      (line) => Number(line.quantityDelivered) > 0,
+    );
+
+    let nextStatus: SalesOrderStatus | null = null;
+    if (allComplete) {
+      nextStatus = SALES_ORDER_STATUS.DELIVERED;
+    } else if (anyProgress) {
+      nextStatus = SALES_ORDER_STATUS.PARTIALLY_DELIVERED;
+    }
+
+    if (!nextStatus || nextStatus === currentStatus) {
+      return;
+    }
+
+    try {
+      assertSalesOrderTransition(currentStatus, nextStatus);
+      assertDeliveryQtyInvariants(nextStatus, qtyLines);
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : 'Invalid sales order status',
+      );
+    }
+
+    await tx
+      .update(sales_orders)
+      .set({
+        status: nextStatus,
+        updated_at: now,
+        updated_by: changedBy,
+      })
+      .where(eq(sales_orders.id, salesOrderId));
+
+    await tx.insert(sales_order_status_history).values({
+      id: createId(),
+      sales_order_id: salesOrderId,
+      from_status: currentStatus,
+      to_status: nextStatus,
+      changed_by: changedBy,
+      changed_at: now,
+      notes: 'Updated by delivery complete',
+    });
   }
 
   private assertSerialPayload(

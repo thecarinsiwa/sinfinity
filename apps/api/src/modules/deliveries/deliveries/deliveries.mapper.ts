@@ -51,6 +51,8 @@ function parseSerialIds(value: unknown): string[] | null {
   return null;
 }
 
+export { parseSerialIds };
+
 export function toDeliveryResponse(
   row: DeliveryRow,
   items?: DeliveryItemRow[],

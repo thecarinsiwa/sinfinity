@@ -32,6 +32,12 @@ describe('sales-order-statuses', () => {
     ).not.toThrow();
     expect(() =>
       assertSalesOrderTransition(
+        SALES_ORDER_STATUS.IN_PROGRESS,
+        SALES_ORDER_STATUS.DELIVERED,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertSalesOrderTransition(
         SALES_ORDER_STATUS.PENDING,
         SALES_ORDER_STATUS.CANCELLED,
       ),
@@ -53,7 +59,7 @@ describe('sales-order-statuses', () => {
     ).toThrow(/Invalid status transition/);
     expect(() =>
       assertSalesOrderTransition(
-        SALES_ORDER_STATUS.IN_PROGRESS,
+        SALES_ORDER_STATUS.CONFIRMED,
         SALES_ORDER_STATUS.DELIVERED,
       ),
     ).toThrow(/Invalid status transition/);
@@ -71,6 +77,19 @@ describe('sales-order-statuses', () => {
         { quantity: '10', quantityDelivered: '4' },
       ]),
     ).not.toThrow();
+
+    expect(() =>
+      assertDeliveryQtyInvariants(SALES_ORDER_STATUS.PARTIALLY_DELIVERED, [
+        { quantity: '10', quantityDelivered: '10' },
+        { quantity: '5', quantityDelivered: '0' },
+      ]),
+    ).not.toThrow();
+
+    expect(() =>
+      assertDeliveryQtyInvariants(SALES_ORDER_STATUS.PARTIALLY_DELIVERED, [
+        { quantity: '10', quantityDelivered: '10' },
+      ]),
+    ).toThrow(/partially_delivered/);
 
     expect(() =>
       assertDeliveryQtyInvariants(SALES_ORDER_STATUS.DELIVERED, [

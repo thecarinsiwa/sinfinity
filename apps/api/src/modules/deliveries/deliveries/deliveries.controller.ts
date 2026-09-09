@@ -196,4 +196,65 @@ export class DeliveriesController {
       user,
     );
   }
+
+  @Post(':id/start')
+  @RequirePermissions('deliveries.write')
+  @ApiOperation({
+    summary: 'Start a delivery',
+    description: 'planned → in_transit. Requires at least one line item.',
+  })
+  @ApiOkResponse({ type: DeliveryResponseDto })
+  start(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    return this.deliveriesService.start(id, organizationId, user);
+  }
+
+  @Post(':id/complete')
+  @RequirePermissions('deliveries.write')
+  @ApiOperation({
+    summary: 'Complete a delivery',
+    description:
+      'in_transit → delivered. applyMovement(out), increments quantity_delivered, updates SO to partially_delivered/delivered.',
+  })
+  @ApiOkResponse({ type: DeliveryResponseDto })
+  complete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    return this.deliveriesService.complete(id, organizationId, user);
+  }
+
+  @Post(':id/fail')
+  @RequirePermissions('deliveries.write')
+  @ApiOperation({
+    summary: 'Mark delivery as failed',
+    description: 'From planned or in_transit. No stock movements.',
+  })
+  @ApiOkResponse({ type: DeliveryResponseDto })
+  fail(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    return this.deliveriesService.fail(id, organizationId, user);
+  }
+
+  @Post(':id/cancel')
+  @RequirePermissions('deliveries.write')
+  @ApiOperation({
+    summary: 'Cancel a delivery',
+    description: 'From planned or in_transit. No stock movements.',
+  })
+  @ApiOkResponse({ type: DeliveryResponseDto })
+  cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryResponseDto> {
+    return this.deliveriesService.cancel(id, organizationId, user);
+  }
 }
