@@ -27,10 +27,13 @@ import {
   customers,
   deliveries,
   delivery_addresses,
+  delivery_confirmations,
   delivery_items,
   delivery_tracking,
+  documents,
   inventory,
   products,
+  proof_of_delivery,
   sales_order_items,
   sales_order_status_history,
   sales_orders,
@@ -71,9 +74,11 @@ import {
   DELIVERY_STATUS,
 } from '../delivery-statuses';
 import {
+  CreateDeliveryConfirmationDto,
   CreateDeliveryDto,
   CreateDeliveryItemDto,
   CreateDeliveryTrackingDto,
+  DeliveryConfirmationResponseDto,
   DeliveryItemResponseDto,
   DeliveryResponseDto,
   DeliveryTrackingResponseDto,
@@ -83,12 +88,15 @@ import {
 } from './dto/delivery.dto';
 import {
   parseSerialIds,
+  toDeliveryConfirmationResponse,
   toDeliveryItemResponse,
   toDeliveryResponse,
   toDeliveryTrackingResponse,
+  type DeliveryConfirmationRow,
   type DeliveryItemRow,
   type DeliveryRow,
   type DeliveryTrackingRow,
+  type ProofOfDeliveryRow,
 } from './deliveries.mapper';
 
 function toMysqlDateTime(value: string | null | undefined): string | null {
@@ -820,6 +828,149 @@ export class DeliveriesService {
       .where(eq(delivery_tracking.id, id))
       .limit(1);
     return toDeliveryTrackingResponse(row as DeliveryTrackingRow);
+  }
+
+  async listConfirmations(
+    deliveryId: string,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryConfirmationResponseDto[]> {
+    await this.requireDeliveryAccess(
+      deliveryId,
+      currentOrganizationId,
+      user,
+    );
+    const rows = await this.db
+      .select()
+      .from(delivery_confirmations)
+      .where(eq(delivery_confirmations.delivery_id, deliveryId))
+      .orderBy(
+        desc(delivery_confirmations.created_at),
+        asc(delivery_confirmations.id),
+      );
+
+    const result: DeliveryConfirmationResponseDto[] = [];
+    for (const row of rows as DeliveryConfirmationRow[]) {
+      const proofs = await this.loadProofs(row.id);
+      result.push(toDeliveryConfirmationResponse(row, proofs));
+    }
+    return result;
+  }
+
+  async createConfirmation(
+    deliveryId: string,
+    dto: CreateDeliveryConfirmationDto,
+    currentOrganizationId?: string,
+    user?: AuthUser,
+  ): Promise<DeliveryConfirmationResponseDto> {
+    const delivery = await this.requireDeliveryAccess(
+      deliveryId,
+      currentOrganizationId,
+      user,
+    );
+    if (
+      delivery.status !== DELIVERY_STATUS.DELIVERED &&
+      delivery.status !== DELIVERY_STATUS.FAILED
+    ) {
+      throw new BadRequestException(
+        'Confirmation is only allowed when delivery is delivered or failed',
+      );
+    }
+
+    if (
+      dto.status === 'accepted_with_remarks' &&
+      !(dto.remarks?.trim())
+    ) {
+      throw new BadRequestException(
+        'remarks are required when status is accepted_with_remarks',
+      );
+    }
+
+    for (const proof of dto.proofs ?? []) {
+      await this.ensureDocumentInOrg(
+        proof.documentId,
+        delivery.organization_id,
+      );
+    }
+
+    const id = createId();
+    const now = nowMysqlDateTime();
+    const confirmedAt = dto.confirmedAt
+      ? toMysqlDateTime(dto.confirmedAt)
+      : now;
+
+    await this.db.transaction(async (tx) => {
+      await tx.insert(delivery_confirmations).values({
+        id,
+        delivery_id: deliveryId,
+        confirmed_by_name: dto.confirmedByName ?? null,
+        confirmed_at: confirmedAt,
+        status: dto.status,
+        remarks: dto.remarks ?? null,
+        created_at: now,
+        updated_at: now,
+      });
+
+      for (const proof of dto.proofs ?? []) {
+        await tx.insert(proof_of_delivery).values({
+          id: createId(),
+          delivery_id: deliveryId,
+          confirmation_id: id,
+          document_id: proof.documentId,
+          proof_type: proof.proofType,
+          captured_at: proof.capturedAt
+            ? toMysqlDateTime(proof.capturedAt)
+            : now,
+          created_at: now,
+        });
+      }
+    });
+
+    const [row] = await this.db
+      .select()
+      .from(delivery_confirmations)
+      .where(eq(delivery_confirmations.id, id))
+      .limit(1);
+    const proofs = await this.loadProofs(id);
+    return toDeliveryConfirmationResponse(
+      row as DeliveryConfirmationRow,
+      proofs,
+    );
+  }
+
+  private async loadProofs(
+    confirmationId: string,
+  ): Promise<ProofOfDeliveryRow[]> {
+    const rows = await this.db
+      .select()
+      .from(proof_of_delivery)
+      .where(eq(proof_of_delivery.confirmation_id, confirmationId))
+      .orderBy(asc(proof_of_delivery.created_at), asc(proof_of_delivery.id));
+    return rows as ProofOfDeliveryRow[];
+  }
+
+  private async ensureDocumentInOrg(
+    documentId: string,
+    organizationId: string,
+  ): Promise<void> {
+    const [row] = await this.db
+      .select({
+        id: documents.id,
+        organization_id: documents.organization_id,
+        deleted_at: documents.deleted_at,
+        status: documents.status,
+      })
+      .from(documents)
+      .where(eq(documents.id, documentId))
+      .limit(1);
+    if (!row || row.deleted_at != null || row.status === 'deleted') {
+      throw new NotFoundException(`Document ${documentId} not found`);
+    }
+    if (row.organization_id !== organizationId) {
+      throw new BadRequestException(
+        'Document must belong to the same organization',
+      );
+    }
   }
 
   private async terminalTransition(

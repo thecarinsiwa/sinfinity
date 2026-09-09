@@ -37,9 +37,11 @@ import { SWAGGER_BEARER_AUTH } from '../../../config/constants';
 import { SWAGGER_TAG } from '../../../config/swagger-tags';
 import { DeliveriesService } from './deliveries.service';
 import {
+  CreateDeliveryConfirmationDto,
   CreateDeliveryDto,
   CreateDeliveryItemDto,
   CreateDeliveryTrackingDto,
+  DeliveryConfirmationResponseDto,
   DeliveryItemResponseDto,
   DeliveryResponseDto,
   DeliveryTrackingResponseDto,
@@ -290,5 +292,46 @@ export class DeliveriesController {
     @CurrentUser() user?: AuthUser,
   ): Promise<DeliveryTrackingResponseDto> {
     return this.deliveriesService.addTracking(id, dto, organizationId, user);
+  }
+
+  @Get(':id/confirmations')
+  @RequirePermissions('deliveries.read')
+  @ApiOperation({
+    summary: 'List delivery confirmations',
+    description: 'Newest first; each includes linked proof_of_delivery rows.',
+  })
+  @ApiOkResponse({ type: [DeliveryConfirmationResponseDto] })
+  listConfirmations(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryConfirmationResponseDto[]> {
+    return this.deliveriesService.listConfirmations(
+      id,
+      organizationId,
+      user,
+    );
+  }
+
+  @Post(':id/confirmations')
+  @RequirePermissions('deliveries.write')
+  @ApiOperation({
+    summary: 'Create a delivery confirmation (POD)',
+    description:
+      'accepted / accepted_with_remarks / rejected. Optional proofs with documentId (signature|photo|document). Allowed when delivered or failed.',
+  })
+  @ApiCreatedResponse({ type: DeliveryConfirmationResponseDto })
+  createConfirmation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateDeliveryConfirmationDto,
+    @OrganizationId() organizationId?: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<DeliveryConfirmationResponseDto> {
+    return this.deliveriesService.createConfirmation(
+      id,
+      dto,
+      organizationId,
+      user,
+    );
   }
 }

@@ -1,7 +1,11 @@
 import type {
+  DeliveryConfirmationResponseDto,
+  DeliveryConfirmationStatus,
   DeliveryItemResponseDto,
   DeliveryResponseDto,
   DeliveryTrackingResponseDto,
+  ProofOfDeliveryResponseDto,
+  ProofOfDeliveryType,
 } from './dto/delivery.dto';
 import type { DeliveryStatus } from '../delivery-statuses';
 
@@ -45,6 +49,27 @@ export type DeliveryTrackingRow = {
   location_label: string | null;
   recorded_at: string;
   notes: string | null;
+};
+
+export type DeliveryConfirmationRow = {
+  id: string;
+  delivery_id: string;
+  confirmed_by_name: string | null;
+  confirmed_at: string | null;
+  status: DeliveryConfirmationStatus;
+  remarks: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProofOfDeliveryRow = {
+  id: string;
+  delivery_id: string;
+  confirmation_id: string | null;
+  document_id: string | null;
+  proof_type: ProofOfDeliveryType;
+  captured_at: string | null;
+  created_at: string;
 };
 
 function parseSerialIds(value: unknown): string[] | null {
@@ -118,5 +143,36 @@ export function toDeliveryTrackingResponse(
     locationLabel: row.location_label,
     recordedAt: row.recorded_at,
     notes: row.notes,
+  };
+}
+
+export function toProofOfDeliveryResponse(
+  row: ProofOfDeliveryRow,
+): ProofOfDeliveryResponseDto {
+  return {
+    id: row.id,
+    deliveryId: row.delivery_id,
+    confirmationId: row.confirmation_id,
+    documentId: row.document_id,
+    proofType: row.proof_type,
+    capturedAt: row.captured_at,
+    createdAt: row.created_at,
+  };
+}
+
+export function toDeliveryConfirmationResponse(
+  row: DeliveryConfirmationRow,
+  proofs?: ProofOfDeliveryRow[],
+): DeliveryConfirmationResponseDto {
+  return {
+    id: row.id,
+    deliveryId: row.delivery_id,
+    confirmedByName: row.confirmed_by_name,
+    confirmedAt: row.confirmed_at,
+    status: row.status,
+    remarks: row.remarks,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    proofs: proofs?.map(toProofOfDeliveryResponse),
   };
 }

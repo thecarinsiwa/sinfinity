@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
@@ -8,6 +9,7 @@ import {
   IsUUID,
   Matches,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
 import { PaginationQueryDto } from '../../../../common/dto/pagination-query.dto';
 import {
@@ -327,4 +329,132 @@ export class DeliveryTrackingResponseDto {
 
   @ApiPropertyOptional({ nullable: true })
   notes!: string | null;
+}
+
+export const DELIVERY_CONFIRMATION_STATUSES = [
+  'accepted',
+  'accepted_with_remarks',
+  'rejected',
+] as const;
+export type DeliveryConfirmationStatus =
+  (typeof DELIVERY_CONFIRMATION_STATUSES)[number];
+
+export const PROOF_OF_DELIVERY_TYPES = [
+  'signature',
+  'photo',
+  'document',
+] as const;
+export type ProofOfDeliveryType = (typeof PROOF_OF_DELIVERY_TYPES)[number];
+
+export class CreateProofOfDeliveryDto {
+  @ApiProperty()
+  @IsUUID('all')
+  documentId!: string;
+
+  @ApiProperty({ enum: PROOF_OF_DELIVERY_TYPES, example: 'signature' })
+  @IsIn([...PROOF_OF_DELIVERY_TYPES])
+  proofType!: ProofOfDeliveryType;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    example: '2026-09-09T15:00:00.000Z',
+  })
+  @IsOptional()
+  @IsDateString()
+  capturedAt?: string | null;
+}
+
+export class CreateDeliveryConfirmationDto {
+  @ApiPropertyOptional({ nullable: true, example: 'Jean Mbala' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  confirmedByName?: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Defaults to now',
+    example: '2026-09-09T15:00:00.000Z',
+  })
+  @IsOptional()
+  @IsDateString()
+  confirmedAt?: string | null;
+
+  @ApiProperty({
+    enum: DELIVERY_CONFIRMATION_STATUSES,
+    example: 'accepted',
+  })
+  @IsIn([...DELIVERY_CONFIRMATION_STATUSES])
+  status!: DeliveryConfirmationStatus;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'Required when status is accepted_with_remarks',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  remarks?: string | null;
+
+  @ApiPropertyOptional({
+    type: [CreateProofOfDeliveryDto],
+    description: 'Optional signature/photo/document proofs',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProofOfDeliveryDto)
+  proofs?: CreateProofOfDeliveryDto[];
+}
+
+export class ProofOfDeliveryResponseDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  deliveryId!: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  confirmationId!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  documentId!: string | null;
+
+  @ApiProperty({ enum: PROOF_OF_DELIVERY_TYPES })
+  proofType!: ProofOfDeliveryType;
+
+  @ApiPropertyOptional({ nullable: true })
+  capturedAt!: string | null;
+
+  @ApiProperty()
+  createdAt!: string;
+}
+
+export class DeliveryConfirmationResponseDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  deliveryId!: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  confirmedByName!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  confirmedAt!: string | null;
+
+  @ApiProperty({ enum: DELIVERY_CONFIRMATION_STATUSES })
+  status!: DeliveryConfirmationStatus;
+
+  @ApiPropertyOptional({ nullable: true })
+  remarks!: string | null;
+
+  @ApiProperty()
+  createdAt!: string;
+
+  @ApiProperty()
+  updatedAt!: string;
+
+  @ApiPropertyOptional({ type: [ProofOfDeliveryResponseDto] })
+  proofs?: ProofOfDeliveryResponseDto[];
 }

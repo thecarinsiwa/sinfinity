@@ -349,4 +349,117 @@ describe('DeliveriesService', () => {
       service.addTracking(deliveryId, { status: 'departed' }, orgId),
     ).rejects.toThrow(/in_transit or delivered/);
   });
+
+  it('creates a confirmation with proof of delivery', async () => {
+    const delivered = {
+      id: deliveryId,
+      organization_id: orgId,
+      delivery_number: 'DLV-1',
+      sales_order_id: soId,
+      customer_id: customerId,
+      warehouse_id: warehouseId,
+      delivery_address_id: null,
+      scheduled_at: null,
+      delivered_at: '2026-09-09 15:00:00.000',
+      driver_user_id: null,
+      status: DELIVERY_STATUS.DELIVERED,
+      notes: null,
+      created_at: '2026-01-01 00:00:00.000',
+      updated_at: '2026-01-01 00:00:00.000',
+      created_by: null,
+      updated_by: null,
+      deleted_at: null,
+    };
+    const docId = '0191e6b8-4c3a-7b2d-9f1e-docdocdocdocd';
+    const confirmationId = '0191e6b8-4c3a-7b2d-9f1e-confconfconfc';
+
+    db.select
+      .mockReturnValueOnce(thenable([delivered]))
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: docId,
+            organization_id: orgId,
+            deleted_at: null,
+            status: 'active',
+          },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: confirmationId,
+            delivery_id: deliveryId,
+            confirmed_by_name: 'Jean',
+            confirmed_at: '2026-09-09 15:00:00.000',
+            status: 'accepted',
+            remarks: null,
+            created_at: '2026-09-09 15:00:00.000',
+            updated_at: '2026-09-09 15:00:00.000',
+          },
+        ]),
+      )
+      .mockReturnValueOnce(
+        thenable([
+          {
+            id: '0191e6b8-4c3a-7b2d-9f1e-proofproofproo',
+            delivery_id: deliveryId,
+            confirmation_id: confirmationId,
+            document_id: docId,
+            proof_type: 'signature',
+            captured_at: '2026-09-09 15:00:00.000',
+            created_at: '2026-09-09 15:00:00.000',
+          },
+        ]),
+      );
+
+    const result = await service.createConfirmation(
+      deliveryId,
+      {
+        status: 'accepted',
+        confirmedByName: 'Jean',
+        proofs: [{ documentId: docId, proofType: 'signature' }],
+      },
+      orgId,
+    );
+
+    expect(result.status).toBe('accepted');
+    expect(result.proofs).toHaveLength(1);
+    expect(result.proofs![0].documentId).toBe(docId);
+    expect(db.insert).toHaveBeenCalled();
+  });
+
+  it('requires remarks for accepted_with_remarks', async () => {
+    db.select.mockReturnValueOnce(
+      thenable([
+        {
+          id: deliveryId,
+          organization_id: orgId,
+          delivery_number: 'DLV-1',
+          sales_order_id: soId,
+          customer_id: customerId,
+          warehouse_id: warehouseId,
+          delivery_address_id: null,
+          scheduled_at: null,
+          delivered_at: '2026-09-09 15:00:00.000',
+          driver_user_id: null,
+          status: DELIVERY_STATUS.DELIVERED,
+          notes: null,
+          created_at: '2026-01-01 00:00:00.000',
+          updated_at: '2026-01-01 00:00:00.000',
+          created_by: null,
+          updated_by: null,
+          deleted_at: null,
+        },
+      ]),
+    );
+
+    await expect(
+      service.createConfirmation(
+        deliveryId,
+        { status: 'accepted_with_remarks' },
+        orgId,
+      ),
+    ).rejects.toThrow(/remarks are required/);
+  });
 });
