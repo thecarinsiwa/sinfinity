@@ -339,6 +339,17 @@ describe('AppController (e2e)', () => {
     expect(body.paths['/api/v1/shipping-methods/{id}']).toBeDefined();
     expect(body.paths['/api/v1/carriers']).toBeDefined();
     expect(body.paths['/api/v1/carriers/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/shipments']).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}']).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}/transition']).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}/items']).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{id}/items/{itemId}'],
+    ).toBeDefined();
+    expect(body.paths['/api/v1/shipments/{id}/tracking']).toBeDefined();
+    expect(
+      body.paths['/api/v1/shipments/{id}/tracking/{eventId}'],
+    ).toBeDefined();
     expect(body.tags?.map((tag) => tag.name)).toEqual(
       expect.arrayContaining([
         'Health',
