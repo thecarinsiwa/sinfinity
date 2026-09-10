@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sinfinity Admin
 
-## Getting Started
+Console d’administration Next.js (`@sinfinity/admin`), port **3001**. Elle consomme l’API NestJS (`@sinfinity/api`, port **4000**).
 
-First, run the development server:
+## Prérequis
+
+- Node.js ≥ 22
+- pnpm ≥ 10
+- API locale démarrée (pour les appels HTTP / health)
+
+## Démarrage
+
+Depuis la racine du monorepo :
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm --filter @sinfinity/admin dev
+# ou
+pnpm dev:admin
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrir [http://localhost:3001](http://localhost:3001).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables d’environnement
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copier l’exemple puis ajuster si besoin :
 
-## Learn More
+```bash
+cp apps/admin/.env.example apps/admin/.env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Description | Défaut (exemple) |
+|----------|-------------|------------------|
+| `NEXT_PUBLIC_API_URL` | Base URL de l’API (préfixe `/api/v1`) | `http://localhost:4000/api/v1` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Showcase UI (dev only)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+En développement, les primitives `src/components/ui` sont visibles sur
+[http://localhost:3001/dev/ui](http://localhost:3001/dev/ui).
+La route renvoie 404 en production.
 
-## Deploy on Vercel
+## Santé API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+[http://localhost:3001/system/health](http://localhost:3001/system/health) appelle
+`GET /health` via le client HTTP Admin (utile pour valider CORS et la connectivité).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Documentation
+
+- Roadmap Admin : [`docs/ROADMAP.md`](./docs/ROADMAP.md)
+- API / Swagger : [http://localhost:4000/docs](http://localhost:4000/docs) (quand l’API tourne)
+- Conventions Next de cette app : [`AGENTS.md`](./AGENTS.md)
