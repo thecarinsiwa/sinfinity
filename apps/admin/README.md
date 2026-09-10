@@ -65,6 +65,18 @@ Voir aussi [`apps/api/docs/database.md`](../api/docs/database.md) et
 [http://localhost:3001/system/health](http://localhost:3001/system/health) appelle
 `GET /health` via le client HTTP Admin (utile pour valider CORS et la connectivité).
 
+## Gouvernance (Phase 5)
+
+Menu latéral **Gouvernance** (filtrée par permissions) :
+
+| Route Admin | Permission | API Nest | Rôle |
+|-------------|------------|----------|------|
+| [`/systeme`](http://localhost:3001/systeme) | `system_settings.read` / `.write` | `GET/PUT /system-settings`, `GET/PUT /system-settings/:key` | Éditeur clé / JSON (parse client avant PUT). Lien vers santé API. |
+| [`/audit`](http://localhost:3001/audit) | `audit.read` | `GET /audit-logs` | Table paginée + filtres ; tiroir détail `oldValues` / `newValues` (lecture seule, pas de delete). |
+| [`/audit/connexions`](http://localhost:3001/audit/connexions) | `audit.read` | `GET /login-logs` | Tentatives de connexion (succès/échec, IP, user-agent). Filtres email / statut / dates. |
+
+Les journaux d’audit et de connexion sont **append-only** côté API.
+
 ## Auth BFF (cookies httpOnly)
 
 Les tokens Nest ne sont **pas** exposés au JavaScript navigateur. Les route handlers
