@@ -21,9 +21,22 @@ pnpm dev:admin
 
 Ouvrir [http://localhost:3001](http://localhost:3001).
 
+## Convention CRUD (pages plein écran)
+
+Create / edit ne passent **plus** par des modales (sauf confirms d’archivage). Pattern cible documenté dans [`docs/ROADMAP.md`](./docs/ROADMAP.md) :
+
+| Opération | Route |
+|-----------|-------|
+| Liste | `/domaine/ressource` |
+| Créer | `/domaine/ressource/nouveau` |
+| Éditer | `/domaine/ressource/[id]/edit` |
+
+Exemple : `/parametres/pays`, `/parametres/pays/nouveau`, `/parametres/pays/[id]/edit`.  
+Exception : fiche organisation singleton `/organisation`. Lecture seule (audit, explorer docs) : drawers OK.
+
 ## Accueil (dashboard)
 
-La route `/` affiche un **tableau de bord** en lectures API uniquement (livrable Phase 8 — voir [Phase 8](#phase-8--tableau-de-bord--polish)) :
+La route `/` affiche un **tableau de bord** en lectures API uniquement (baseline livrée — polish UX / i18n ci-dessous) :
 
 | Indicateur | Source |
 |------------|--------|
@@ -78,7 +91,7 @@ Voir aussi [`apps/api/docs/database.md`](../api/docs/database.md) et
 [http://localhost:3001/system/health](http://localhost:3001/system/health) appelle
 `GET /health` via le client HTTP Admin (utile pour valider CORS et la connectivité).
 
-## Gouvernance (Phase 5)
+## Gouvernance
 
 Menu latéral **Gouvernance** (filtrée par permissions) :
 
@@ -90,19 +103,19 @@ Menu latéral **Gouvernance** (filtrée par permissions) :
 
 Les journaux d’audit et de connexion sont **append-only** côté API.
 
-## Documents (Phase 6)
+## Documents
 
 Menu **Documents** (`documents.read`) — hub puis sous-routes :
 
 | Route Admin | Permission | API Nest | Rôle |
 |-------------|------------|----------|------|
 | [`/documents`](http://localhost:3001/documents) | `documents.read` | — | Hub Types + Explorer. |
-| [`/documents/types`](http://localhost:3001/documents/types) | `documents.read` / `.write` | `GET/POST/PATCH/DELETE /document-types` | CRUD configuration (code, nom, MIME). Types système non supprimables ; édition système réservée super-admin. |
+| [`/documents/types`](http://localhost:3001/documents/types) | `documents.read` / `.write` | `GET/POST/PATCH/DELETE /document-types` | CRUD configuration (code, nom, MIME). Cible : pages `/nouveau` + `/[id]/edit` (voir roadmap). Types système non supprimables ; édition système réservée super-admin. |
 | [`/documents/explorer`](http://localhost:3001/documents/explorer) | `documents.read` | `GET /documents` | Liste support lecture seule. Filtres : type, statut, `entityType`, `entityId`, search. Pas d’upload / download. |
 
 `GET /documents` accepte `entityType` / `entityId` (via `document_links` ; `entityId` exige `entityType`).
 
-## Catalogue (Phase 7)
+## Catalogue
 
 Menu **Catalogue** (`catalog.read`) — hub puis sous-routes. Permissions écriture :
 `catalog.write` (pas de code `products.write` côté API).
@@ -110,9 +123,9 @@ Menu **Catalogue** (`catalog.read`) — hub puis sous-routes. Permissions écrit
 | Route Admin | Permission | API Nest | Rôle |
 |-------------|------------|----------|------|
 | [`/catalogue`](http://localhost:3001/catalogue) | `catalog.read` | — | Hub Marques / Catégories / Produits. |
-| [`/catalogue/marques`](http://localhost:3001/catalogue/marques) | `catalog.read` / `.write` | `GET/POST/PATCH/DELETE /product-brands` | CRUD marques (nom, logo URL, site). Soft-delete. |
-| [`/catalogue/categories`](http://localhost:3001/catalogue/categories) | `catalog.read` / `.write` | `/product-categories` (+ `GET …/tree`) | Catégories produits (arbre `parentId`) — UI à brancher. |
-| [`/catalogue/categories-services`](http://localhost:3001/catalogue/categories-services) | `catalog.read` / `.write` | `/service-categories` | Catégories services (liste plate) — UI à brancher. |
+| [`/catalogue/marques`](http://localhost:3001/catalogue/marques) | `catalog.read` / `.write` | `GET/POST/PATCH/DELETE /product-brands` | CRUD marques (nom, logo URL, site). Soft-delete. Cible pages `/nouveau` + `/[id]/edit`. |
+| [`/catalogue/categories`](http://localhost:3001/catalogue/categories) | `catalog.read` / `.write` | `/product-categories` (+ `GET …/tree`) | Catégories produits (arbre `parentId`) — **stub** ; livraison roadmap phase 5 en pages. |
+| [`/catalogue/categories-services`](http://localhost:3001/catalogue/categories-services) | `catalog.read` / `.write` | `/service-categories` | Catégories services (liste plate) — **stub** ; idem phase 5. |
 | [`/catalogue/produits`](http://localhost:3001/catalogue/produits) | `catalog.read` / `.write` | `GET/POST/PATCH/DELETE /products` | CRUD **allégé** : SKU, nom, marque, catégorie, unité (`GET /product-units`), `isActive`. Soft-delete. |
 
 ### Frontière Admin vs Web
@@ -125,11 +138,9 @@ Menu **Catalogue** (`catalog.read`) — hub puis sous-routes. Permissions écrit
 
 L’Admin ne remplace pas le module Catalogue Web : il débloque un catalogue vide et maintient les référentiels.
 
-## Phase 8 — Tableau de bord & polish
+## Tableau de bord, UX & i18n (baseline)
 
-Objectif roadmap : vue d’accueil utile, qualité UX transversale (états vides, 403/404), et **i18n** fr / en / es. Voir aussi [`docs/ROADMAP.md`](./docs/ROADMAP.md) § Phase 8.
-
-### Livrables
+Livré. Suite du chantier (pages CRUD, design, users/rôles) : [`docs/ROADMAP.md`](./docs/ROADMAP.md) phases 1–7.
 
 | Volet | Contenu |
 |-------|---------|
@@ -243,6 +254,6 @@ Voir [`apps/api/docs/database.md`](../api/docs/database.md) pour la liste compl�
 
 ## Documentation
 
-- Roadmap Admin : [`docs/ROADMAP.md`](./docs/ROADMAP.md)
+- Roadmap Admin (baseline + phases pages CRUD / design) : [`docs/ROADMAP.md`](./docs/ROADMAP.md)
 - API / Swagger : [http://localhost:4000/docs](http://localhost:4000/docs) (quand l’API tourne)
 - Conventions Next de cette app : [`AGENTS.md`](./AGENTS.md)
