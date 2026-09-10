@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, count, desc, eq, isNull, like, max, ne, or, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, like, max, ne, or, type SQL } from 'drizzle-orm';
 import {
   buildPaginatedResponse,
   createId,
@@ -15,6 +15,7 @@ import {
 import { DRIZZLE } from '../../../database/database.constants';
 import type { DrizzleDB } from '../../../database/database.types';
 import {
+  document_links,
   document_types,
   document_versions,
   documents,
@@ -68,17 +69,39 @@ export class DocumentsService {
       status,
       documentTypeId,
       organizationId,
+      entityType,
+      entityId,
     } = query;
+
+    if (entityId && !entityType) {
+      throw new BadRequestException(
+        'entityType is required when entityId is provided',
+      );
+    }
+
     const scopeOrgId = this.requireScopeOrgId(
       organizationId,
       currentOrganizationId,
       user,
     );
+
+    let linkedDocumentIds: string[] | undefined;
+    if (entityType) {
+      linkedDocumentIds = await this.findDocumentIdsByLink(
+        entityType,
+        entityId,
+      );
+      if (linkedDocumentIds.length === 0) {
+        return buildPaginatedResponse([], 0, page, pageSize);
+      }
+    }
+
     const where = this.buildWhere({
       organizationId: scopeOrgId,
       search,
       status,
       documentTypeId,
+      documentIds: linkedDocumentIds,
     });
     const offset = (page - 1) * pageSize;
 
@@ -451,11 +474,33 @@ export class DocumentsService {
     }
   }
 
+  private async findDocumentIdsByLink(
+    entityType: string,
+    entityId?: string,
+  ): Promise<string[]> {
+    const parts: SQL[] = [eq(document_links.entity_type, entityType)];
+    if (entityId) {
+      parts.push(eq(document_links.entity_id, entityId));
+    }
+
+    const rows = await this.db
+      .select({ documentId: document_links.document_id })
+      .from(document_links)
+      .where(and(...parts));
+
+    const ids = new Set<string>();
+    for (const row of rows as { documentId: string }[]) {
+      ids.add(row.documentId);
+    }
+    return [...ids];
+  }
+
   private buildWhere(params: {
     organizationId: string;
     search?: string;
     status?: string;
     documentTypeId?: string;
+    documentIds?: string[];
   }): SQL {
     const parts: SQL[] = [
       eq(documents.organization_id, params.organizationId),
@@ -469,6 +514,10 @@ export class DocumentsService {
 
     if (params.documentTypeId) {
       parts.push(eq(documents.document_type_id, params.documentTypeId));
+    }
+
+    if (params.documentIds) {
+      parts.push(inArray(documents.id, params.documentIds));
     }
 
     if (params.search) {

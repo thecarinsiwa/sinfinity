@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ExchangeRateFormModal } from "@/components/settings/exchange-rate-form-modal";
@@ -31,6 +32,8 @@ import {
 const PAGE_SIZE = 20;
 
 export function ExchangeRatesPanel() {
+  const t = useTranslations("settings.exchangeRates");
+  const tc = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -97,15 +100,11 @@ export function ExchangeRatesPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les taux",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, fromCurrencyId, toCurrencyId]);
+  }, [page, fromCurrencyId, toCurrencyId, t]);
 
   useEffect(() => {
     void load();
@@ -126,7 +125,7 @@ export function ExchangeRatesPanel() {
       setLatestResult(result);
     } catch (cause) {
       setLatestError(
-        cause instanceof ApiError ? cause.message : "Aucun taux trouvé",
+        cause instanceof ApiError ? cause.message : t("latestNotFound"),
       );
     } finally {
       setLatestLoading(false);
@@ -140,15 +139,15 @@ export function ExchangeRatesPanel() {
       await apiFetch<void>(`/exchange-rates/${deleting.id}`, {
         method: "DELETE",
       });
-      toast({ title: "Taux archivé", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
@@ -159,12 +158,13 @@ export function ExchangeRatesPanel() {
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-lg border border-border bg-surface p-4">
-        <h2 className="mb-3 text-sm font-semibold text-foreground">
-          Dernier taux
+        <h2 className="mb-1 text-sm font-semibold text-foreground">
+          {t("latestTitle")}
         </h2>
+        <p className="mb-3 text-sm text-muted">{t("latestLead")}</p>
         <div className="grid gap-3 sm:grid-cols-4">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">From (ISO)</span>
+            <span className="font-medium">{t("latestFrom")}</span>
             <Input
               maxLength={3}
               value={latestFrom}
@@ -174,7 +174,7 @@ export function ExchangeRatesPanel() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">To (ISO)</span>
+            <span className="font-medium">{t("latestTo")}</span>
             <Input
               maxLength={3}
               value={latestTo}
@@ -184,7 +184,9 @@ export function ExchangeRatesPanel() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Date (optionnel)</span>
+            <span className="font-medium">
+              {tc("optional", { label: t("rateDate") })}
+            </span>
             <Input
               type="date"
               value={latestDate}
@@ -202,7 +204,7 @@ export function ExchangeRatesPanel() {
                 latestTo.trim().length !== 3
               }
             >
-              {latestLoading ? "Recherche…" : "Chercher"}
+              {latestLoading ? t("searchingLatest") : t("searchLatest")}
             </Button>
           </div>
         </div>
@@ -215,10 +217,8 @@ export function ExchangeRatesPanel() {
             <span className="font-mono font-medium">
               {formatDecimalDisplay(latestResult.rate)}
             </span>{" "}
-            au {latestResult.rateDate.slice(0, 10)}
-            {latestResult.source ? (
-              <span className="text-muted"> ({latestResult.source})</span>
-            ) : null}
+            ({latestResult.rateDate.slice(0, 10)}
+            {latestResult.source ? ` · ${latestResult.source}` : ""})
           </p>
         ) : null}
       </section>
@@ -226,7 +226,7 @@ export function ExchangeRatesPanel() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Source</span>
+            <span className="font-medium">{t("source")}</span>
             <Select
               value={fromCurrencyId}
               onChange={(e) => {
@@ -234,7 +234,7 @@ export function ExchangeRatesPanel() {
                 setFromCurrencyId(e.target.value);
               }}
             >
-              <option value="">Toutes</option>
+              <option value="">{tc("allF")}</option>
               {currencies.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code}
@@ -243,7 +243,7 @@ export function ExchangeRatesPanel() {
             </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Cible</span>
+            <span className="font-medium">{t("target")}</span>
             <Select
               value={toCurrencyId}
               onChange={(e) => {
@@ -251,7 +251,7 @@ export function ExchangeRatesPanel() {
                 setToCurrencyId(e.target.value);
               }}
             >
-              <option value="">Toutes</option>
+              <option value="">{tc("allF")}</option>
               {currencies.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code}
@@ -268,25 +268,25 @@ export function ExchangeRatesPanel() {
               setFormOpen(true);
             }}
           >
-            Nouveau taux
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des taux…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun taux"
-          description="Créez un taux ou ajustez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -297,7 +297,7 @@ export function ExchangeRatesPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouveau taux
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -307,11 +307,13 @@ export function ExchangeRatesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Paire</Th>
-                <Th>Taux</Th>
-                <Th>Date</Th>
-                <Th>Source</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>
+                  {t("source")} / {t("target")}
+                </Th>
+                <Th>{t("rate")}</Th>
+                <Th>{t("rateDate")}</Th>
+                <Th>{t("formSource")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -325,7 +327,7 @@ export function ExchangeRatesPanel() {
                     {formatDecimalDisplay(row.rate)}
                   </Td>
                   <Td>{row.rateDate.slice(0, 10)}</Td>
-                  <Td className="text-muted">{row.source ?? "—"}</Td>
+                  <Td className="text-muted">{row.source ?? tc("emDash")}</Td>
                   <Td>
                     <div className="flex justify-end gap-2">
                       <Can permission="settings.write">
@@ -338,7 +340,7 @@ export function ExchangeRatesPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tc("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -346,7 +348,7 @@ export function ExchangeRatesPanel() {
                           size="sm"
                           onClick={() => setDeleting(row)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -371,7 +373,7 @@ export function ExchangeRatesPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Taux mis à jour" : "Taux créé",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -383,7 +385,7 @@ export function ExchangeRatesPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver le taux"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -392,7 +394,7 @@ export function ExchangeRatesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -400,17 +402,15 @@ export function ExchangeRatesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Soft-delete du taux{" "}
-          <span className="font-mono text-foreground">
-            {formatDecimalDisplay(deleting?.rate)}
-          </span>
-          .
+          {t("archiveBody", {
+            rate: formatDecimalDisplay(deleting?.rate),
+          })}
         </p>
       </Modal>
     </div>

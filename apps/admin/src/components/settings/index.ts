@@ -1,7 +1,9 @@
 export { CitiesPanel } from "./cities-panel";
 export { CityFormModal } from "./city-form-modal";
 export { CountriesPanel } from "./countries-panel";
-export { CountryFormModal } from "./country-form-modal";
+export { CountryCreatePage } from "./country-create-page";
+export { CountryEditPage } from "./country-edit-page";
+export { CountryForm } from "./country-form";
 export { CurrenciesPanel } from "./currencies-panel";
 export { CurrencyFormModal } from "./currency-form-modal";
 export { ExchangeRateFormModal } from "./exchange-rate-form-modal";

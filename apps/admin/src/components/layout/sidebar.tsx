@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/auth-provider";
 import { filterNavItems } from "@/components/layout/filter-nav-items";
 import {
   APP_NAV_ITEMS,
-  NAV_GROUP_LABELS,
   NAV_GROUP_ORDER,
   type NavGroupId,
   type NavItem,
@@ -28,17 +28,16 @@ function isActivePath(pathname: string, href: string): boolean {
 
 function groupItems(items: NavItem[]): Array<{
   id: NavGroupId;
-  label: string;
   items: NavItem[];
 }> {
   return NAV_GROUP_ORDER.map((id) => ({
     id,
-    label: NAV_GROUP_LABELS[id],
     items: items.filter((item) => item.group === id),
   })).filter((group) => group.items.length > 0);
 }
 
 export function Sidebar({ open, onNavigate }: SidebarProps) {
+  const t = useTranslations();
   const pathname = usePathname();
   const { permissions, isSuperAdmin, logout, status, organization } =
     useAuth();
@@ -69,10 +68,12 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
             onClick={onNavigate}
             className="block truncate text-base font-semibold tracking-tight text-foreground"
           >
-            Sinfinity
+            {t("common.brand")}
           </Link>
           <p className="truncate text-xs text-muted">
-            {organization?.name ? `${organization.name} · Admin` : "Console Admin"}
+            {organization?.name
+              ? t("common.orgAdminSuffix", { name: organization.name })
+              : t("common.consoleAdmin")}
           </p>
         </div>
       </div>
@@ -81,7 +82,7 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
         {groups.map((group) => (
           <div key={group.id} className="flex flex-col gap-1">
             <p className="px-3 pb-1 text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-              {group.label}
+              {t(`nav.groups.${group.id}`)}
             </p>
             {group.items.map((item) => {
               const active = isActivePath(pathname, item.href);
@@ -103,7 +104,7 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
                       aria-hidden
                     />
                   ) : null}
-                  {item.label}
+                  {t(`nav.items.${item.id}`)}
                 </Link>
               );
             })}
@@ -119,7 +120,7 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
           onClick={() => void logout()}
           disabled={status === "loading"}
         >
-          Déconnexion
+          {t("common.logout")}
         </Button>
       </div>
     </aside>

@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
-import { Badge, Spinner } from "@/components/ui";
+import { Badge, Button, Spinner } from "@/components/ui";
 import {
   ApiError,
   apiFetch,
   type HealthResponse,
   type PaginatedResponse,
 } from "@/lib/api";
-import { formatDateTimeFr } from "@/lib/dashboard/format";
+import { formatDateTime, greetingKeyForHour } from "@/lib/dashboard/format";
 import { cn } from "@/lib/cn";
 
 type CountState =
@@ -25,57 +26,42 @@ type HealthState =
   | { status: "ready"; data: HealthResponse }
   | { status: "error"; message: string };
 
+type QuickLinkId =
+  | "organization"
+  | "users"
+  | "settings"
+  | "audit"
+  | "branches"
+  | "roles"
+  | "health";
+
 const QUICK_LINKS: Array<{
-  title: string;
+  id: QuickLinkId;
   href: string;
-  hint: string;
   permission: string | null;
 }> = [
   {
-    title: "Organisation",
+    id: "organization",
     href: "/organisation",
-    hint: "Fiche tenant",
     permission: "organizations.read",
   },
+  { id: "users", href: "/utilisateurs", permission: "users.read" },
+  { id: "settings", href: "/parametres", permission: "settings.read" },
+  { id: "audit", href: "/audit", permission: "audit.read" },
   {
-    title: "Agences",
+    id: "branches",
     href: "/organisation/agences",
-    hint: "Sites & entrepôts",
     permission: "branches.read",
   },
-  {
-    title: "Utilisateurs",
-    href: "/utilisateurs",
-    hint: "Comptes",
-    permission: "users.read",
-  },
-  {
-    title: "Rôles",
-    href: "/roles",
-    hint: "RBAC",
-    permission: "roles.read",
-  },
-  {
-    title: "Paramètres",
-    href: "/parametres",
-    hint: "Référentiels",
-    permission: "settings.read",
-  },
-  {
-    title: "Audit",
-    href: "/audit",
-    hint: "Journal",
-    permission: "audit.read",
-  },
-  {
-    title: "Santé API",
-    href: "/system/health",
-    hint: "Diagnostic",
-    permission: null,
-  },
+  { id: "roles", href: "/roles", permission: "roles.read" },
+  { id: "health", href: "/system/health", permission: null },
 ];
 
 export function DashboardHome() {
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
+  const tRoot = useTranslations();
+  const locale = useLocale();
   const { user, organization, hasPermission, isSuperAdmin } = useAuth();
   const [usersCount, setUsersCount] = useState<CountState>({
     status: "loading",
@@ -85,8 +71,34 @@ export function DashboardHome() {
   });
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
 
+  const loadHealth = useCallback(
+    async (signal?: { cancelled: boolean }) => {
+      setHealth({ status: "loading" });
+      try {
+        const data = await apiFetch<HealthResponse>("/health", {
+          skipAuth: true,
+          cache: "no-store",
+        });
+        if (!signal?.cancelled) {
+          setHealth({ status: "ready", data });
+        }
+      } catch (error) {
+        if (!signal?.cancelled) {
+          setHealth({
+            status: "error",
+            message:
+              error instanceof ApiError
+                ? error.message
+                : t("healthUnreachable"),
+          });
+        }
+      }
+    },
+    [t],
+  );
+
   useEffect(() => {
-    let cancelled = false;
+    const signal = { cancelled: false };
 
     async function loadCount(
       path: string,
@@ -99,39 +111,20 @@ export function DashboardHome() {
       }
       try {
         const result = await apiFetch<PaginatedResponse<unknown>>(path);
-        if (!cancelled) {
+        if (!signal.cancelled) {
           setState({ status: "ready", total: result.meta.total });
         }
       } catch (error) {
-        if (!cancelled) {
-          setState({
-            status: "error",
-            message:
-              error instanceof ApiError
-                ? error.message
-                : "Chargement impossible",
-          });
+        if (signal.cancelled) return;
+        if (error instanceof ApiError && error.statusCode === 403) {
+          setState({ status: "denied" });
+          return;
         }
-      }
-    }
-
-    async function loadHealth() {
-      try {
-        const data = await apiFetch<HealthResponse>("/health", {
-          skipAuth: true,
-          cache: "no-store",
+        setState({
+          status: "error",
+          message:
+            error instanceof ApiError ? error.message : t("loadFailed"),
         });
-        if (!cancelled) {
-          setHealth({ status: "ready", data });
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setHealth({
-            status: "error",
-            message:
-              error instanceof ApiError ? error.message : "API injoignable",
-          });
-        }
       }
     }
 
@@ -145,31 +138,52 @@ export function DashboardHome() {
       isSuperAdmin || hasPermission("branches.read"),
       setBranchesCount,
     );
-    void loadHealth();
+    void loadHealth(signal);
 
     return () => {
-      cancelled = true;
+      signal.cancelled = true;
     };
-  }, [hasPermission, isSuperAdmin]);
+  }, [hasPermission, isSuperAdmin, loadHealth, t]);
+
+  const displayName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.email ||
+    "";
+  const greeting = tRoot(greetingKeyForHour(new Date().getHours()));
 
   return (
     <div className="flex flex-col gap-6 pb-2">
+      <header>
+        <p className="text-sm text-muted">
+          {greeting}
+          {displayName ? (
+            <>
+              ,{" "}
+              <span className="font-medium text-foreground">{displayName}</span>
+            </>
+          ) : null}
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+          {t("title")}
+        </h1>
+        <p className="mt-1 text-sm text-muted">{t("lead")}</p>
+      </header>
+
       <div className="grid gap-4 lg:grid-cols-12">
         <Panel className="lg:col-span-4" delay={0}>
-          <p className="text-sm font-medium text-muted">Organisation</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-            {organization?.name ?? "—"}
-          </h2>
-          <p className="mt-2 text-sm text-muted">
-            Console d’administration Sinfinity. Les modules métier restent sur
-            Web et POS.
+          <p className="text-sm font-medium text-muted">
+            {t("organizationLabel")}
           </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+            {organization?.name ?? tCommon("emDash")}
+          </h2>
+          <p className="mt-2 text-sm text-muted">{t("organizationBlurb")}</p>
           <Can permission="organizations.read">
             <Link
               href="/organisation"
               className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
-              Ouvrir la fiche
+              {t("openOrg")}
             </Link>
           </Can>
         </Panel>
@@ -177,28 +191,34 @@ export function DashboardHome() {
         <Panel className="lg:col-span-8" delay={60}>
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-muted">Vue d’ensemble</p>
+              <p className="text-sm font-medium text-muted">
+                {t("overviewLabel")}
+              </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Indicateurs
+                {t("indicators")}
               </h2>
             </div>
-            <Badge tone="neutral">Lectures API</Badge>
+            <Badge tone="neutral">{t("apiReads")}</Badge>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <StatTile
-              label="Utilisateurs actifs"
+              label={t("activeUsers")}
               href="/utilisateurs"
               state={usersCount}
+              permissionRequired={t("permissionRequired")}
+              openListLabel={t("openList", { label: t("activeUsers") })}
             />
             <StatTile
-              label="Agences actives"
+              label={t("activeBranches")}
               href="/organisation/agences"
               state={branchesCount}
+              permissionRequired={t("permissionRequired")}
+              openListLabel={t("openList", { label: t("activeBranches") })}
             />
             <div className="rounded-2xl border border-border/70 bg-background/60 p-4">
-              <p className="text-sm text-muted">Dernière connexion</p>
+              <p className="text-sm text-muted">{t("lastLogin")}</p>
               <p className="mt-3 text-xl font-semibold tracking-tight text-foreground">
-                {formatDateTimeFr(user?.lastLoginAt)}
+                {formatDateTime(user?.lastLoginAt, locale)}
               </p>
               <p className="mt-2 truncate text-xs text-muted">{user?.email}</p>
             </div>
@@ -208,25 +228,27 @@ export function DashboardHome() {
 
       <Panel delay={120}>
         <div className="mb-4">
-          <p className="text-sm font-medium text-muted">Raccourcis</p>
+          <p className="text-sm font-medium text-muted">{t("shortcutsLabel")}</p>
           <h2 className="text-lg font-semibold text-foreground">
-            Accès rapides
+            {t("quickAccess")}
           </h2>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {QUICK_LINKS.map((link) => {
+            const title = t(`links.${link.id}.title`);
+            const hint = t(`links.${link.id}.hint`);
             const card = (
               <Link
                 href={link.href}
                 className="group flex flex-col items-start gap-2 rounded-2xl border border-border/70 bg-background/50 p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
               >
                 <span className="flex size-10 items-center justify-center rounded-xl bg-surface text-primary shadow-sm ring-1 ring-border/60 transition-transform group-hover:scale-105">
-                  <QuickLinkGlyph label={link.title} />
+                  <QuickLinkGlyph label={title} />
                 </span>
                 <span className="text-sm font-semibold text-foreground">
-                  {link.title}
+                  {title}
                 </span>
-                <span className="text-xs text-muted">{link.hint}</span>
+                <span className="text-xs text-muted">{hint}</span>
               </Link>
             );
 
@@ -247,9 +269,9 @@ export function DashboardHome() {
         <Panel className="lg:col-span-5" delay={180}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-muted">Santé API</p>
+              <p className="text-sm font-medium text-muted">{t("healthLabel")}</p>
               <h2 className="text-lg font-semibold text-foreground">
-                Disponibilité Nest
+                {t("nestAvailability")}
               </h2>
             </div>
             {health.status === "ready" ? (
@@ -263,9 +285,9 @@ export function DashboardHome() {
 
           <div className="mt-6 flex items-center gap-6">
             <HealthRing state={health} />
-            <div className="min-w-0 flex-1 space-y-2 text-sm">
+            <div className="min-h-0 flex-1 space-y-2 text-sm">
               {health.status === "loading" ? (
-                <Spinner label="Contrôle en cours…" />
+                <Spinner label={t("healthChecking")} />
               ) : null}
               {health.status === "ready" ? (
                 <>
@@ -275,39 +297,56 @@ export function DashboardHome() {
                 </>
               ) : null}
               {health.status === "error" ? (
-                <p className="text-danger">{health.message}</p>
+                <div className="space-y-3">
+                  <p className="text-danger">{health.message}</p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void loadHealth()}
+                  >
+                    {t("retryHealth")}
+                  </Button>
+                </div>
               ) : null}
               <Link
                 href="/system/health"
                 className="inline-flex pt-2 text-sm font-medium text-primary hover:underline"
               >
-                Voir le détail
+                {t("viewDetail")}
               </Link>
             </div>
           </div>
         </Panel>
 
         <Panel className="lg:col-span-7" delay={220}>
-          <p className="text-sm font-medium text-muted">Session</p>
+          <p className="text-sm font-medium text-muted">{t("sessionLabel")}</p>
           <h2 className="text-lg font-semibold text-foreground">
-            Profil courant
+            {t("currentProfile")}
           </h2>
           <dl className="mt-5 grid gap-3 sm:grid-cols-2">
             <InfoCell
-              label="Nom"
+              label={t("name")}
               value={
                 [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-                "—"
+                tCommon("emDash")
               }
             />
-            <InfoCell label="Email" value={user?.email ?? "—"} />
             <InfoCell
-              label="Rôle plateforme"
-              value={isSuperAdmin ? "Super-admin" : "Utilisateur org"}
+              label={t("email")}
+              value={user?.email ?? tCommon("emDash")}
             />
             <InfoCell
-              label="Permissions"
-              value={`${user?.permissions?.length ?? 0} code(s)`}
+              label={t("platformRole")}
+              value={
+                isSuperAdmin ? t("superAdminRole") : t("orgUserRole")
+              }
+            />
+            <InfoCell
+              label={t("permissions")}
+              value={t("permissionCodes", {
+                count: user?.permissions?.length ?? 0,
+              })}
             />
           </dl>
         </Panel>
@@ -344,10 +383,14 @@ function StatTile({
   label,
   href,
   state,
+  permissionRequired,
+  openListLabel,
 }: {
   label: string;
   href: string;
   state: CountState;
+  permissionRequired: string;
+  openListLabel: string;
 }) {
   const content = (
     <div className="rounded-2xl border border-border/70 bg-background/60 p-4 transition-colors hover:border-primary/35">
@@ -360,7 +403,7 @@ function StatTile({
           </p>
         ) : null}
         {state.status === "denied" ? (
-          <p className="text-sm text-muted">Permission requise</p>
+          <p className="text-sm text-muted">{permissionRequired}</p>
         ) : null}
         {state.status === "error" ? (
           <p className="text-sm text-danger">{state.message}</p>
@@ -369,11 +412,15 @@ function StatTile({
     </div>
   );
 
-  if (state.status === "denied") {
+  if (state.status === "denied" || state.status === "error") {
     return content;
   }
 
-  return <Link href={href}>{content}</Link>;
+  return (
+    <Link href={href} aria-label={openListLabel}>
+      {content}
+    </Link>
+  );
 }
 
 function HealthRing({ state }: { state: HealthState }) {
@@ -427,8 +474,8 @@ function InfoCell({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
 function QuickLinkGlyph({ label }: { label: string }) {
   const letter = label.trim().charAt(0).toUpperCase() || "?";
   return <span className="text-sm font-bold">{letter}</span>;
 }
+

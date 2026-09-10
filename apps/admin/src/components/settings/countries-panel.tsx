@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
-import { CountryFormModal } from "@/components/settings/country-form-modal";
 import {
   Alert,
   Button,
@@ -21,11 +22,27 @@ import {
 } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { ApiError, apiFetch, type PaginatedResponse } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import type { Country } from "@/lib/settings";
 
 const PAGE_SIZE = 20;
+const NEW_HREF = "/parametres/pays/nouveau";
+
+const linkButtonClass = cn(
+  "inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors",
+  "border-transparent bg-primary text-primary-foreground hover:bg-primary-hover",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+);
+
+const linkButtonSmSecondaryClass = cn(
+  "inline-flex h-8 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
+  "border-border bg-surface text-foreground hover:bg-surface-muted",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+);
 
 export function CountriesPanel() {
+  const t = useTranslations("settings.countries");
+  const tc = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -41,8 +58,6 @@ export function CountriesPanel() {
   const [items, setItems] = useState<Country[]>([]);
   const [total, setTotal] = useState(0);
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Country | null>(null);
   const [deleting, setDeleting] = useState<Country | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -67,15 +82,11 @@ export function CountriesPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les pays",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, code, search]);
+  }, [page, code, search, t]);
 
   useEffect(() => {
     void load();
@@ -92,7 +103,7 @@ export function CountriesPanel() {
     setDeleteLoading(true);
     try {
       await apiFetch<void>(`/countries/${deleting.id}`, { method: "DELETE" });
-      toast({ title: "Pays archivé", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) {
         setPage((p) => p - 1);
@@ -101,9 +112,9 @@ export function CountriesPanel() {
       }
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
@@ -116,7 +127,7 @@ export function CountriesPanel() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Code ISO</span>
+            <span className="font-medium">{t("isoCode")}</span>
             <Input
               maxLength={2}
               value={codeInput}
@@ -126,60 +137,53 @@ export function CountriesPanel() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm sm:col-span-2">
+            <span className="font-medium" id="countries-search-label">
+              {tc("search")}
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="countries-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Nom du pays…"
+                placeholder={t("searchPlaceholder")}
                 onKeyDown={(e) => e.key === "Enter" && applyFilters()}
               />
               <Button type="button" variant="secondary" onClick={applyFilters}>
-                Filtrer
+                {tc("filter")}
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
-          <Button
-            type="button"
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
-            Nouveau pays
-          </Button>
+          <Link href={NEW_HREF} className={linkButtonClass}>
+            {t("new")}
+          </Link>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des pays…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun pays"
-          description="Ajustez les filtres ou créez un premier pays."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  setEditing(null);
-                  setFormOpen(true);
-                }}
+              <Link
+                href={NEW_HREF}
+                className={cn(linkButtonClass, "h-8 px-3 text-sm")}
               >
-                Nouveau pays
-              </Button>
+                {t("new")}
+              </Link>
             ) : undefined
           }
         />
@@ -188,11 +192,11 @@ export function CountriesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Code3</Th>
-                <Th>Nom</Th>
-                <Th>Tél.</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tc("code")}</Th>
+                <Th>{t("code3")}</Th>
+                <Th>{tc("name")}</Th>
+                <Th>{t("phoneCol")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -200,31 +204,28 @@ export function CountriesPanel() {
                 <Tr key={country.id}>
                   <Td className="font-mono text-xs">{country.code}</Td>
                   <Td className="font-mono text-xs text-muted">
-                    {country.code3 ?? "—"}
+                    {country.code3 ?? tc("emDash")}
                   </Td>
                   <Td>{country.name}</Td>
-                  <Td className="text-muted">{country.phoneCode ?? "—"}</Td>
+                  <Td className="text-muted">
+                    {country.phoneCode ?? tc("emDash")}
+                  </Td>
                   <Td>
                     <div className="flex justify-end gap-2">
                       <Can permission="settings.write">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            setEditing(country);
-                            setFormOpen(true);
-                          }}
+                        <Link
+                          href={`/parametres/pays/${country.id}/edit`}
+                          className={linkButtonSmSecondaryClass}
                         >
-                          Modifier
-                        </Button>
+                          {tc("edit")}
+                        </Link>
                         <Button
                           type="button"
                           variant="danger"
                           size="sm"
                           onClick={() => setDeleting(country)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -242,25 +243,12 @@ export function CountriesPanel() {
         </>
       )}
 
-      <CountryFormModal
-        open={formOpen}
-        country={editing}
-        onClose={() => setFormOpen(false)}
-        onSaved={() => {
-          toast({
-            title: editing ? "Pays mis à jour" : "Pays créé",
-            tone: "success",
-          });
-          void load();
-        }}
-      />
-
       <Modal
         open={deleting !== null}
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver le pays"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -269,7 +257,7 @@ export function CountriesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -277,15 +265,16 @@ export function CountriesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.name}</span> (
-          {deleting?.code}).
+          {t("archiveBody", {
+            name: deleting?.name ?? "",
+            code: deleting?.code ?? "",
+          })}
         </p>
       </Modal>
     </div>

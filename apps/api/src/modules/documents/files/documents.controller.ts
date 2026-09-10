@@ -62,7 +62,12 @@ export class DocumentsController {
 
   @Get()
   @RequirePermissions('documents.read')
-  @ApiOperation({ summary: 'List documents' })
+  @ApiOperation({
+    summary: 'List documents',
+    description:
+      'Filters: documentTypeId, status, search, entityType, entityId. ' +
+      'entityType/entityId resolve via document_links (entityId requires entityType).',
+  })
   @ApiPaginatedResponse(DocumentResponseDto)
   findAll(
     @Query() query: ListDocumentsQueryDto,

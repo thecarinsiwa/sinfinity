@@ -1,17 +1,25 @@
 export type NavGroupId = "general" | "references" | "governance";
 
+export type NavItemId =
+  | "dashboard"
+  | "organization"
+  | "branches"
+  | "users"
+  | "roles"
+  | "settings"
+  | "documents"
+  | "catalogue"
+  | "audit"
+  | "loginLogs"
+  | "system";
+
 export type NavItem = {
-  label: string;
+  /** Clé sous `nav.items.*` */
+  id: NavItemId;
   href: string;
   /** If null, visible to any authenticated admin session. */
   permission: string | null;
   group: NavGroupId;
-};
-
-export const NAV_GROUP_LABELS: Record<NavGroupId, string> = {
-  general: "Général",
-  references: "Référentiels",
-  governance: "Gouvernance",
 };
 
 export const NAV_GROUP_ORDER: NavGroupId[] = [
@@ -22,61 +30,67 @@ export const NAV_GROUP_ORDER: NavGroupId[] = [
 
 export const APP_NAV_ITEMS: NavItem[] = [
   {
-    label: "Tableau de bord",
+    id: "dashboard",
     href: "/",
     permission: null,
     group: "general",
   },
   {
-    label: "Organisation",
+    id: "organization",
     href: "/organisation",
     permission: "organizations.read",
     group: "general",
   },
   {
-    label: "Agences",
+    id: "branches",
     href: "/organisation/agences",
     permission: "branches.read",
     group: "general",
   },
   {
-    label: "Utilisateurs",
+    id: "users",
     href: "/utilisateurs",
     permission: "users.read",
     group: "general",
   },
   {
-    label: "Rôles",
+    id: "roles",
     href: "/roles",
     permission: "roles.read",
     group: "general",
   },
   {
-    label: "Paramètres",
+    id: "settings",
     href: "/parametres",
     permission: "settings.read",
     group: "references",
   },
   {
-    label: "Documents",
+    id: "documents",
     href: "/documents",
     permission: "documents.read",
     group: "references",
   },
   {
-    label: "Catalogue",
+    id: "catalogue",
     href: "/catalogue",
     permission: "catalog.read",
     group: "references",
   },
   {
-    label: "Audit",
+    id: "audit",
     href: "/audit",
     permission: "audit.read",
     group: "governance",
   },
   {
-    label: "Système",
+    id: "loginLogs",
+    href: "/audit/connexions",
+    permission: "audit.read",
+    group: "governance",
+  },
+  {
+    id: "system",
     href: "/systeme",
     permission: "system_settings.read",
     group: "governance",

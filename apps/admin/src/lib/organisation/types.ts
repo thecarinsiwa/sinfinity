@@ -70,9 +70,3 @@ export type ListBranchesQuery = {
   isActive?: boolean;
   organizationId?: string;
 };
-
-export const BRANCH_TYPE_LABELS: Record<BranchType, string> = {
-  office: "Bureau",
-  warehouse: "Entrepôt",
-  mixed: "Mixte",
-};

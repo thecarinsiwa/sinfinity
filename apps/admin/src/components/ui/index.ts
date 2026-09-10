@@ -12,6 +12,8 @@ export { Input } from "./input";
 export type { InputProps } from "./input";
 export { Dialog, Modal } from "./modal";
 export type { ModalProps } from "./modal";
+export { Drawer } from "./drawer";
+export type { DrawerProps } from "./drawer";
 export { Pagination } from "./pagination";
 export type { PaginationProps } from "./pagination";
 export { Select } from "./select";

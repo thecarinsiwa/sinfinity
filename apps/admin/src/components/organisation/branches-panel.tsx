@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { BranchFormModal } from "@/components/organisation/branch-form-modal";
@@ -23,11 +24,7 @@ import {
 } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { ApiError, apiFetch, type PaginatedResponse } from "@/lib/api";
-import {
-  BRANCH_TYPE_LABELS,
-  BRANCH_TYPES,
-  type Branch,
-} from "@/lib/organisation";
+import { BRANCH_TYPES, type Branch } from "@/lib/organisation";
 
 const PAGE_SIZE = 20;
 
@@ -53,6 +50,8 @@ function buildBranchesQuery(params: {
 }
 
 export function BranchesPanel() {
+  const t = useTranslations("organisation");
+  const tCommon = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("branches.write");
@@ -88,12 +87,12 @@ export function BranchesPanel() {
       setError(
         cause instanceof ApiError
           ? cause.message
-          : "Impossible de charger les agences",
+          : t("branches.loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [page, search, type, isActive]);
+  }, [page, search, type, isActive, t]);
 
   useEffect(() => {
     void load();
@@ -116,7 +115,7 @@ export function BranchesPanel() {
     setDeleteLoading(true);
     try {
       await apiFetch<void>(`/branches/${deleting.id}`, { method: "DELETE" });
-      toast({ title: "Agence archivée", tone: "success" });
+      toast({ title: t("branches.toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) {
         setPage((p) => p - 1);
@@ -125,9 +124,11 @@ export function BranchesPanel() {
       }
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tCommon("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError
+            ? cause.message
+            : tCommon("genericError"),
         tone: "danger",
       });
     } finally {
@@ -139,13 +140,16 @@ export function BranchesPanel() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="branches-search-label">
+              {tCommon("search")}
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="branches-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Code ou nom…"
+                placeholder={t("branches.searchPlaceholder")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     setPage(1);
@@ -161,12 +165,12 @@ export function BranchesPanel() {
                   setSearch(searchInput);
                 }}
               >
-                OK
+                {tCommon("filter")}
               </Button>
             </div>
-          </label>
+          </div>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Type</span>
+            <span className="font-medium">{tCommon("type")}</span>
             <Select
               value={type}
               onChange={(e) => {
@@ -174,16 +178,16 @@ export function BranchesPanel() {
                 setType(e.target.value);
               }}
             >
-              <option value="">Tous</option>
-              {BRANCH_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {BRANCH_TYPE_LABELS[t]}
+              <option value="">{tCommon("all")}</option>
+              {BRANCH_TYPES.map((branchType) => (
+                <option key={branchType} value={branchType}>
+                  {t(`branchTypes.${branchType}`)}
                 </option>
               ))}
             </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Statut</span>
+            <span className="font-medium">{tCommon("status")}</span>
             <Select
               value={isActive}
               onChange={(e) => {
@@ -191,38 +195,38 @@ export function BranchesPanel() {
                 setIsActive(e.target.value);
               }}
             >
-              <option value="">Tous</option>
-              <option value="true">Actives</option>
-              <option value="false">Inactives</option>
+              <option value="">{tCommon("all")}</option>
+              <option value="true">{tCommon("actives")}</option>
+              <option value="false">{tCommon("inactives")}</option>
             </Select>
           </label>
         </div>
 
         <Can permission="branches.write">
           <Button type="button" onClick={openCreate}>
-            Nouvelle agence
+            {t("branches.new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tCommon("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des agences…" />
+          <Spinner label={t("branches.loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucune agence"
-          description="Créez une première agence ou ajustez les filtres."
+          title={t("branches.emptyTitle")}
+          description={t("branches.emptyDescription")}
           action={
             canWrite ? (
               <Button type="button" size="sm" onClick={openCreate}>
-                Nouvelle agence
+                {t("branches.new")}
               </Button>
             ) : undefined
           }
@@ -232,12 +236,12 @@ export function BranchesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Nom</Th>
-                <Th>Type</Th>
-                <Th>Téléphone</Th>
-                <Th>Statut</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tCommon("code")}</Th>
+                <Th>{tCommon("name")}</Th>
+                <Th>{tCommon("type")}</Th>
+                <Th>{tCommon("phone")}</Th>
+                <Th>{tCommon("status")}</Th>
+                <Th className="text-right">{tCommon("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -245,11 +249,15 @@ export function BranchesPanel() {
                 <Tr key={branch.id}>
                   <Td className="font-mono text-xs">{branch.code}</Td>
                   <Td>{branch.name}</Td>
-                  <Td>{BRANCH_TYPE_LABELS[branch.type]}</Td>
-                  <Td className="text-muted">{branch.phone ?? "—"}</Td>
+                  <Td>{t(`branchTypes.${branch.type}`)}</Td>
+                  <Td className="text-muted">
+                    {branch.phone ?? tCommon("emDash")}
+                  </Td>
                   <Td>
                     <Badge tone={branch.isActive ? "success" : "neutral"}>
-                      {branch.isActive ? "Active" : "Inactive"}
+                      {branch.isActive
+                        ? tCommon("active")
+                        : tCommon("inactive")}
                     </Badge>
                   </Td>
                   <Td>
@@ -261,7 +269,7 @@ export function BranchesPanel() {
                           size="sm"
                           onClick={() => openEdit(branch)}
                         >
-                          Modifier
+                          {tCommon("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -269,7 +277,7 @@ export function BranchesPanel() {
                           size="sm"
                           onClick={() => setDeleting(branch)}
                         >
-                          Archiver
+                          {tCommon("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -293,7 +301,9 @@ export function BranchesPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Agence mise à jour" : "Agence créée",
+            title: editing
+              ? t("branches.toastUpdated")
+              : t("branches.toastCreated"),
             tone: "success",
           });
           void load();
@@ -307,7 +317,7 @@ export function BranchesPanel() {
             setDeleting(null);
           }
         }}
-        title="Archiver l’agence"
+        title={t("branches.archiveTitle")}
         footer={
           <>
             <Button
@@ -316,7 +326,7 @@ export function BranchesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tCommon("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -324,17 +334,16 @@ export function BranchesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tCommon("archiving") : tCommon("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">
-            {deleting?.name ?? ""}
-          </span>{" "}
-          ({deleting?.code}). L’agence disparaîtra des listes actives.
+          {t("branches.archiveBody", {
+            name: deleting?.name ?? "",
+            code: deleting?.code ?? "",
+          })}
         </p>
       </Modal>
     </div>

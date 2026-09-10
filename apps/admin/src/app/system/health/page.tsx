@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Alert, Badge } from "@/components/ui";
 import { ApiError, apiFetch, getApiBaseUrl, type HealthResponse } from "@/lib/api";
 
@@ -8,7 +9,9 @@ type HealthLoadResult =
   | { ok: true; data: HealthResponse }
   | { ok: false; message: string; statusCode?: number };
 
-async function loadHealth(): Promise<HealthLoadResult> {
+async function loadHealth(
+  unreachableFallback: string,
+): Promise<HealthLoadResult> {
   try {
     const data = await apiFetch<HealthResponse>("/health", {
       cache: "no-store",
@@ -26,64 +29,59 @@ async function loadHealth(): Promise<HealthLoadResult> {
     return {
       ok: false,
       message:
-        error instanceof Error ? error.message : "Impossible de joindre l’API",
+        error instanceof Error ? error.message : unreachableFallback,
     };
   }
 }
 
 export default async function SystemHealthPage() {
-  const result = await loadHealth();
+  const t = await getTranslations("health");
+  const tSysteme = await getTranslations("systeme");
+  const result = await loadHealth(t("unreachable"));
   const baseUrl = getApiBaseUrl();
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-12">
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium tracking-wide text-primary uppercase">
-          Système
+          {tSysteme("pageTitle")}
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          Santé de l’API
+          {t("title")}
         </h1>
         <p className="text-sm text-muted">
-          Contrôle public <code className="font-mono text-foreground">GET /health</code>{" "}
-          via <code className="font-mono text-foreground">{baseUrl}</code>
+          {t("lead")}{" "}
+          <code className="font-mono text-foreground">{baseUrl}</code>
         </p>
       </div>
 
       {result.ok ? (
         <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 shadow-sm">
-          <Alert tone="success" title="API joignable">
-            Le client HTTP Admin atteint Nest et MySQL répond.
-          </Alert>
           <dl className="grid gap-3 text-sm sm:grid-cols-3">
             <div className="flex flex-col gap-1">
-              <dt className="text-muted">Statut API</dt>
+              <dt className="text-muted">{t("apiStatus")}</dt>
               <dd>
                 <Badge tone="success">{result.data.status}</Badge>
               </dd>
             </div>
             <div className="flex flex-col gap-1">
-              <dt className="text-muted">Base de données</dt>
+              <dt className="text-muted">{t("database")}</dt>
               <dd>
                 <Badge tone="success">{result.data.database}</Badge>
               </dd>
             </div>
             <div className="flex flex-col gap-1">
-              <dt className="text-muted">Version</dt>
+              <dt className="text-muted">{t("version")}</dt>
               <dd className="font-mono text-foreground">{result.data.version}</dd>
             </div>
           </dl>
         </div>
       ) : (
-        <Alert tone="danger" title="API indisponible">
+        <Alert tone="danger" title={t("unreachable")}>
           {result.statusCode ? (
             <p className="mb-1">HTTP {result.statusCode}</p>
           ) : null}
           <p>{result.message}</p>
-          <p className="mt-2">
-            Vérifiez que l’API tourne sur le port 4000 et que CORS autorise
-            localhost:3001.
-          </p>
         </Alert>
       )}
 
@@ -92,7 +90,7 @@ export default async function SystemHealthPage() {
           href="/"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          Retour à l’accueil
+          {t("backHome")}
         </Link>
       </p>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { Alert, Button, Modal } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
@@ -24,6 +25,8 @@ export function SettingsSeedAction() {
 }
 
 function SettingsSeedActionInner() {
+  const t = useTranslations("settings.seed");
+  const tc = useTranslations("common");
   const { toast } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -40,18 +43,19 @@ function SettingsSeedActionInner() {
       setLastResult(result);
       setConfirmOpen(false);
       toast({
-        title: "Seeds settings chargés",
-        description: `${result.inserted} inséré(s), ${result.updated} mis à jour`,
+        title: t("successTitle"),
+        description: t("successBody", {
+          inserted: result.inserted,
+          updated: result.updated,
+        }),
         tone: "success",
       });
     } catch (cause) {
       const message =
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible d’exécuter le seed";
+        cause instanceof ApiError ? cause.message : tc("genericError");
       setError(message);
       toast({
-        title: "Seed impossible",
+        title: t("errorTitle"),
         description: message,
         tone: "danger",
       });
@@ -64,15 +68,8 @@ function SettingsSeedActionInner() {
     <section className="rounded-lg border border-dashed border-border bg-surface-muted/40 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            Seeds settings (dev)
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Upsert idempotent des référentiels (devises, pays, villes, unités,
-            Incoterms, conditions de paiement, taxes). Visible uniquement en
-            développement — l’API refuse hors{" "}
-            <code className="text-xs">NODE_ENV=development</code>.
-          </p>
+          <h2 className="text-sm font-semibold text-foreground">{t("title")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("lead")}</p>
         </div>
         <Button
           type="button"
@@ -83,26 +80,22 @@ function SettingsSeedActionInner() {
           }}
           disabled={loading}
         >
-          Charger les seeds settings
+          {t("action")}
         </Button>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur" className="mt-3">
+        <Alert tone="danger" title={tc("error")} className="mt-3">
           {error}
         </Alert>
       ) : null}
 
       {lastResult ? (
         <p className="mt-3 text-xs text-muted">
-          Dernier run : {lastResult.inserted} insert · {lastResult.updated}{" "}
-          update — devises {fmtBucket(lastResult.details.currencies)}, pays{" "}
-          {fmtBucket(lastResult.details.countries)}, villes{" "}
-          {fmtBucket(lastResult.details.cities)}, unités{" "}
-          {fmtBucket(lastResult.details.units)}, Incoterms{" "}
-          {fmtBucket(lastResult.details.shippingTerms)}, paiement{" "}
-          {fmtBucket(lastResult.details.paymentTerms)}, taxes{" "}
-          {fmtBucket(lastResult.details.taxes)}.
+          {t("successBody", {
+            inserted: lastResult.inserted,
+            updated: lastResult.updated,
+          })}
         </p>
       ) : null}
 
@@ -111,7 +104,7 @@ function SettingsSeedActionInner() {
         onClose={() => {
           if (!loading) setConfirmOpen(false);
         }}
-        title="Charger les seeds settings ?"
+        title={t("confirmTitle")}
         footer={
           <>
             <Button
@@ -120,29 +113,20 @@ function SettingsSeedActionInner() {
               onClick={() => setConfirmOpen(false)}
               disabled={loading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               type="button"
               onClick={() => void runSeed()}
               disabled={loading}
             >
-              {loading ? "Chargement…" : "Confirmer l’upsert"}
+              {loading ? t("loading") : tc("confirm")}
             </Button>
           </>
         }
       >
-        <p className="text-sm text-muted">
-          Opération{" "}
-          <span className="font-medium text-foreground">non destructive</span>{" "}
-          : upsert par code (insert ou mise à jour des lignes de référence).
-          Les données métier hors catalogue seed ne sont pas effacées.
-        </p>
+        <p className="text-sm text-muted">{t("confirmBody")}</p>
       </Modal>
     </section>
   );
-}
-
-function fmtBucket(bucket: { inserted: number; updated: number }): string {
-  return `+${bucket.inserted}/↻${bucket.updated}`;
 }

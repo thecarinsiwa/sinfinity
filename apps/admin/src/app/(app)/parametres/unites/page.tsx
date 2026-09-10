@@ -1,12 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { UnitsPanel } from "@/components/settings/units-panel";
 import { SettingsSubpage } from "@/components/settings/settings-subpage";
 
-export default function UnitesPage() {
+export default async function UnitesPage() {
+  const t = await getTranslations("settings.units");
+
   return (
-    <SettingsSubpage
-      title="Unités"
-      description="PCS, KG, BOX et autres unités de mesure."
-    >
+    <SettingsSubpage title={t("pageTitle")} description={t("pageLead")}>
       <UnitsPanel />
     </SettingsSubpage>
   );

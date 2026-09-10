@@ -1,12 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { CurrenciesPanel } from "@/components/settings/currencies-panel";
 import { SettingsSubpage } from "@/components/settings/settings-subpage";
 
-export default function DevisesPage() {
+export default async function DevisesPage() {
+  const t = await getTranslations("settings.currencies");
+
   return (
-    <SettingsSubpage
-      title="Devises"
-      description="Référentiel monétaire (USD, CDF, CNY…)."
-    >
+    <SettingsSubpage title={t("pageTitle")} description={t("pageLead")}>
       <CurrenciesPanel />
     </SettingsSubpage>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input, Textarea } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -37,6 +38,8 @@ export function PaymentTermFormModal({
   onClose,
   onSaved,
 }: PaymentTermFormModalProps) {
+  const t = useTranslations("settings.paymentTerms");
+  const tc = useTranslations("common");
   const isEdit = term !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -64,7 +67,7 @@ export function PaymentTermFormModal({
 
     const days = Number.parseInt(form.daysDue, 10);
     if (Number.isNaN(days) || days < 0) {
-      setError("Le délai doit être un entier ≥ 0");
+      setError(tc("genericError"));
       setSaving(false);
       return;
     }
@@ -92,7 +95,7 @@ export function PaymentTermFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -103,19 +106,19 @@ export function PaymentTermFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier la condition" : "Nouvelle condition"}
+      title={isEdit ? t("edit") : t("new")}
       className="max-w-xl"
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
             form="payment-term-form"
             disabled={saving || !form.code.trim() || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -131,7 +134,7 @@ export function PaymentTermFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code</span>
+          <span className="font-medium">{t("formCode")}</span>
           <Input
             required
             maxLength={64}
@@ -143,7 +146,7 @@ export function PaymentTermFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Délai (jours)</span>
+          <span className="font-medium">{t("formDays")}</span>
           <Input
             required
             type="number"
@@ -154,7 +157,7 @@ export function PaymentTermFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Libellé</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             maxLength={255}
@@ -165,7 +168,9 @@ export function PaymentTermFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Description (optionnel)</span>
+          <span className="font-medium">
+            {tc("optional", { label: t("formDescription") })}
+          </span>
           <Textarea
             rows={3}
             value={form.description}

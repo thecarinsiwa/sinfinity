@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Checkbox, Input } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -39,6 +40,8 @@ export function CurrencyFormModal({
   onClose,
   onSaved,
 }: CurrencyFormModalProps) {
+  const t = useTranslations("settings.currencies");
+  const tc = useTranslations("common");
   const isEdit = currency !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -67,7 +70,7 @@ export function CurrencyFormModal({
 
     const decimals = Number.parseInt(form.decimalPlaces, 10);
     if (Number.isNaN(decimals) || decimals < 0 || decimals > 8) {
-      setError("Les décimales doivent être un entier entre 0 et 8");
+      setError(tc("genericError"));
       setSaving(false);
       return;
     }
@@ -96,7 +99,7 @@ export function CurrencyFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -107,11 +110,11 @@ export function CurrencyFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier la devise" : "Nouvelle devise"}
+      title={isEdit ? t("edit") : t("new")}
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
@@ -123,7 +126,7 @@ export function CurrencyFormModal({
               !form.symbol.trim()
             }
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -135,7 +138,7 @@ export function CurrencyFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code ISO 4217</span>
+          <span className="font-medium">{t("formCode")}</span>
           <Input
             required
             maxLength={3}
@@ -147,7 +150,7 @@ export function CurrencyFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Symbole</span>
+          <span className="font-medium">{t("formSymbol")}</span>
           <Input
             required
             value={form.symbol}
@@ -157,7 +160,7 @@ export function CurrencyFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Nom</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             value={form.name}
@@ -166,7 +169,7 @@ export function CurrencyFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Décimales</span>
+          <span className="font-medium">{t("formDecimals")}</span>
           <Input
             type="number"
             min={0}
@@ -186,7 +189,7 @@ export function CurrencyFormModal({
             }
             disabled={saving}
           />
-          <span>Active</span>
+          <span>{t("formActive")}</span>
         </label>
       </form>
     </Modal>

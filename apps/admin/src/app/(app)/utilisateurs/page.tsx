@@ -1,5 +1,7 @@
+import { getTranslations } from "next-intl/server";
 import { ComingSoonPage } from "@/components/layout/coming-soon";
 
-export default function UtilisateursPage() {
-  return <ComingSoonPage title="Utilisateurs" />;
+export default async function UtilisateursPage() {
+  const t = await getTranslations("stubs");
+  return <ComingSoonPage title={t("usersTitle")} />;
 }

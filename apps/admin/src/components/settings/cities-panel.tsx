@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { CityFormModal } from "@/components/settings/city-form-modal";
@@ -27,6 +28,8 @@ import type { City, Country } from "@/lib/settings";
 const PAGE_SIZE = 20;
 
 export function CitiesPanel() {
+  const t = useTranslations("settings.cities");
+  const tc = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -93,15 +96,11 @@ export function CitiesPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les villes",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, countryId, search]);
+  }, [page, countryId, search, t]);
 
   useEffect(() => {
     void load();
@@ -112,7 +111,7 @@ export function CitiesPanel() {
     setDeleteLoading(true);
     try {
       await apiFetch<void>(`/cities/${deleting.id}`, { method: "DELETE" });
-      toast({ title: "Ville archivée", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) {
         setPage((p) => p - 1);
@@ -121,9 +120,9 @@ export function CitiesPanel() {
       }
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
@@ -136,7 +135,7 @@ export function CitiesPanel() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Pays</span>
+            <span className="font-medium">{t("country")}</span>
             <Select
               value={countryId}
               onChange={(e) => {
@@ -144,7 +143,7 @@ export function CitiesPanel() {
                 setCountryId(e.target.value);
               }}
             >
-              <option value="">Tous</option>
+              <option value="">{tc("all")}</option>
               {countries.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code} — {c.name}
@@ -152,13 +151,16 @@ export function CitiesPanel() {
               ))}
             </Select>
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="cities-search-label">
+              {tc("search")}
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="cities-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Nom de ville…"
+                placeholder={t("searchPlaceholder")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     setPage(1);
@@ -174,10 +176,10 @@ export function CitiesPanel() {
                   setSearch(searchInput);
                 }}
               >
-                Filtrer
+                {tc("filter")}
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
           <Button
@@ -187,25 +189,25 @@ export function CitiesPanel() {
               setFormOpen(true);
             }}
           >
-            Nouvelle ville
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des villes…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucune ville"
-          description="Ajustez les filtres ou créez une première ville."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -216,7 +218,7 @@ export function CitiesPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouvelle ville
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -226,10 +228,10 @@ export function CitiesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Nom</Th>
-                <Th>Pays</Th>
-                <Th>Région</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tc("name")}</Th>
+                <Th>{t("country")}</Th>
+                <Th>{tc("region")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -239,7 +241,7 @@ export function CitiesPanel() {
                   <Td className="text-sm text-muted">
                     {countryNameById.get(city.countryId) ?? city.countryId}
                   </Td>
-                  <Td className="text-muted">{city.region ?? "—"}</Td>
+                  <Td className="text-muted">{city.region ?? tc("emDash")}</Td>
                   <Td>
                     <div className="flex justify-end gap-2">
                       <Can permission="settings.write">
@@ -252,7 +254,7 @@ export function CitiesPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tc("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -260,7 +262,7 @@ export function CitiesPanel() {
                           size="sm"
                           onClick={() => setDeleting(city)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -286,7 +288,7 @@ export function CitiesPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Ville mise à jour" : "Ville créée",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -298,7 +300,7 @@ export function CitiesPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver la ville"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -307,7 +309,7 @@ export function CitiesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -315,14 +317,13 @@ export function CitiesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.name}</span>.
+          {t("archiveBody", { name: deleting?.name ?? "" })}
         </p>
       </Modal>
     </div>

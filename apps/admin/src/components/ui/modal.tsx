@@ -1,12 +1,14 @@
 "use client";
 
 import {
-  useEffect,
   useId,
+  useRef,
   type HTMLAttributes,
   type ReactNode,
 } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { useDialogA11y } from "@/components/ui/use-dialog-a11y";
 import { cn } from "@/lib/cn";
 
 export type ModalProps = {
@@ -26,28 +28,12 @@ export function Modal({
   footer,
   className,
 }: ModalProps) {
+  const t = useTranslations("common");
   const titleId = useId();
+  const descriptionId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open, onClose]);
+  useDialogA11y(open, onClose, panelRef);
 
   if (!open) {
     return null;
@@ -57,16 +43,20 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         type="button"
-        aria-label="Fermer la fenêtre"
+        tabIndex={-1}
+        aria-label={t("closeDialog")}
         className="absolute inset-0 bg-foreground/40"
         onClick={onClose}
       />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        tabIndex={-1}
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-lg border border-border bg-surface p-5 shadow-md",
+          "relative z-10 w-full max-w-lg rounded-lg border border-border bg-surface p-5 shadow-md outline-none",
           className,
         )}
       >
@@ -74,11 +64,18 @@ export function Modal({
           <h2 id={titleId} className="text-lg font-semibold text-foreground">
             {title}
           </h2>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Fermer">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            aria-label={t("close")}
+          >
             ×
           </Button>
         </div>
-        <div className="text-sm text-foreground">{children}</div>
+        <div id={descriptionId} className="text-sm text-foreground">
+          {children}
+        </div>
         {footer ? <div className="mt-5 flex justify-end gap-2">{footer}</div> : null}
       </div>
     </div>

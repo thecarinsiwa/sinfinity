@@ -81,13 +81,6 @@ export type UpdateExchangeRateInput = Partial<CreateExchangeRateInput>;
 export const TAX_TYPES = ["vat", "customs", "withholding", "other"] as const;
 export type TaxType = (typeof TAX_TYPES)[number];
 
-export const TAX_TYPE_LABELS: Record<TaxType, string> = {
-  vat: "TVA",
-  customs: "Douane",
-  withholding: "Retenue",
-  other: "Autre",
-};
-
 export type Tax = {
   id: string;
   organizationId: string | null;
@@ -122,14 +115,6 @@ export const UNIT_TYPES = [
   "other",
 ] as const;
 export type UnitType = (typeof UNIT_TYPES)[number];
-
-export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
-  count: "Comptage",
-  weight: "Poids",
-  length: "Longueur",
-  volume: "Volume",
-  other: "Autre",
-};
 
 export type Unit = {
   id: string;
@@ -209,51 +194,28 @@ export type SettingsSeedResult = {
   };
 };
 
+export type SettingsNavId =
+  | "countries"
+  | "cities"
+  | "currencies"
+  | "exchangeRates"
+  | "taxes"
+  | "units"
+  | "paymentTerms"
+  | "shippingTerms";
+
 export type SettingsNavItem = {
-  title: string;
-  description: string;
+  id: SettingsNavId;
   href: string;
 };
 
 export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
-  {
-    title: "Pays",
-    description: "Référentiel géographique ISO",
-    href: "/parametres/pays",
-  },
-  {
-    title: "Villes",
-    description: "Villes rattachées aux pays",
-    href: "/parametres/villes",
-  },
-  {
-    title: "Devises",
-    description: "USD, CDF, CNY…",
-    href: "/parametres/devises",
-  },
-  {
-    title: "Taux de change",
-    description: "Historique et dernier taux",
-    href: "/parametres/taux-change",
-  },
-  {
-    title: "Taxes",
-    description: "TVA, douane, retenues",
-    href: "/parametres/taxes",
-  },
-  {
-    title: "Unités",
-    description: "PCS, KG, BOX…",
-    href: "/parametres/unites",
-  },
-  {
-    title: "Conditions de paiement",
-    description: "NET30, acompte…",
-    href: "/parametres/conditions-paiement",
-  },
-  {
-    title: "Incoterms",
-    description: "EXW, FOB, CIF, DDP…",
-    href: "/parametres/incoterms",
-  },
+  { id: "countries", href: "/parametres/pays" },
+  { id: "cities", href: "/parametres/villes" },
+  { id: "currencies", href: "/parametres/devises" },
+  { id: "exchangeRates", href: "/parametres/taux-change" },
+  { id: "taxes", href: "/parametres/taxes" },
+  { id: "units", href: "/parametres/unites" },
+  { id: "paymentTerms", href: "/parametres/conditions-paiement" },
+  { id: "shippingTerms", href: "/parametres/incoterms" },
 ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ShippingTermFormModal } from "@/components/settings/shipping-term-form-modal";
@@ -26,6 +27,8 @@ import type { ShippingTerm } from "@/lib/settings";
 const PAGE_SIZE = 20;
 
 export function ShippingTermsPanel() {
+  const t = useTranslations("settings.shippingTerms");
+  const tc = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -68,15 +71,11 @@ export function ShippingTermsPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les Incoterms",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, code, search, incotermVersion]);
+  }, [page, code, search, incotermVersion, t]);
 
   useEffect(() => {
     void load();
@@ -96,15 +95,15 @@ export function ShippingTermsPanel() {
       await apiFetch<void>(`/shipping-terms/${deleting.id}`, {
         method: "DELETE",
       });
-      toast({ title: "Incoterm archivé", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
@@ -117,7 +116,7 @@ export function ShippingTermsPanel() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Code</span>
+            <span className="font-medium">{tc("code")}</span>
             <Input
               maxLength={32}
               value={codeInput}
@@ -128,18 +127,21 @@ export function ShippingTermsPanel() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+            <span className="font-medium">{tc("search")}</span>
             <Input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nom…"
+              placeholder={tc("searchPlaceholder")}
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Version</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="shipping-terms-version-label">
+              {tc("version")}
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="shipping-terms-version-label"
                 maxLength={32}
                 value={versionInput}
                 onChange={(e) => setVersionInput(e.target.value)}
@@ -147,10 +149,10 @@ export function ShippingTermsPanel() {
                 onKeyDown={(e) => e.key === "Enter" && applyFilters()}
               />
               <Button type="button" variant="secondary" onClick={applyFilters}>
-                Filtrer
+                {tc("filter")}
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
           <Button
@@ -160,25 +162,25 @@ export function ShippingTermsPanel() {
               setFormOpen(true);
             }}
           >
-            Nouvel Incoterm
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des Incoterms…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun Incoterm"
-          description="Ajustez les filtres ou créez un terme de livraison."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -189,7 +191,7 @@ export function ShippingTermsPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouvel Incoterm
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -199,10 +201,10 @@ export function ShippingTermsPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Libellé</Th>
-                <Th>Version</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tc("code")}</Th>
+                <Th>{tc("name")}</Th>
+                <Th>{tc("version")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -217,7 +219,9 @@ export function ShippingTermsPanel() {
                       </div>
                     ) : null}
                   </Td>
-                  <Td className="text-muted">{row.incotermVersion ?? "—"}</Td>
+                  <Td className="text-muted">
+                    {row.incotermVersion ?? tc("emDash")}
+                  </Td>
                   <Td>
                     <div className="flex justify-end gap-2">
                       <Can permission="settings.write">
@@ -230,7 +234,7 @@ export function ShippingTermsPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tc("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -238,7 +242,7 @@ export function ShippingTermsPanel() {
                           size="sm"
                           onClick={() => setDeleting(row)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -262,7 +266,7 @@ export function ShippingTermsPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Incoterm mis à jour" : "Incoterm créé",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -274,7 +278,7 @@ export function ShippingTermsPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver l'Incoterm"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -283,7 +287,7 @@ export function ShippingTermsPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -291,14 +295,13 @@ export function ShippingTermsPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span>.
+          {t("archiveBody", { code: deleting?.code ?? "" })}
         </p>
       </Modal>
     </div>

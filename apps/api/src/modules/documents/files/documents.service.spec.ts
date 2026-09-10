@@ -144,4 +144,82 @@ describe('DocumentsService', () => {
       service.findOne(row.id, orgId, orgUser),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it('rejects entityId without entityType', async () => {
+    await expect(
+      service.findAll(
+        {
+          page: 1,
+          pageSize: 20,
+          order: 'asc',
+          entityId: '0191e6b8-4c3a-7b2d-9f1e-entityentity',
+        },
+        orgId,
+        orgUser,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('returns empty page when entityType has no links', async () => {
+    db.select.mockReturnValueOnce(thenable([]));
+
+    const result = await service.findAll(
+      {
+        page: 1,
+        pageSize: 20,
+        order: 'asc',
+        entityType: 'customer',
+      },
+      orgId,
+      orgUser,
+    );
+
+    expect(result.data).toEqual([]);
+    expect(result.meta.total).toBe(0);
+    expect(db.select).toHaveBeenCalledTimes(1);
+  });
+
+  it('filters by entityType via document_links then lists documents', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([{ documentId: row.id }]))
+      .mockReturnValueOnce(thenable([row]))
+      .mockReturnValueOnce(thenable([{ total: 1 }]));
+
+    const result = await service.findAll(
+      {
+        page: 1,
+        pageSize: 20,
+        order: 'asc',
+        entityType: 'quotation',
+      },
+      orgId,
+      orgUser,
+    );
+
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].id).toBe(row.id);
+    expect(db.select).toHaveBeenCalledTimes(3);
+  });
+
+  it('filters by entityType and entityId', async () => {
+    db.select
+      .mockReturnValueOnce(thenable([{ documentId: row.id }]))
+      .mockReturnValueOnce(thenable([row]))
+      .mockReturnValueOnce(thenable([{ total: 1 }]));
+
+    const result = await service.findAll(
+      {
+        page: 1,
+        pageSize: 20,
+        order: 'asc',
+        entityType: 'customer',
+        entityId: '0191e6b8-4c3a-7b2d-9f1e-customer0001',
+      },
+      orgId,
+      orgUser,
+    );
+
+    expect(result.meta.total).toBe(1);
+    expect(result.data[0].title).toBe('Quote');
+  });
 });

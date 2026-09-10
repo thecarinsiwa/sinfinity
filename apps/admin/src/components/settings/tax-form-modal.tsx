@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Checkbox, Input, Select } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
   isDecimalString,
-  TAX_TYPE_LABELS,
   TAX_TYPES,
   type Country,
   type CreateTaxInput,
@@ -48,6 +48,9 @@ export function TaxFormModal({
   onClose,
   onSaved,
 }: TaxFormModalProps) {
+  const t = useTranslations("settings.taxes");
+  const tc = useTranslations("common");
+  const tTaxTypes = useTranslations("settings.taxTypes");
   const isEdit = tax !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -77,7 +80,7 @@ export function TaxFormModal({
 
     const rateValue = form.rate.trim();
     if (!isDecimalString(rateValue)) {
-      setError("Le taux doit être un nombre décimal (string), ex. 16.0000");
+      setError(t("rateInvalid"));
       setSaving(false);
       return;
     }
@@ -107,7 +110,7 @@ export function TaxFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -118,12 +121,12 @@ export function TaxFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier la taxe" : "Nouvelle taxe"}
+      title={isEdit ? t("edit") : t("new")}
       className="max-w-xl"
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
@@ -135,7 +138,7 @@ export function TaxFormModal({
               !form.rate.trim()
             }
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -147,7 +150,7 @@ export function TaxFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code</span>
+          <span className="font-medium">{t("formCode")}</span>
           <Input
             required
             maxLength={64}
@@ -159,7 +162,7 @@ export function TaxFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Type</span>
+          <span className="font-medium">{t("formType")}</span>
           <Select
             required
             value={form.taxType}
@@ -168,15 +171,15 @@ export function TaxFormModal({
             }
             disabled={saving}
           >
-            {TAX_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {TAX_TYPE_LABELS[t]}
+            {TAX_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {tTaxTypes(type)}
               </option>
             ))}
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Libellé</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             maxLength={255}
@@ -187,7 +190,7 @@ export function TaxFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Taux % (decimal string)</span>
+          <span className="font-medium">{t("formRate")}</span>
           <Input
             required
             inputMode="decimal"
@@ -199,7 +202,9 @@ export function TaxFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Pays (optionnel)</span>
+          <span className="font-medium">
+            {tc("optional", { label: t("formCountry") })}
+          </span>
           <Select
             value={form.countryId}
             onChange={(e) =>
@@ -207,7 +212,7 @@ export function TaxFormModal({
             }
             disabled={saving}
           >
-            <option value="">— Global —</option>
+            <option value="">{tc("noneOptionF")}</option>
             {countries.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.code} — {c.name}
@@ -223,7 +228,7 @@ export function TaxFormModal({
             }
             disabled={saving}
           />
-          <span>Active</span>
+          <span>{t("formActive")}</span>
         </label>
       </form>
     </Modal>

@@ -1,10 +1,20 @@
 # Roadmap Admin Sinfinity
 
-Plan de développement de la console d’administration Next.js (`apps/admin`, port **3001**), consommant l’API NestJS (`apps/api`, port **4000**).
+Feuille de route **actuelle** de la console d’administration Next.js (`apps/admin`, port **3001**), consommant l’API NestJS (`apps/api`, port **4000**).
 
-Ce document suit le même flux que le roadmap API : **une branche principale par phase**, puis **des branches secondaires parallélisables** (idéalement une par agent / une par PR). Chaque branche secondaire a un **prompt copiable** à coller dans Cursor.
+Ce document **remplace** l’ancien plan phases 0–8 (fondations → dashboard), désormais considéré comme **baseline livrée**. Le travail restant porte sur :
 
-**Périmètre Admin (oui / non)**
+1. un **socle de pages formulaire** plein écran ;
+2. une **cohérence design** shell / listes / formulaires ;
+3. la **migration** de tous les CRUD create/edit hors modales vers des routes dédiées ;
+4. la **livraison** des stubs (utilisateurs, rôles, catégories catalogue) ;
+5. le **nettoyage** des modales CRUD obsolètes.
+
+**Format de travail** : une branche principale par phase, puis des branches secondaires parallélisables (idéalement une par agent / une par PR), chacune avec un **prompt copiable**.
+
+---
+
+## Périmètre Admin (oui / non)
 
 | Oui — console d’administration | Non — réservé à Web (`:3000`) ou POS (`:3002`) |
 |--------------------------------|--------------------------------------------------|
@@ -13,125 +23,175 @@ Ce document suit le même flux que le roadmap API : **une branche principale par
 | Paramètres système, audit, journaux de connexion | Caisse / point de vente |
 | Types documentaires, référentiels catalogue | Installation terrain, maintenance, facturation métier |
 
-L’Admin **ne réimplémente pas** le métier : elle orchestre les écrans de configuration et de gouvernance sur l’API déjà livrée (voir [`apps/api/docs/ROADMAP.md`](../../api/docs/ROADMAP.md)).
+L’Admin **ne réimplémente pas** le métier : elle orchestre configuration et gouvernance sur l’API (voir [`apps/api/docs/ROADMAP.md`](../../api/docs/ROADMAP.md)).
 
-**Multilingue** : l’application Admin est prévue en **français (fr)**, **anglais (en)** et **espagnol (es)** — sélection de langue utilisateur, libellés UI et messages d’erreur localisés (pas de texte figé dans une seule langue).
+**Multilingue** : **fr** (défaut), **en**, **es** — déjà en place via `next-intl` (cookie `sinfinity_locale`, pas de préfixe d’URL).
 
 **Sources de vérité**
 
 | Sujet | Fichier |
 |-------|---------|
-| Roadmap API (dépendances endpoints) | [`apps/api/docs/ROADMAP.md`](../../api/docs/ROADMAP.md) |
+| Roadmap API | [`apps/api/docs/ROADMAP.md`](../../api/docs/ROADMAP.md) |
 | DDL MySQL | [`database/sql/sinfinity_schema.sql`](../../../database/sql/sinfinity_schema.sql) |
 | Dictionnaire | [`database/dictionnaire-donnees.md`](../../../database/dictionnaire-donnees.md) |
 | Modules métier | [`database/modules/`](../../../database/modules/) |
-| Règles Next.js (cette app) | [`apps/admin/AGENTS.md`](../AGENTS.md) |
+| Conventions Next | [`apps/admin/AGENTS.md`](../AGENTS.md) |
+| README Admin | [`apps/admin/README.md`](../README.md) |
 
-L’Admin est aujourd’hui un scaffold Next.js 16 (App Router, React 19, Tailwind 4) sans auth ni client API. La phase 0 pose ces fondations.
+---
+
+## Phase 0 — Baseline (livré, ne pas re-planifier)
+
+### Déjà en place
+
+| Domaine | État |
+|---------|------|
+| Fondations | Env, client HTTP `/api/backend`, tokens CSS, UI kit, `/dev/ui`, health |
+| Auth & shell | BFF cookies httpOnly, middleware login, sidebar / topbar, permissions |
+| Organisation | Fiche `/organisation` (formulaire page) + liste agences (create/edit **encore en modale**) |
+| Paramètres | Hub + 8 listes dédiées (pays → incoterms) — create/edit **encore en modales** |
+| Documents | Hub + types (modale) + explorer lecture (drawer) |
+| Catalogue | Hub + marques / produits (modales) ; catégories **stubs** |
+| Gouvernance | Système (modale), audit + connexions (lecture, drawers) |
+| Accueil & polish | Dashboard `/`, 403/404/error, EmptyState, confirms Modal, i18n fr/en/es |
+| Utilisateurs / Rôles | Routes `/utilisateurs`, `/roles` — **ComingSoonPage** |
+
+### Pattern actuel vs cible
+
+| Aujourd’hui | Cible (ce roadmap) |
+|-------------|-------------------|
+| Liste dédiée + **Modal** create/edit | Liste dédiée + pages **`/nouveau`** et **`/[id]/edit`** |
+| Modales pour confirms + formulaires | Modales **uniquement** pour confirms destructifs |
+| Drawers audit / détail document | Inchangé (lecture seule) |
+| Organisation = formulaire page | Inchangé (singleton, pas de `/nouveau`) |
+
+### Stubs à livrer (phases 5–6)
+
+- `/utilisateurs`, `/roles` (+ affectation rôles)
+- `/catalogue/categories`, `/catalogue/categories-services`
 
 ---
 
 ## Comment utiliser ce roadmap
 
-1. Respecter l’**ordre d’exécution** (les écrans Admin dépendent des phases API correspondantes).
+1. Respecter l’**ordre d’exécution** (le socle pages formulaire avant toute migration).
 2. Créer la **branche principale** de la phase depuis `develop` (ou `main`).
-3. Pour chaque **branche secondaire** : partir de la principale, coller le **prompt socle** + le **prompt spécifique**, implémenter, ouvrir une PR vers la principale.
+3. Pour chaque **branche secondaire** : partir de la principale, coller le **prompt socle** + le **prompt spécifique**, ouvrir une PR vers la principale.
 4. Quand toutes les secondaires sont fusionnées : PR de la principale vers `develop`.
 
 ```text
 develop
-  └── feat/admin-m01-organisation          ← branche principale
-        ├── feat/admin-m01-orgs            ← secondaire → PR vers m01
-        ├── feat/admin-m01-branches
-        └── feat/admin-m01-users
+  └── feat/admin-p10-settings-pages     ← branche principale
+        ├── feat/admin-p10-settings-geo ← secondaire → PR vers principale
+        ├── feat/admin-p10-settings-money
+        └── feat/admin-p10-settings-terms
 ```
 
-**Prérequis API** : pour une phase Admin N, les endpoints de la phase API équivalente doivent être disponibles (ou mockés explicitement — à éviter). Vérifier Swagger : [http://localhost:4000/docs](http://localhost:4000/docs).
+**Prérequis API** : endpoints déjà exposés (Swagger : [http://localhost:4000/docs](http://localhost:4000/docs)). Pas de nouveaux endpoints métier sauf agrégats déjà prévus côté API.
 
 ---
 
-## Ordre d’exécution recommandé
+## Ordre d’exécution
 
-| Phase | Domaine | Branche principale | Dépend de (Admin) | Dépend de (API) |
-|------:|---------|--------------------|-------------------|-----------------|
-| 0 | Fondations techniques | `feat/admin-p00-foundations` | — | API P0 (health, CORS) |
-| 1 | Auth & shell | `feat/admin-p01-shell` | 0 | API M01 auth |
-| 2 | Organisation & agences | `feat/admin-m01-organisation` | 1 | API M01 orgs / branches |
-| 3 | Utilisateurs & RBAC | `feat/admin-m01-security` | 2 | API M01 users / rbac |
-| 4 | Paramétrage global | `feat/admin-m18-settings` | 1 | API M18 settings |
-| 5 | Système & audit | `feat/admin-m01-ops` | 3 | API M01 audit / system-settings |
-| 6 | Types documentaires | `feat/admin-m16-documents` | 1 | API M16 documents |
-| 7 | Référentiels catalogue | `feat/admin-m03-catalogue` | 4 | API M03 catalogue |
-| 8 | Tableau de bord, polish & i18n (fr/en/es) | `feat/admin-p08-dashboard` | 2–5 | API health + lectures |
+| Phase | Domaine | Branche principale | Dépend de |
+|------:|---------|--------------------|-----------|
+| 0 | Baseline livrée | — | — |
+| 1 | Socle pages formulaire | `feat/admin-p09-crud-shell` | 0 |
+| 2 | Design & cohérence visuelle | `feat/admin-p09-design` | 1 |
+| 3 | Paramètres → pages CRUD | `feat/admin-p10-settings-pages` | 1 (idéal : 2) |
+| 4 | Org / docs / système → pages | `feat/admin-p10-org-docs-ops` | 1 |
+| 5 | Catalogue → pages + stubs catégories | `feat/admin-p10-catalogue-pages` | 1 |
+| 6 | Utilisateurs & RBAC (pages natives) | `feat/admin-p11-users-rbac` | 1 |
+| 7 | Cleanup modales & doc | `feat/admin-p12-cleanup` | 3–6 |
 
 ```mermaid
 flowchart LR
-  P0[0 Fondations] --> P1[1 Auth shell]
-  P1 --> P2[2 Organisation]
-  P2 --> P3[3 Users RBAC]
-  P1 --> P4[4 Settings]
-  P3 --> P5[5 Système audit]
-  P1 --> P6[6 Documents types]
-  P4 --> P7[7 Catalogue refs]
-  P5 --> P8[8 Dashboard]
-  P7 --> P8
+  P0[0 Baseline] --> P1[1 Socle form pages]
+  P1 --> P2[2 Design]
+  P1 --> P3[3 Settings]
+  P2 --> P3
+  P1 --> P4[4 Org Docs Ops]
+  P1 --> P5[5 Catalogue]
+  P1 --> P6[6 Users RBAC]
+  P3 --> P7[7 Cleanup]
+  P4 --> P7
+  P5 --> P7
+  P6 --> P7
 ```
+
+Les phases **3, 4, 5, 6** sont **parallélisables** après la phase 1 (la 2 peut avancer en parallèle dès que le layout page formulaire existe).
 
 ---
 
-## Conventions communes (toutes les branches)
+## Conventions communes
 
 ### Git
 
-- Branche principale : `feat/admin-mXX-slug` (ou `feat/admin-p00-foundations`).
-- Branche secondaire : `feat/admin-mXX-detail`, créée **depuis** la principale, fusionnée **vers** la principale.
-- Un sujet = une branche = une PR. Pas de mélange de domaines Admin.
-- Ne pas pousser de secrets (`.env`). Utiliser `.env.example`.
+- Branche principale : `feat/admin-pXX-slug`.
+- Branche secondaire : `feat/admin-pXX-detail`, créée **depuis** la principale, fusionnée **vers** la principale.
+- Un sujet = une branche = une PR.
+- Pas de secrets dans git (`.env`).
+
+### Pattern CRUD (obligatoire pour toute nouvelle UI)
+
+Pour chaque ressource mutable :
+
+| Opération | Route | Composant typique |
+|-----------|-------|-------------------|
+| Liste | `/domaine/ressource` | `*-panel.tsx` |
+| Créer | `/domaine/ressource/nouveau` | `*-form.tsx` dans `page.tsx` |
+| Éditer | `/domaine/ressource/[id]/edit` | même `*-form.tsx` mode edit |
+| Archiver / supprimer | reste sur la liste | `Modal` de confirmation |
+
+**Exceptions**
+
+- **Organisation** : fiche singleton `/organisation` (pas de liste multi-entités, pas de `/nouveau`).
+- **Audit / connexions / explorer documents** : lecture seule (drawer détail OK).
+- **Hubs** (`/parametres`, `/catalogue`, `/documents`) : navigation uniquement.
+
+**Exemple pays**
+
+```text
+/parametres/pays
+/parametres/pays/nouveau
+/parametres/pays/[id]/edit
+```
+
+**Migration technique**
+
+1. Extraire le corps de `*-form-modal.tsx` → `*-form.tsx` (props `mode`, `initial`, `onSuccess` / redirect).
+2. Ajouter les routes App Router `nouveau/page.tsx` et `[id]/edit/page.tsx`.
+3. Remplacer les `setFormOpen(true)` des panels par `router.push(...)` / `Link`.
+4. Garder la `Modal` uniquement pour le confirm d’archivage.
+5. Clés i18n : réutiliser les namespaces existants ; ajouter un sous-bloc `formPage` (titre, annuler, enregistrer) si besoin.
 
 ### Next.js / UI
 
 - App Router sous `apps/admin/src/app/`.
-- Lire [`AGENTS.md`](../AGENTS.md) et la doc Next locale (`node_modules/next/dist/docs/`) avant d’utiliser une API Next — la version 16 peut différer du training.
-- Port dev **3001** (`next dev --port 3001`).
-- Tailwind 4 ; pas d’UI kit imposé tant qu’aucun package partagé n’existe dans `packages/`.
-- **Internationalisation (i18n)** : français, anglais, espagnol (voir section dédiée). Code / noms de fichiers en anglais.
-- Pas d’appels SQL depuis Admin : **uniquement** l’API REST `/api/v1`.
-- Isolation multi-tenant : l’`organization_id` vient du JWT / contexte API, jamais hardcodé côté UI.
-- Montants : afficher avec la devise ; ne jamais parser en `number` flottant pour des calculs métier (string / decimal lib si besoin).
-- Soft delete : masquer les lignes `deleted_at` ; actions « désactiver » / « archiver » selon l’API.
-
-### Internationalisation (fr / en / es)
-
-- Langues supportées : **`fr`** (défaut produit), **`en`**, **`es`**.
-- Tous les libellés UI, toasts, empty states, pages d’erreur et formulaires passent par des **clés i18n** (pas de chaînes en dur dans les composants, hors contenu métier renvoyé par l’API).
-- Sélecteur de langue accessible depuis le shell (topbar) une fois l’auth en place ; persistance (cookie / `localStorage` / préférence user si l’API l’expose).
-- `lang` du document HTML aligné sur la locale active.
-- Les messages d’erreur API peuvent rester en anglais côté Nest ; l’Admin les mappe ou les affiche via clés quand c’est possible.
-- La livraison i18n complète (fichiers de messages + bascule) est planifiée en **phase 8** ; dès les phases précédentes, **éviter** de figer du français en dur — préférer des clés ou un socle i18n dès qu’il existe.
+- Lire [`AGENTS.md`](../AGENTS.md) et la doc Next locale avant d’utiliser une API Next 16.
+- Port **3001** ; Tailwind 4 ; tokens dans `globals.css`.
+- **Uniquement** l’API REST via le proxy BFF — pas de SQL depuis Admin.
+- Soft delete : langage « archiver / désactiver » ; masquer `deleted_at`.
+- Montants : afficher avec devise ; pas de `number` flottant pour calculs métier.
 
 ### Auth & permissions
 
-- Tokens : access + refresh (cookies httpOnly **ou** storage sécurisé — choisir une stratégie en phase 1 et s’y tenir).
-- Après login : charger `GET /auth/me` + permissions (`GET /me/permissions` ou équivalent).
-- Cacher / désactiver les actions UI selon les codes `module.action` (ex. `users.write`, `settings.read`).
-- Rôle cible de la console : **ADMIN** (et super-admin org si l’API le prévoit). Rediriger les comptes sans droits admin hors de la console.
-
-### Client API
-
-- Base URL via `NEXT_PUBLIC_API_URL` (ex. `http://localhost:4000/api/v1`).
-- Intercepteur : Bearer, refresh sur 401, erreurs normalisées `{ statusCode, message, error }`.
-- Types TypeScript alignés sur les DTO Swagger (génération optionnelle plus tard ; pas de duplication inventée).
+- Cookies httpOnly (`sinfinity_access` / `sinfinity_refresh`) via routes `/api/auth/*`.
+- UI filtrée par codes `module.action` (`settings.write`, `users.read`, `catalog.write`, …).
+- Rôle cible : **ADMIN** (+ super-admin org). Sinon → `/forbidden`.
 
 ### Definition of Done (branche secondaire)
 
-- [ ] Écrans / composants demandés, branchés sur l’API réelle
+- [ ] Routes liste + `nouveau` + `[id]/edit` (sauf exceptions documentées)
+- [ ] Formulaire partagé (`*-form.tsx`), plus de create/edit en Modal
 - [ ] États loading / empty / error / success
-- [ ] Respect des permissions (`*.read` / `*.write`)
-- [ ] Formulaires validés (côté client) + messages d’erreur API affichés
-- [ ] Libellés via clés i18n (fr / en / es) dès que le socle i18n est disponible ; sinon ne pas multiplier le français en dur
-- [ ] Responsive utilisable (desktop prioritaire, mobile lisible)
-- [ ] Aucune colonne / champ inventé : coller au DDL / Swagger
-- [ ] README Admin mis à jour si le démarrage ou les variables d’env changent
+- [ ] Permissions `*.read` / `*.write` respectées
+- [ ] Validation client + erreurs API affichées
+- [ ] Libellés via clés i18n (fr / en / es)
+- [ ] Confirm destructif en `Modal` (jamais `window.confirm`)
+- [ ] Responsive desktop prioritaire, mobile lisible
+- [ ] Aucun champ inventé : coller au DDL / Swagger
+- [ ] README mis à jour si routes ou conventions changent
 
 ---
 
@@ -140,661 +200,537 @@ flowchart LR
 ```text
 Tu travailles dans le monorepo Sinfinity, package @sinfinity/admin (Next.js 16 App Router, React 19, Tailwind 4, port 3001).
 
-Contexte produit : console d’ADMINISTRATION multi-tenant (pas l’UI métier Web).
-Cycle métier global (rappel) : Lead → Devis → Commande → Sourcing → Achat → Import RDC → Stock → Livraison → Installation → Maintenance → Facturation.
-L’Admin configure et gouverne ; Web/POS exécutent le métier.
+Contexte : console d’ADMINISTRATION multi-tenant (pas l’UI métier Web/POS).
+Sources de vérité : database/sql/sinfinity_schema.sql, database/modules/, apps/api/docs/ROADMAP.md, apps/admin/docs/ROADMAP.md, apps/admin/AGENTS.md.
 
-Sources de vérité (ne pas inventer de champs) :
-- database/sql/sinfinity_schema.sql
-- database/modules/<MODULE>.md  (celui de la phase)
-- apps/api/docs/ROADMAP.md      (endpoints déjà définis)
-- apps/admin/docs/ROADMAP.md
-- apps/admin/AGENTS.md          (conventions Next de cette app)
+Pattern CRUD obligatoire :
+- Liste sur route dédiée
+- Création : …/nouveau
+- Édition : …/[id]/edit
+- Confirm archivage/suppression : Modal uniquement
+- Extraire les formulaires hors *-form-modal.tsx vers *-form.tsx
 
-Stack attendue (posée en phase 0, à réutiliser) :
-- Client HTTP typé vers NEXT_PUBLIC_API_URL (/api/v1)
-- Auth JWT (access + refresh) + contexte user / org / permissions
-- Layout shell (sidebar, topbar), design tokens CSS
-- Listes paginées, formulaires, toasts d’erreur API
+Stack déjà en place (réutiliser, ne pas réinventer) :
+- BFF auth cookies + proxy /api/backend
+- Shell sidebar/topbar, Can / permissions
+- UI kit src/components/ui, tokens CSS
+- next-intl (fr/en/es), messages sous apps/admin/messages/
 
 Règles :
-1. Consommer uniquement l’API Nest ; pas d’accès MySQL depuis Admin.
+1. Consommer uniquement l’API Nest ; pas de MySQL depuis Admin.
 2. Isolation organization_id via le contexte auth API.
-3. UI multilingue fr / en / es (clés i18n) ; code en anglais.
-4. Permissions module.action pour afficher / autoriser les actions.
-5. Ne pas construire les écrans métier Web (CRM, devis, stock opérationnel…).
-6. Lire la doc Next locale avant d’utiliser une API framework récente.
+3. UI multilingue fr/en/es (clés i18n) ; code fichiers en anglais.
+4. Permissions module.action pour actions UI.
+5. Ne pas construire les écrans métier Web.
+6. Lire la doc Next locale avant une API framework récente.
 7. Répondre en français dans le résumé de fin.
 
-À la fin : lister les routes UI ajoutées, les endpoints API consommés, et comment lancer Admin + API pour tester.
+À la fin : lister les routes UI ajoutées/modifiées, les endpoints API consommés, et comment tester (Admin :3001 + API :4000).
 ```
 
 ---
 
-# Phase 0 — Fondations techniques
+# Phase 1 — Socle pages formulaire
 
 ## Objectif
 
-Rendre l’Admin **démarrable, configurable, capable d’appeler l’API**, avec une base UI commune **avant** tout écran métier admin. Sans cette phase, les agents suivants inventent dix clients HTTP et dix layouts.
+Poser les **briques transverses** pour que chaque migration CRUD réutilise le même layout de page (titre, fil d’Ariane, actions Annuler / Enregistrer, états chargement / erreur), sans recopier dix fois le chrome.
 
 ## Branche principale
 
-`feat/admin-p00-foundations`
+`feat/admin-p09-crud-shell`
 
 ## Branches secondaires
 
 | Branche | Portée |
 |---------|--------|
-| `feat/admin-p00-config` | Env, `.env.example`, `NEXT_PUBLIC_API_URL`, scripts README |
-| `feat/admin-p00-api-client` | Fetch/client HTTP, erreurs, types de base pagination |
-| `feat/admin-p00-ui-kit` | Tokens CSS, typo, boutons, inputs, table, modal, toast |
-| `feat/admin-p00-health` | Page diagnostic : ping `GET /health` API |
+| `feat/admin-p09-form-layout` | Composant layout page formulaire + breadcrumbs |
+| `feat/admin-p09-form-i18n` | Clés i18n communes (`common.formPage`, navigation retour liste) |
+| `feat/admin-p09-form-pilot` | Pilote sur **une** ressource simple (ex. pays) pour valider le pattern |
 
 ## Prompt branches secondaires
 
-### `feat/admin-p00-config`
+### `feat/admin-p09-form-layout`
 
 ```text
 [Coller le prompt socle]
 
-Branche : feat/admin-p00-config
-Objectif : variables d’environnement Admin.
-- .env.example avec NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
-- Documenter pnpm --filter @sinfinity/admin dev (port 3001) dans apps/admin/README.md
-- Remplacer le boilerplate create-next-app de page.tsx par une page d’accueil minimale « Sinfinity Admin »
-- Pas encore d’auth ni de layout métier
+Branche : feat/admin-p09-form-layout
+Objectif : composant réutilisable (ex. FormPageShell / ResourceFormPage) sous
+src/components/layout ou src/components/crud :
+- titre + description courte
+- breadcrumb (hub → liste → nouveau|édition)
+- zone contenu (children = formulaire)
+- barre d’actions sticky ou footer : Annuler (retour liste) + Enregistrer (submit form)
+- slots loading / error pour le fetch d’édition
+Pas encore de migration massive. Documenter l’API du composant dans un commentaire bref.
 ```
 
-### `feat/admin-p00-api-client`
+### `feat/admin-p09-form-i18n`
 
 ```text
 [Coller le prompt socle]
 
-Branche : feat/admin-p00-api-client
-Objectif : module src/lib/api (ou équivalent) :
-- apiFetch(path, options) avec base URL, JSON, headers
-- Types PaginationMeta / PaginatedResponse alignés API
-- Mapping des erreurs { statusCode, message, error }
-- Stub d’injection Authorization (hooké en phase 1)
-Pas d’écrans métier. Tester contre GET /health si l’API tourne.
+Branche : feat/admin-p09-form-i18n
+Objectif : clés fr/en/es pour chrome formulaire page :
+createTitle / editTitle, cancel, save, saveSuccess, loadFailed, notFound.
+Réutiliser common.* quand possible. Pas de chaînes en dur dans le layout.
 ```
 
-### `feat/admin-p00-ui-kit`
+### `feat/admin-p09-form-pilot`
 
 ```text
 [Coller le prompt socle]
 
-Branche : feat/admin-p00-ui-kit
-Objectif : primitives UI réutilisables sous src/components/ui :
-Button, Input, Select, Textarea, Checkbox, Badge, Table, Pagination,
-Modal/Dialog, Spinner, EmptyState, Alert/Toast.
-Tokens CSS (couleurs, spacing, radius) — éviter le look générique purple/cream AI.
-Pas de dépendance shadcn obligatoire ; rester cohérent et léger.
-Documenter un petit showcase /story route interne optionnelle (dev only).
-```
-
-### `feat/admin-p00-health`
-
-```text
-[Coller le prompt socle]
-
-Branche : feat/admin-p00-health
-Objectif : route /system/health (ou section sur l’accueil) qui appelle GET /health
-et affiche statut API + version. Utile pour valider CORS et le client HTTP.
-Pas d’auth requise si l’endpoint health est public.
-```
-
-## Explication littéraire (branches secondaires)
-
-La phase 0 fixe le **contrat de travail** : une URL d’API, un client unique, des briques UI stables. Le ping health est la preuve que Admin parle bien à Nest avant d’enchaîner login et CRUD.
-
----
-
-# Phase 1 — Auth & shell applicatif
-
-## Objectif
-
-Permettre à un administrateur de **se connecter**, de voir un **shell** (sidebar + topbar) et d’être **redirigé** selon ses permissions. Tous les écrans suivants s’insèrent dans ce cadre.
-
-Doc métier : [`database/modules/01_organisation_securite.md`](../../../database/modules/01_organisation_securite.md)  
-API : phases auth de `feat/api-m01-organisation`
-
-## Branche principale
-
-`feat/admin-p01-shell`
-
-## Branches secondaires
-
-| Branche | Portée |
-|---------|--------|
-| `feat/admin-p01-auth` | Login, logout, refresh, garde de routes |
-| `feat/admin-p01-session` | Contexte user / org / permissions |
-| `feat/admin-p01-layout` | Sidebar, topbar, navigation Admin, breadcrumb |
-| `feat/admin-p01-guards` | Protection pages + masquage menu selon permissions |
-
-## Prompt branches secondaires
-
-### `feat/admin-p01-auth`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-p01-auth
-Pages /login (email + mot de passe) → POST /auth/login.
-Stocker access + refresh selon la stratégie choisie (préférer cookies httpOnly
-via route handlers Next si possible ; sinon documenter le choix).
-POST /auth/logout, refresh automatique sur 401.
-Page /login publique ; le reste de l’app protégé.
-UI multilingue (fr / en / es), erreurs API affichées clairement.
-```
-
-### `feat/admin-p01-session`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-p01-session
-Après auth : GET /auth/me + permissions.
-Provider React (ou équivalent) exposant user, organization, permissions[],
-hasPermission(code). Hook useAuth / usePermissions.
-Gérer le cas session expirée → redirect /login.
-```
-
-### `feat/admin-p01-layout`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-p01-layout
-Layout authentifié : sidebar (Organisation, Utilisateurs, Rôles, Paramètres,
-Documents, Catalogue, Audit, Système), topbar (org name, user, logout).
-Navigation App Router groups (dashboard)/... 
-Mobile : sidebar collapsible. Pas encore de contenu métier dans les pages liées
-( stubs « À venir » acceptables).
-```
-
-### `feat/admin-p01-guards`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-p01-guards
-Middleware ou layout guard : non authentifié → /login.
-Authentifié sans droit admin pertinent → page /forbidden.
-Helper <Can permission="users.write"> pour boutons.
-Masquer les entrées de menu sans *.read correspondant.
-```
-
-## Explication littéraire (branches secondaires)
-
-L’**auth** ouvre la porte ; la **session** dit qui on est ; le **layout** dit où on va ; les **guards** empêchent de cliquer là où l’API refuserait quand même. Séparer ces quatre sujets évite une PR monolithe « tout le shell ».
-
----
-
-# Phase 2 — Organisation & agences
-
-## Objectif
-
-Écrans de gestion du **tenant** et des **agences / entrepôts** (branches).
-
-Doc : [`database/modules/01_organisation_securite.md`](../../../database/modules/01_organisation_securite.md)  
-API : `organizations`, `branches`
-
-## Branche principale
-
-`feat/admin-m01-organisation`
-
-## Branches secondaires
-
-| Branche | Portée |
-|---------|--------|
-| `feat/admin-m01-orgs` | Fiche organisation (lecture / édition) |
-| `feat/admin-m01-branches` | Liste + CRUD agences |
-
-## Prompt branches secondaires
-
-### `feat/admin-m01-orgs`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-m01-orgs
-UI organisation courante : afficher / éditer legal_name, tax_id, email, phone,
-website, logo_url, default_currency_id, country_id, is_active.
-Selects alimentés par settings (currencies, countries) — stub si phase 4 absente.
-Permissions organizations.read / organizations.write.
-Si l’API expose un create super-admin : écran bootstrap optionnel, sinon hors scope.
-```
-
-### `feat/admin-m01-branches`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-m01-branches
-Liste paginée des branches (filtre type, is_active, search).
-Formulaire create/edit : code, name, type office/warehouse/mixed, address,
-city_id, phone, manager_user_id (nullable), is_active.
-Permissions branches.read / branches.write.
-```
-
-## Explication littéraire (branches secondaires)
-
-L’**organisation** est la fiche identité du tenant ; les **agences** sont le découpage opérationnel (bureau vs entrepôt). Deux PRs distinctes pour ne pas bloquer le CRUD agences sur le logo org.
-
----
-
-# Phase 3 — Utilisateurs & RBAC
-
-## Objectif
-
-Administrer les **comptes**, les **rôles** et la **matrice de permissions**.
-
-Doc : [`database/modules/01_organisation_securite.md`](../../../database/modules/01_organisation_securite.md)  
-API : `users`, `roles`, `permissions`, `user_roles`
-
-## Branche principale
-
-`feat/admin-m01-security`
-
-## Branches secondaires
-
-| Branche | Portée |
-|---------|--------|
-| `feat/admin-m01-users` | CRUD utilisateurs, activation, reset |
-| `feat/admin-m01-roles` | CRUD rôles org + affectation permissions |
-| `feat/admin-m01-user-roles` | Affectation rôles aux utilisateurs |
-
-## Prompt branches secondaires
-
-### `feat/admin-m01-users`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-m01-users
-Liste users (search, is_active, branch_id). Fiche create/edit :
-email, first_name, last_name, phone, branch_id, is_active.
-Jamais afficher password_hash. Actions : activer/désactiver, reset password
-si l’API le fournit. Permissions users.read / users.write.
-```
-
-### `feat/admin-m01-roles`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-m01-roles
-Liste rôles (système + org). Édition name/description pour rôles org.
-Matrice permissions (groupées par module) avec cases à cocher → role_permissions.
-Rôles is_system : non suppressibles, permissions éventuellement read-only
-selon règles API. Permissions roles.read / roles.write.
-```
-
-### `feat/admin-m01-user-roles`
-
-```text
-[Coller le prompt socle — module 01]
-
-Branche : feat/admin-m01-user-roles
-Sur la fiche user (ou page dédiée) : assigner / retirer des rôles,
-branch_id optionnel par affectation si l’API le permet.
-Permissions roles.write (ou users.write selon contrat API — coller à Swagger).
-```
-
-## Explication littéraire (branches secondaires)
-
-Créer un **utilisateur** n’est pas dessiner la **matrice RBAC** ; lier les deux est un troisième geste. Trois branches = trois PRs reviewables.
-
----
-
-# Phase 4 — Paramétrage global (Settings)
-
-## Objectif
-
-UI d’administration des **référentiels** : géographie, monnaies, taxes, unités, conditions de paiement et Incoterms.
-
-Doc : [`database/modules/18_settings.md`](../../../database/modules/18_settings.md)  
-API : phase `feat/api-m18-settings`
-
-## Branche principale
-
-`feat/admin-m18-settings`
-
-## Branches secondaires
-
-| Branche | Portée |
-|---------|--------|
-| `feat/admin-m18-geo` | Pays, villes |
-| `feat/admin-m18-money` | Devises, taux, taxes |
-| `feat/admin-m18-terms` | Unités, payment terms, shipping terms |
-| `feat/admin-m18-seeds-ui` | Bouton seed (dev) si `POST /settings/seed` existe |
-
-## Prompt branches secondaires
-
-### `feat/admin-m18-geo`
-
-```text
-[Coller le prompt socle — module 18]
-
-Branche : feat/admin-m18-geo
-Pages Paramètres → Pays / Villes.
-CRUD + filtres (code ISO, search, country_id).
+Branche : feat/admin-p09-form-pilot
+Objectif : migrer le CRUD Pays en pages plein écran pour valider le socle :
+- /parametres/pays (liste : liens vers nouveau / edit, Modal confirm archive)
+- /parametres/pays/nouveau
+- /parametres/pays/[id]/edit
+Extraire country-form-modal → country-form.tsx.
 Permissions settings.read / settings.write.
+Après merge, ce pilote sert de référence aux phases 3–6.
 ```
 
-### `feat/admin-m18-money`
+## Explication
 
-```text
-[Coller le prompt socle — module 18]
-
-Branche : feat/admin-m18-money
-CRUD currencies, exchange_rates (unicité from/to/date), taxes.
-Afficher les DECIMAL en string formatée ; jamais float JS pour les taux.
-Endpoint latest taux si exposé. Permissions settings.read / settings.write.
-```
-
-### `feat/admin-m18-terms`
-
-```text
-[Coller le prompt socle — module 18]
-
-Branche : feat/admin-m18-terms
-CRUD units, payment_terms, shipping_terms (Incoterms).
-Listes claires pour relecture admin. Permissions settings.*.
-```
-
-### `feat/admin-m18-seeds-ui`
-
-```text
-[Coller le prompt socle — module 18]
-
-Branche : feat/admin-m18-seeds-ui
-En NODE_ENV=development uniquement : action UI « Charger les seeds settings »
-→ POST /settings/seed (settings.write). Confirmation destructive-safe (upsert).
-Masquer en production. Documenter dans README Admin.
-```
-
-## Explication littéraire (branches secondaires)
-
-Les référentiels sont découpés comme côté API : **geo**, **money**, **terms**. La UI seed reste isolée pour ne jamais fuiter un bouton dangereux en prod.
+Sans ce socle, chaque agent invente un layout différent. Le **pilote Pays** prouve le pattern avant la vague de migrations.
 
 ---
 
-# Phase 5 — Paramètres système & audit
+# Phase 2 — Design & cohérence visuelle
 
 ## Objectif
 
-Éditer les **system_settings** (clé / JSON) et consulter les **journaux d’audit** et de **connexion**.
-
-Doc : [`database/modules/01_organisation_securite.md`](../../../database/modules/01_organisation_securite.md)  
-API : `system_settings`, `audit_logs`, `login_logs`
+Améliorer la **présence visuelle** de la console sans changer le métier : shell, listes, pages formulaire alignés (densité, typo, espacements, hiérarchie), en s’appuyant sur les tokens existants (ardoise / teal — pas de look purple/cream générique).
 
 ## Branche principale
 
-`feat/admin-m01-ops`
+`feat/admin-p09-design`
 
 ## Branches secondaires
 
 | Branche | Portée |
 |---------|--------|
-| `feat/admin-m01-system-settings` | Éditeur clé/valeur JSON |
-| `feat/admin-m01-audit` | Liste audit_logs (lecture seule) |
-| `feat/admin-m01-login-logs` | Liste login_logs (lecture seule) |
+| `feat/admin-p09-design-tokens` | Affiner tokens CSS / thème (surfaces, focus, états) |
+| `feat/admin-p09-design-shell` | Sidebar, topbar, dashboard : hiérarchie et respiration |
+| `feat/admin-p09-design-lists` | Pattern liste unifié (filtres, table, empty, actions) |
+| `feat/admin-p09-design-forms` | Pages formulaire : largeur, groupes de champs, labels |
 
 ## Prompt branches secondaires
 
-### `feat/admin-m01-system-settings`
+### `feat/admin-p09-design-tokens`
 
 ```text
-[Coller le prompt socle — module 01]
+[Coller le prompt socle]
 
-Branche : feat/admin-m01-system-settings
-UI GET/PUT system-settings et par clé.
-Éditeur JSON validé (erreur parse côté client).
-Permissions system_settings.read / system_settings.write.
+Branche : feat/admin-p09-design-tokens
+Objectif : revue de globals.css / @theme — contrastes, focus ring, surfaces,
+radius cohérents. Pas de nouveau UI kit. Documenter les variables clés en
+commentaire en tête de fichier ou dans README (section design courte).
+Conserver la direction ardoise/teal existante.
 ```
 
-### `feat/admin-m01-audit`
+### `feat/admin-p09-design-shell`
 
 ```text
-[Coller le prompt socle — module 01]
+[Coller le prompt socle]
 
-Branche : feat/admin-m01-audit
-Table paginée audit_logs : date, user, action, entity_type, entity_id.
-Filtres + tiroir détail old/new JSON (lecture seule, pas de delete).
-Permission audit.read.
+Branche : feat/admin-p09-design-shell
+Objectif : polish sidebar + topbar + accueil dashboard.
+Une composition claire, marque visible, pas de cards décoratives inutiles.
+Mobile : drawer/collapse déjà présent — vérifier lisibilité.
+Pas de nouvelle feature métier.
 ```
 
-### `feat/admin-m01-login-logs`
+### `feat/admin-p09-design-lists`
 
 ```text
-[Coller le prompt socle — module 01]
+[Coller le prompt socle]
 
-Branche : feat/admin-m01-login-logs
-Liste login_logs (succès/échec, ip, user_agent, date).
-Filtres email/user, statut. Lecture seule. Permission audit.read
-(ou celle exposée par l’API — coller à Swagger).
+Branche : feat/admin-p09-design-lists
+Objectif : harmoniser toolbar filtres + Table + Pagination + EmptyState
+sur 2–3 panels représentatifs (paramètres + catalogue), puis généraliser
+via classes / petit helper si utile. Pas de refonte métier des colonnes.
 ```
 
-## Explication littéraire (branches secondaires)
+### `feat/admin-p09-design-forms`
 
-Les **system_settings** sont de la config vivante ; l’**audit** et les **login logs** sont de la conformité. Les séparer évite de mélanger un éditeur JSON avec une table append-only.
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p09-design-forms
+Objectif : appliquer le FormPageShell au pilote Pays (ou équivalent) avec
+une densité confortable (label, aide, erreurs). Showcase /dev/ui : ajouter
+un exemple « page formulaire » si pertinent (dev only).
+```
+
+## Explication
+
+Le design suit le socle technique pour que les migrations héritent d’une UI déjà soignée, plutôt que de polish après coup ressource par ressource.
 
 ---
 
-# Phase 6 — Types documentaires
+# Phase 3 — Paramètres → pages CRUD
 
 ## Objectif
 
-Administrer le **catalogue de types de documents** (et métadonnées associées) utilisés ensuite par Web pour rattacher des fichiers.
-
-Doc : [`database/modules/16_documents.md`](../../../database/modules/16_documents.md)  
-API : phase `feat/api-m16-documents`
+Migrer les **8 référentiels** settings hors modales (sauf le pilote Pays s’il est déjà fait en phase 1).
 
 ## Branche principale
 
-`feat/admin-m16-documents`
+`feat/admin-p10-settings-pages`
+
+## Branches secondaires
+
+| Branche | Portée | Routes cible |
+|---------|--------|--------------|
+| `feat/admin-p10-settings-geo` | Pays (si pas pilote), villes | `/parametres/pays|villes/...` |
+| `feat/admin-p10-settings-money` | Devises, taux, taxes | `/parametres/devises|taux-change|taxes/...` |
+| `feat/admin-p10-settings-terms` | Unités, conditions paiement, incoterms | `/parametres/unites|conditions-paiement|incoterms/...` |
+
+Permission : `settings.read` / `settings.write`. Seed dev inchangé (`POST /settings/seed`).
+
+## Prompt branches secondaires
+
+### `feat/admin-p10-settings-geo`
+
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p10-settings-geo
+Migrer Pays (si encore en modale) et Villes vers pages nouveau / [id]/edit.
+Réutiliser FormPageShell. Listes : liens + Modal confirm archive.
+Endpoints : /countries, /cities (Swagger). i18n settings.countries / cities.
+```
+
+### `feat/admin-p10-settings-money`
+
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p10-settings-money
+Migrer Devises, Taux de change, Taxes vers pages nouveau / [id]/edit.
+Même pattern que geo. Endpoints Swagger currencies / exchange-rates / taxes.
+Attention montants / rates : strings, pas float.
+```
+
+### `feat/admin-p10-settings-terms`
+
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p10-settings-terms
+Migrer Unités, Conditions de paiement, Incoterms vers pages nouveau / [id]/edit.
+Endpoints product-units / payment-terms / shipping-terms (noms exacts Swagger).
+```
+
+## Explication
+
+Les settings sont nombreux mais **isomorphes** : une fois le pilote validé, trois PRs groupées suffisent.
+
+---
+
+# Phase 4 — Organisation, documents, système → pages
+
+## Objectif
+
+Aligner les CRUD restants (hors catalogue / users) sur le pattern pages.
+
+## Branche principale
+
+`feat/admin-p10-org-docs-ops`
 
 ## Branches secondaires
 
 | Branche | Portée |
 |---------|--------|
-| `feat/admin-m16-doc-types` | CRUD document_types |
-| `feat/admin-m16-doc-browse` | Exploration lecture des documents (optionnel admin) |
+| `feat/admin-p10-branches-pages` | Agences : `/organisation/agences/nouveau`, `/organisation/agences/[id]/edit` |
+| `feat/admin-p10-doc-types-pages` | Types documents : `/documents/types/nouveau`, `/documents/types/[id]/edit` |
+| `feat/admin-p10-system-pages` | System settings : `/systeme/nouveau`, `/systeme/[id]/edit` (ou clé selon API) |
+
+**Hors migration** : fiche organisation (déjà page) ; audit / connexions / explorer (lecture).
 
 ## Prompt branches secondaires
 
-### `feat/admin-m16-doc-types`
+### `feat/admin-p10-branches-pages`
 
 ```text
-[Coller le prompt socle — module 16]
+[Coller le prompt socle]
 
-Branche : feat/admin-m16-doc-types
-CRUD des types documentaires alignés DDL / Swagger
-(code, name, allowed mime, flags…). Permissions documents.* selon API.
-Pas d’upload métier complexe ici — focus configuration.
+Branche : feat/admin-p10-branches-pages
+Migrer CRUD agences hors branch-form-modal vers pages plein écran.
+Permissions branches.read / branches.write. API /branches.
+Organisation (/organisation) : ne pas toucher sauf liens nav éventuels.
 ```
 
-### `feat/admin-m16-doc-browse`
+### `feat/admin-p10-doc-types-pages`
 
 ```text
-[Coller le prompt socle — module 16]
+[Coller le prompt socle]
 
-Branche : feat/admin-m16-doc-browse
-Liste en lecture des documents (filtres entity_type, type) pour support admin.
-Pas de remplacement du module Documents Web ; usage diagnostic / support.
+Branche : feat/admin-p10-doc-types-pages
+Migrer document types vers /documents/types/nouveau et .../[id]/edit.
+Respecter règles API : types système non supprimables ; édition système
+réservée super-admin. Explorer documents : inchangé (lecture + drawer).
 ```
 
-## Explication littéraire (branches secondaires)
+### `feat/admin-p10-system-pages`
 
-L’Admin **définit les types** ; Web **attache les fichiers** aux dossiers métier. La browse admin reste un outil de support, volontairement secondaire.
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p10-system-pages
+Migrer édition system settings hors modale vers pages.
+Permissions system_settings.read / .write. Parser JSON côté client avant PUT.
+Lien santé API conservé.
+```
+
+## Explication
+
+Même pattern que settings, domaines plus sensibles (org, docs système, clés JSON).
 
 ---
 
-# Phase 7 — Référentiels catalogue
+# Phase 5 — Catalogue → pages + stubs catégories
 
 ## Objectif
 
-Gérer les **données de référence catalogue** (marques, catégories, catégories de services) sans les écrans opérationnels produits complets de Web — ou avec un CRUD produit minimal si l’équipe Admin doit bootstrap le catalogue.
-
-Doc : [`database/modules/03_catalogue.md`](../../../database/modules/03_catalogue.md)  
-API : phase `feat/api-m03-catalogue`
+Migrer marques / produits en pages ; **livrer** les catégories produits et services (aujourd’hui stubs) **directement** en listes + pages formulaire.
 
 ## Branche principale
 
-`feat/admin-m03-catalogue`
+`feat/admin-p10-catalogue-pages`
 
 ## Branches secondaires
 
 | Branche | Portée |
 |---------|--------|
-| `feat/admin-m03-brands` | Marques |
-| `feat/admin-m03-categories` | Catégories produits (+ services) |
-| `feat/admin-m03-products-lite` | CRUD produit minimal (SKU, nom, statut) — optionnel |
+| `feat/admin-p10-brands-pages` | Marques → pages |
+| `feat/admin-p10-products-pages` | Produits lite → pages |
+| `feat/admin-p10-categories` | Catégories produits (arbre) + services (liste) — CRUD complet en pages |
+
+Permissions : `catalog.read` / `catalog.write`.
+
+### Frontière Admin vs Web (inchangée)
+
+| Admin | Web |
+|-------|-----|
+| Bootstrap référentiel + produit minimal | Fiche produit opérationnelle complète |
+| SKU, nom, brand, category, unit, actif | Specs, images avancées, pricing riche |
 
 ## Prompt branches secondaires
 
-### `feat/admin-m03-brands`
+### `feat/admin-p10-brands-pages`
 
 ```text
-[Coller le prompt socle — module 03]
+[Coller le prompt socle]
 
-Branche : feat/admin-m03-brands
-CRUD brands selon API. Liste + formulaire. Permissions catalogue / products
-selon codes Swagger.
+Branche : feat/admin-p10-brands-pages
+Migrer marques hors brand-form-modal.
+Routes : /catalogue/marques, /nouveau, /[id]/edit.
+API /product-brands. Soft-delete + Modal confirm.
 ```
 
-### `feat/admin-m03-categories`
+### `feat/admin-p10-products-pages`
 
 ```text
-[Coller le prompt socle — module 03]
+[Coller le prompt socle]
 
-Branche : feat/admin-m03-categories
-CRUD product categories (arbre si parent_id) et service categories.
-UI arborescente simple si l’API renvoie parent_id.
+Branche : feat/admin-p10-products-pages
+Migrer produits lite hors product-form-modal.
+Champs : SKU, nom, marque, catégorie, unité, isActive — coller Swagger.
+Pas de fiche technique Web.
 ```
 
-### `feat/admin-m03-products-lite`
+### `feat/admin-p10-categories`
 
 ```text
-[Coller le prompt socle — module 03]
+[Coller le prompt socle]
 
-Branche : feat/admin-m03-products-lite
-CRUD produit allégé : SKU, name, brand, category, status, unités de base.
-Pas de fiche technique complète (specs, images avancées) — laisser à Web
-si le roadmap Web le prévoit. Documenter la frontière Admin vs Web.
+Branche : feat/admin-p10-categories
+Remplacer les stubs EmptyState :
+- /catalogue/categories (+ nouveau / [id]/edit) — arbre parentId si API tree
+- /catalogue/categories-services (+ nouveau / [id]/edit) — liste plate
+API /product-categories, /service-categories. i18n catalogue.*.
+Livrer directement en pages (pas de détour modale).
 ```
 
-## Explication littéraire (branches secondaires)
+## Explication
 
-Les **marques** et **catégories** sont du référentiel pur. Le **produit lite** n’existe que pour débloquer un catalogue vide ; la richesse catalogue reste côté Web.
+Les stubs catégories ne passent **jamais** par une étape modale : pages dès le premier commit.
 
 ---
 
-# Phase 8 — Tableau de bord & polish
+# Phase 6 — Utilisateurs & RBAC (pages natives)
 
 ## Objectif
 
-Donner une **vue d’accueil** utile à l’admin (compteurs, liens rapides, santé API), figer la qualité UX transversale (états vides, 403/404), et livrer l’**i18n complet** (français, anglais, espagnol).
+Remplacer `ComingSoonPage` sur `/utilisateurs` et `/roles` par un CRUD complet **en pages plein écran** (pas de phase modale intermédiaire).
 
 ## Branche principale
 
-`feat/admin-p08-dashboard`
+`feat/admin-p11-users-rbac`
 
 ## Branches secondaires
 
 | Branche | Portée |
 |---------|--------|
-| `feat/admin-p08-home` | Dashboard : compteurs users/branches, liens, health |
-| `feat/admin-p08-errors` | Pages 403 / 404 / erreur API globale |
-| `feat/admin-p08-ux` | Empty states, confirmations destructives, accessibilité de base |
-| `feat/admin-p08-i18n` | Socle i18n + messages fr / en / es + sélecteur de langue |
+| `feat/admin-p11-users` | Liste + `/utilisateurs/nouveau` + `/utilisateurs/[id]/edit` |
+| `feat/admin-p11-roles` | Liste + `/roles/nouveau` + `/roles/[id]/edit` (+ permissions) |
+| `feat/admin-p11-user-roles` | Affectation rôles sur fiche user (section page edit) et/ou page dédiée si nécessaire |
+
+Permissions : `users.*`, `roles.*` (codes exacts Swagger).
 
 ## Prompt branches secondaires
 
-### `feat/admin-p08-home`
+### `feat/admin-p11-users`
 
 ```text
 [Coller le prompt socle]
 
-Branche : feat/admin-p08-home
-Dashboard / : cartes résumé (nb users actifs, branches, dernière connexion),
-liens vers Organisation / Users / Settings / Audit, statut GET /health.
-Uniquement des lectures API déjà existantes — pas de nouveau endpoint métier
-sauf agrégats déjà exposés.
+Branche : feat/admin-p11-users
+Livrer CRUD utilisateurs Admin :
+- liste paginée + filtres (actif, search) selon API
+- /utilisateurs/nouveau, /utilisateurs/[id]/edit
+- activation / désactivation selon endpoints existants
+FormPageShell + i18n nouveau namespace users.*.
+Ne pas inventer de champs hors DTO Swagger.
 ```
 
-### `feat/admin-p08-errors`
+### `feat/admin-p11-roles`
 
 ```text
 [Coller le prompt socle]
 
-Branche : feat/admin-p08-errors
-Pages not-found, forbidden, error boundary App Router.
-Messages via clés i18n (fr / en / es). Bouton retour dashboard / login.
+Branche : feat/admin-p11-roles
+CRUD rôles organisation + matrice / checklist permissions API.
+Routes /roles, /roles/nouveau, /roles/[id]/edit.
+Permissions roles.read / roles.write.
 ```
 
-### `feat/admin-p08-ux`
+### `feat/admin-p11-user-roles`
 
 ```text
 [Coller le prompt socle]
 
-Branche : feat/admin-p08-ux
-Passer en revue listes existantes : EmptyState, confirmations delete/désactivation,
-focus clavier formulaires, labels associés. Pas de nouvelle feature métier.
+Branche : feat/admin-p11-user-roles
+Affectation des rôles aux utilisateurs sur la page edit user
+(section dédiée) ; page séparée seulement si l’UX l’exige.
+Consommer les endpoints d’affectation déjà exposés par l’API M01.
 ```
 
-### `feat/admin-p08-i18n`
+## Explication
 
-```text
-[Coller le prompt socle]
-
-Branche : feat/admin-p08-i18n
-Objectif : Admin multilingue — français (défaut), anglais, espagnol.
-- Choisir et documenter la lib i18n (ex. next-intl) compatible App Router Next 16
-- Fichiers de messages pour login, shell, menus, erreurs, stubs existants
-- Sélecteur de langue dans la topbar ; persister le choix (cookie)
-- Attribut lang du <html> synchronisé
-- Migrer les chaînes FR en dur des phases 0–7 vers des clés
-Pas de traduction des données métier API (noms org, etc.) — UI chrome uniquement.
-```
-
-## Explication littéraire (branches secondaires)
-
-Le **dashboard** ancre la console ; les **erreurs** évitent les écrans blancs ; le **polish UX** homogénéise ce que les phases précédentes ont livré chacune dans leur coin. L’**i18n** (fr / en / es) est volontairement en fin de parcours pour basculer tout le chrome UI d’un coup, une fois les écrans stabilisés — tout en interdisant dès le début de considérer le français comme seule langue cible.
+Dernier grand trou fonctionnel de la console. Pattern pages dès le jour 1 pour éviter une double migration.
 
 ---
 
-## Hors scope explicite (roadmap Web / POS)
+# Phase 7 — Cleanup & documentation
 
-Ne pas planifier dans Admin (sauf décision produit écrite) :
+## Objectif
 
-- CRM (leads, opportunités, activités commerciales)
-- Devis, commandes clients, paiements clients
+Retirer le code mort (modales CRUD), aligner README / showcase, vérifier qu’**aucun** create/edit métier ne reste en Modal.
+
+## Branche principale
+
+`feat/admin-p12-cleanup`
+
+## Branches secondaires
+
+| Branche | Portée |
+|---------|--------|
+| `feat/admin-p12-remove-modals` | Supprimer `*-form-modal.tsx` CRUD obsolètes + imports |
+| `feat/admin-p12-readme` | README : convention routes, inventaire à jour |
+| `feat/admin-p12-dev-ui` | Showcase `/dev/ui` : FormPageShell + états liste |
+
+## Prompt branches secondaires
+
+### `feat/admin-p12-remove-modals`
+
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p12-remove-modals
+Audit : aucun *-form-modal.tsx pour create/edit métier.
+Conserver Modal pour confirms. Drawers lecture (audit, documents) OK.
+Supprimer code mort, exports index, messages i18n orphelins si évidents.
+```
+
+### `feat/admin-p12-readme`
+
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p12-readme
+Mettre à jour apps/admin/README.md :
+- convention /nouveau et /[id]/edit
+- inventaire routes users/roles/catégories
+- lien vers ce ROADMAP (phases 1–7 actuelles)
+Retirer les références obsolètes « Phase 6/7/8 » de l’ancien plan si trompeuses.
+```
+
+### `feat/admin-p12-dev-ui`
+
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p12-dev-ui
+Enrichir /dev/ui (dev only) avec exemples FormPageShell et pattern liste.
+404 en production inchangé.
+```
+
+## Explication
+
+Ferme le chantier : la console n’a plus deux patterns concurrent (modale vs page).
+
+---
+
+## Inventaire routes cible (après phase 7)
+
+| Domaine | Liste | Créer | Éditer |
+|---------|-------|-------|--------|
+| Organisation | `/organisation` (fiche) | — | fiche |
+| Agences | `/organisation/agences` | `…/nouveau` | `…/[id]/edit` |
+| Utilisateurs | `/utilisateurs` | `…/nouveau` | `…/[id]/edit` |
+| Rôles | `/roles` | `…/nouveau` | `…/[id]/edit` |
+| Paramètres ×8 | `/parametres/…` | `…/nouveau` | `…/[id]/edit` |
+| Types docs | `/documents/types` | `…/nouveau` | `…/[id]/edit` |
+| Explorer docs | `/documents/explorer` | — | drawer lecture |
+| Marques / produits / catégories | `/catalogue/…` | `…/nouveau` | `…/[id]/edit` |
+| Système | `/systeme` | `…/nouveau` | `…/[id]/edit` |
+| Audit / connexions | `/audit`, `/audit/connexions` | — | drawer lecture |
+| Dashboard / health | `/`, `/system/health` | — | — |
+
+---
+
+## Hors scope explicite (Web / POS)
+
+Ne pas planifier dans Admin :
+
+- CRM, devis, commandes, paiements clients
 - Sourcing, achats, landed cost, logistique import
-- Stock opérationnel, transferts, inventaires physiques
-- Livraisons, projets, maintenance, facturation complète
+- Stock opérationnel, livraisons, maintenance, facturation complète
 - POS / caisse
+- Upload / download documents opérationnels (hors config des types)
 
-Ces domaines ont (ou auront) leur roadmap UI dédiée sous `apps/web` et `apps/pos`.
+Ces domaines ont (ou auront) leur roadmap sous `apps/web` et `apps/pos`.
 
 ---
 
-## Récapitulatif navigation cible
+## Récapitulatif navigation
 
-| Menu Admin | Phase | Permissions typiques |
-|------------|------:|----------------------|
-| Tableau de bord | 8 | authentifié admin |
-| Organisation | 2 | `organizations.*` |
-| Agences | 2 | `branches.*` |
-| Utilisateurs | 3 | `users.*` |
-| Rôles & permissions | 3 | `roles.*` |
-| Paramètres (geo / money / terms) | 4 | `settings.*` |
-| Paramètres système | 5 | `system_settings.*` |
-| Audit / connexions | 5 | `audit.read` |
-| Types documentaires | 6 | `documents.*` |
-| Catalogue (réfs) | 7 | permissions catalogue API |
-| Santé système | 0 / 8 | public health + admin |
+| Menu Admin | Phase cible | Permissions typiques |
+|------------|------------:|----------------------|
+| Tableau de bord | baseline | authentifié admin |
+| Organisation | baseline (+ design) | `organizations.*` |
+| Agences | 4 | `branches.*` |
+| Utilisateurs | 6 | `users.*` |
+| Rôles & permissions | 6 | `roles.*` |
+| Paramètres | 3 | `settings.*` |
+| Documents | 4 | `documents.*` |
+| Catalogue | 5 | `catalog.*` |
+| Audit / connexions | baseline | `audit.read` |
+| Paramètres système | 4 | `system_settings.*` |
 
-Une fois Admin lancé (`pnpm --filter @sinfinity/admin dev`) et l’API sur `:4000`, la console est sur [http://localhost:3001](http://localhost:3001).
+Admin : [http://localhost:3001](http://localhost:3001) — API : [http://localhost:4000](http://localhost:4000) — Swagger : [http://localhost:4000/docs](http://localhost:4000/docs).

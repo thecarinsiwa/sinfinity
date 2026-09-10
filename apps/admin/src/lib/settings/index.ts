@@ -5,9 +5,7 @@ export {
 } from "./format";
 export {
   SETTINGS_NAV_ITEMS,
-  TAX_TYPE_LABELS,
   TAX_TYPES,
-  UNIT_TYPE_LABELS,
   UNIT_TYPES,
 } from "./types";
 export type {
@@ -24,6 +22,7 @@ export type {
   Currency,
   ExchangeRate,
   PaymentTerm,
+  SettingsNavId,
   SettingsNavItem,
   SettingsSeedResult,
   ShippingTerm,
