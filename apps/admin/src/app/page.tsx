@@ -21,6 +21,12 @@ export default function Home() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm sm:justify-start">
           <a
+            href="/login"
+            className="font-medium text-teal-800 underline-offset-4 hover:underline"
+          >
+            Connexion
+          </a>
+          <a
             href="/system/health"
             className="font-medium text-teal-800 underline-offset-4 hover:underline"
           >
