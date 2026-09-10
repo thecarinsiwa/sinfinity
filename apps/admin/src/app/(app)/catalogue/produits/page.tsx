@@ -1,16 +1,13 @@
-import { EmptyState } from "@/components/ui";
+import { ProductsPanel } from "@/components/catalogue/products-panel";
 import { CatalogueSubpage } from "@/components/catalogue/catalogue-subpage";
 
 export default function CatalogueProduitsPage() {
   return (
     <CatalogueSubpage
       title="Produits"
-      description="CRUD allégé : SKU, marque, catégorie, unité, statut."
+      description="CRUD allégé : SKU, marque, catégorie, unité, statut. Specs / images → Web."
     >
-      <EmptyState
-        title="À venir"
-        description="Le CRUD produit allégé sera branché ensuite."
-      />
+      <ProductsPanel />
     </CatalogueSubpage>
   );
 }
