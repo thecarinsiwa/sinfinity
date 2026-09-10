@@ -1,14 +1,27 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { Spinner } from "@/components/ui";
+import { hasAdminConsoleAccess } from "@/lib/auth/admin-access";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
+  const { status, permissions, isSuperAdmin } = useAuth();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const allowed =
+    status === "authenticated" &&
+    hasAdminConsoleAccess({ isSuperAdmin, permissions });
+
+  useEffect(() => {
+    if (status === "authenticated" && !allowed) {
+      router.replace("/forbidden");
+    }
+  }, [status, allowed, router]);
 
   if (status === "loading") {
     return (
@@ -22,6 +35,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="flex flex-1 items-center justify-center bg-background">
         <Spinner label="Redirection vers la connexion…" />
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-background">
+        <Spinner label="Vérification des droits…" />
       </div>
     );
   }

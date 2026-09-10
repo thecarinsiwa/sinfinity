@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { Can } from "@/components/auth/can";
 import { Badge } from "@/components/ui";
 
 export default function DashboardPage() {
@@ -18,21 +21,27 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <DashboardCard
-          title="Organisation"
-          href="/organisation"
-          hint="Fiche tenant et agences"
-        />
-        <DashboardCard
-          title="Utilisateurs & rôles"
-          href="/utilisateurs"
-          hint="Comptes et RBAC"
-        />
-        <DashboardCard
-          title="Paramètres"
-          href="/parametres"
-          hint="Référentiels globaux"
-        />
+        <Can permission="organizations.read">
+          <DashboardCard
+            title="Organisation"
+            href="/organisation"
+            hint="Fiche tenant et agences"
+          />
+        </Can>
+        <Can permission="users.read">
+          <DashboardCard
+            title="Utilisateurs & rôles"
+            href="/utilisateurs"
+            hint="Comptes et RBAC"
+          />
+        </Can>
+        <Can permission="settings.read">
+          <DashboardCard
+            title="Paramètres"
+            href="/parametres"
+            hint="Référentiels globaux"
+          />
+        </Can>
         <DashboardCard
           title="Santé API"
           href="/system/health"

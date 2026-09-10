@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
+import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/auth/constants";
 
-export const ACCESS_COOKIE = "sinfinity_access";
-export const REFRESH_COOKIE = "sinfinity_refresh";
+export { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/auth/constants";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 
