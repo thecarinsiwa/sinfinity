@@ -1,5 +1,6 @@
 export { AppShell } from "./app-shell";
 export { ComingSoonPage } from "./coming-soon";
+export { ErrorPageLink, ErrorPageShell } from "./error-page-shell";
 export { filterNavItems } from "./filter-nav-items";
 export {
   APP_NAV_ITEMS,
