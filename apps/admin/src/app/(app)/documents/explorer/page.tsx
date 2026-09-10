@@ -1,16 +1,13 @@
-import { EmptyState } from "@/components/ui";
+import { DocumentsBrowsePanel } from "@/components/documents/documents-browse-panel";
 import { DocumentsSubpage } from "@/components/documents/documents-subpage";
 
 export default function DocumentsExplorerPage() {
   return (
     <DocumentsSubpage
       title="Explorer"
-      description="Liste lecture seule pour support (filtres type / entité)."
+      description="Liste lecture seule pour support (filtres type / entité / statut)."
     >
-      <EmptyState
-        title="À venir"
-        description="L’exploration des documents sera branchée ensuite."
-      />
+      <DocumentsBrowsePanel />
     </DocumentsSubpage>
   );
 }
