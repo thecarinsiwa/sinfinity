@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { cn } from "@/lib/cn";
 
 export function LoginForm() {
-  const { login, status } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +107,7 @@ export function LoginForm() {
 
       <button
         type="submit"
-        disabled={submitting || status === "loading"}
+        disabled={submitting}
         className={cn(
           "mt-4 w-full bg-[#ffd200] py-3.5 text-sm font-bold tracking-[0.12em] text-white uppercase",
           "transition-[transform,filter,opacity] duration-200",
