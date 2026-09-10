@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/layout/coming-soon";
+import { SettingsHub } from "@/components/settings/settings-hub";
 
 export default function ParametresPage() {
-  return <ComingSoonPage title="Paramètres" />;
+  return <SettingsHub />;
 }
