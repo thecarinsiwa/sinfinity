@@ -75,7 +75,19 @@
     "symbol": "Símbolo",
     "region": "Región",
     "website": "Sitio web",
-    "email": "Email"
+    "email": "Email",
+    "formPage": {
+      "breadcrumb": "Ruta de navegación",
+      "createTitle": "Nuevo · {resource}",
+      "editTitle": "Editar · {resource}",
+      "createCrumb": "Nuevo",
+      "editCrumb": "Edición",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saveSuccess": "Guardado correctamente",
+      "loadFailed": "No se pudo cargar el elemento",
+      "notFound": "Elemento no encontrado"
+    }
   },
   "locale": {
     "label": "Idioma",

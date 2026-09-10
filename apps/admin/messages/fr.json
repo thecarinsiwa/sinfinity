@@ -75,7 +75,19 @@
     "symbol": "Symbole",
     "region": "Région",
     "website": "Site web",
-    "email": "Email"
+    "email": "Email",
+    "formPage": {
+      "breadcrumb": "Fil d’Ariane",
+      "createTitle": "Nouveau · {resource}",
+      "editTitle": "Modifier · {resource}",
+      "createCrumb": "Nouveau",
+      "editCrumb": "Modification",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saveSuccess": "Enregistrement réussi",
+      "loadFailed": "Impossible de charger l’élément",
+      "notFound": "Élément introuvable"
+    }
   },
   "locale": {
     "label": "Langue",

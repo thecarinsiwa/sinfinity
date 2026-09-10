@@ -10,17 +10,19 @@ import { cn } from "@/lib/cn";
  * FormPageShell — chrome partagé pour les pages CRUD plein écran (`/nouveau`, `/[id]/edit`).
  *
  * API :
- * - `title` / `description?` — en-tête de page
+ * - `title` / `description?` — en-tête (souvent `useFormPageMessages().createTitle/editTitle`)
  * - `breadcrumbs` — fil hub → liste → nouveau|édition ; dernier item sans `href` = courant
- * - `formId` — id du `<form>` enfant ; le bouton Enregistrer utilise `form={formId}` + `type="submit"`
- * - `cancelHref` — cible du bouton Annuler (souvent la liste)
- * - `children` — contenu du formulaire (le caller enveloppe avec `<form id={formId} onSubmit=…>`)
- * - `loading?` — remplace le contenu par un Spinner (fetch édition)
- * - `error?` — remplace le contenu par une Alert ; Annuler reste disponible
- * - `saving?` / `saveDisabled?` — état du submit
- * - `stickyActions?` (défaut true) — barre d’actions collée en bas du viewport
+ *   (crumbs courant : `createCrumb` / `editCrumb`)
+ * - `formId` — id du `<form>` enfant ; Enregistrer = `form={formId}` + `type="submit"`
+ * - `cancelHref` — cible Annuler (liste)
+ * - `children` — caller enveloppe avec `<form id={formId} onSubmit=…>`
+ * - `loading?` / `error?` — slots fetch édition (`loadFailed` / `notFound` côté page)
+ * - `saving?` / `saveDisabled?` — état submit
+ * - `stickyActions?` (défaut true)
  * - labels optionnels : sinon `common.cancel` / `common.save` / `common.saving` / `common.loading`
+ *   (`common.formPage.cancel|save` existent avec le même libellé pour les pages qui lisent formPage)
  *
+ * Toasts succès : `common.formPage.saveSuccess` (hors shell).
  * Ne gère pas la validation ni l’appel API — uniquement le chrome.
  */
 export type FormPageBreadcrumb = {
@@ -71,12 +73,13 @@ export function FormPageShell({
   loadingLabel,
   className,
 }: FormPageShellProps) {
-  const t = useTranslations("common");
+  const t = useTranslations("common.formPage");
+  const tc = useTranslations("common");
   const showForm = !loading && !error;
 
   return (
     <div className={cn("mx-auto flex w-full max-w-3xl flex-col gap-6", className)}>
-      <nav aria-label="Breadcrumb" className="text-sm text-muted">
+      <nav aria-label={t("breadcrumb")} className="text-sm text-muted">
         <ol className="flex flex-wrap items-center gap-1.5">
           {breadcrumbs.map((item, index) => {
             const isLast = index === breadcrumbs.length - 1;
@@ -120,12 +123,12 @@ export function FormPageShell({
       <div className="min-w-0">
         {loading ? (
           <div className="flex justify-center rounded-lg border border-border bg-surface px-4 py-12 shadow-sm">
-            <Spinner label={loadingLabel ?? t("loading")} />
+            <Spinner label={loadingLabel ?? tc("loading")} />
           </div>
         ) : null}
 
         {error && !loading ? (
-          <Alert tone="danger" title={t("error")}>
+          <Alert tone="danger" title={tc("error")}>
             {error}
           </Alert>
         ) : null}
@@ -141,7 +144,7 @@ export function FormPageShell({
         )}
       >
         <Link href={cancelHref} className={cancelLinkClass}>
-          {cancelLabel ?? t("cancel")}
+          {cancelLabel ?? tc("cancel")}
         </Link>
         {showForm ? (
           <Button
@@ -149,7 +152,9 @@ export function FormPageShell({
             form={formId}
             disabled={saving || saveDisabled}
           >
-            {saving ? (savingLabel ?? t("saving")) : (saveLabel ?? t("save"))}
+            {saving
+              ? (savingLabel ?? tc("saving"))
+              : (saveLabel ?? tc("save"))}
           </Button>
         ) : null}
       </div>

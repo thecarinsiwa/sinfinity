@@ -188,6 +188,7 @@ Lib : **`next-intl`** (App Router Next 16). **Pas de préfixe de locale dans l�
 | Namespace | Périmètre |
 |-----------|-----------|
 | `common`, `pagination` | Actions partagées, statuts, chargement, pagination |
+| `common.formPage` | Chrome pages CRUD (`createTitle` / `editTitle`, toasts, loadFailed, notFound) — `cancel`/`save` alignés sur `common` |
 | `nav`, `topbar`, `loginPage`, `metadata` | Shell, login, titres app |
 | `errors`, `stubs`, `dashboard` | Erreurs, stubs, accueil |
 | `settings.*` | Hub / seed / pays…incoterms |
