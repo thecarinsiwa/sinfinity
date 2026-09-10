@@ -34,4 +34,5 @@ pnpm --filter @sinfinity/api test
 pnpm --filter @sinfinity/api test:e2e
 pnpm --filter @sinfinity/api build
 pnpm --filter @sinfinity/api db:introspect   # après un changement de DDL SQL
+pnpm --filter @sinfinity/api seed:dev        # org + users de test (dev)
 ```

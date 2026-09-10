@@ -60,6 +60,16 @@ posant les cookies `sinfinity_access` / `sinfinity_refresh` :
 Le middleware redirige vers `/login` sans cookie de session. Les comptes sans
 permission admin gate aboutissent sur `/forbidden`.
 
+## Comptes de test (API locale)
+
+Après `pnpm --filter @sinfinity/api seed:dev` :
+
+| Email | Mot de passe | Rôle |
+|-------|--------------|------|
+| `admin@sinfinity.cd` | `local-dev-only-1` (ou `SEED_DEV_PASSWORD`) | ADMIN / super-admin |
+
+Voir [`apps/api/docs/database.md`](../api/docs/database.md) pour la liste complète des rôles.
+
 ## Documentation
 
 - Roadmap Admin : [`docs/ROADMAP.md`](./docs/ROADMAP.md)

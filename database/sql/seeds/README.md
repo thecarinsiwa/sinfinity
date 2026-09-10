@@ -10,6 +10,7 @@
 ```bash
 pnpm --filter @sinfinity/api seed:rbac
 pnpm --filter @sinfinity/api seed:settings
+pnpm --filter @sinfinity/api seed:dev   # org + agences + utilisateurs de test (dev/test only)
 ```
 
 En développement, `POST /api/v1/settings/seed` (permission `settings.write`) relance le même upsert Settings.

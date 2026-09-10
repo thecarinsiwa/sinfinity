@@ -1,5 +1,13 @@
-import { SettingsResourceStub } from "@/components/settings/settings-resource-stub";
+import { CurrenciesPanel } from "@/components/settings/currencies-panel";
+import { SettingsSubpage } from "@/components/settings/settings-subpage";
 
 export default function DevisesPage() {
-  return <SettingsResourceStub title="Devises" />;
+  return (
+    <SettingsSubpage
+      title="Devises"
+      description="Référentiel monétaire (USD, CDF, CNY…)."
+    >
+      <CurrenciesPanel />
+    </SettingsSubpage>
+  );
 }
