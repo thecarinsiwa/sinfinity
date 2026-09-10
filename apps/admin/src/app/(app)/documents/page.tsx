@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/layout/coming-soon";
+import { DocumentsHub } from "@/components/documents/documents-hub";
 
 export default function DocumentsPage() {
-  return <ComingSoonPage title="Documents" />;
+  return <DocumentsHub />;
 }
