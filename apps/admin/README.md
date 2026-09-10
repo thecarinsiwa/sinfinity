@@ -89,6 +89,29 @@ Menu **Documents** (`documents.read`) — hub puis sous-routes :
 
 `GET /documents` accepte `entityType` / `entityId` (via `document_links` ; `entityId` exige `entityType`).
 
+## Catalogue (Phase 7)
+
+Menu **Catalogue** (`catalog.read`) — hub puis sous-routes. Permissions écriture :
+`catalog.write` (pas de code `products.write` côté API).
+
+| Route Admin | Permission | API Nest | Rôle |
+|-------------|------------|----------|------|
+| [`/catalogue`](http://localhost:3001/catalogue) | `catalog.read` | — | Hub Marques / Catégories / Produits. |
+| [`/catalogue/marques`](http://localhost:3001/catalogue/marques) | `catalog.read` / `.write` | `GET/POST/PATCH/DELETE /product-brands` | CRUD marques (nom, logo URL, site). Soft-delete. |
+| [`/catalogue/categories`](http://localhost:3001/catalogue/categories) | `catalog.read` / `.write` | `/product-categories` (+ `GET …/tree`) | Catégories produits (arbre `parentId`) — UI à brancher. |
+| [`/catalogue/categories-services`](http://localhost:3001/catalogue/categories-services) | `catalog.read` / `.write` | `/service-categories` | Catégories services (liste plate) — UI à brancher. |
+| [`/catalogue/produits`](http://localhost:3001/catalogue/produits) | `catalog.read` / `.write` | `GET/POST/PATCH/DELETE /products` | CRUD **allégé** : SKU, nom, marque, catégorie, unité (`GET /product-units`), `isActive`. Soft-delete. |
+
+### Frontière Admin vs Web
+
+| Admin | Web |
+|-------|-----|
+| Bootstrap référentiel (marques, catégories, produit minimal) | Fiche produit opérationnelle complète |
+| SKU / nom / brand / category / unit / actif | Specs techniques, images avancées, pricing riche, sous-catégories / modèles |
+| Sélection d’unités en lecture seule | Usage métier catalogue (commandes, stock, etc.) |
+
+L’Admin ne remplace pas le module Catalogue Web : il débloque un catalogue vide et maintient les référentiels.
+
 ## Auth BFF (cookies httpOnly)
 
 Les tokens Nest ne sont **pas** exposés au JavaScript navigateur. Les route handlers
