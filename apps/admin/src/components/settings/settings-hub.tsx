@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SettingsSeedAction } from "@/components/settings/settings-seed-action";
 import { Badge } from "@/components/ui";
 import { SETTINGS_NAV_ITEMS } from "@/lib/settings";
 
@@ -13,6 +14,8 @@ export function SettingsHub() {
           Référentiels globaux utilisés par l’organisation et les modules métier.
         </p>
       </div>
+
+      <SettingsSeedAction />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {SETTINGS_NAV_ITEMS.map((item) => (

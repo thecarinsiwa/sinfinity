@@ -10,6 +10,7 @@ export { PaymentTermFormModal } from "./payment-term-form-modal";
 export { PaymentTermsPanel } from "./payment-terms-panel";
 export { SettingsHub } from "./settings-hub";
 export { SettingsResourceStub } from "./settings-resource-stub";
+export { SettingsSeedAction } from "./settings-seed-action";
 export { SettingsSubpage } from "./settings-subpage";
 export { ShippingTermFormModal } from "./shipping-term-form-modal";
 export { ShippingTermsPanel } from "./shipping-terms-panel";

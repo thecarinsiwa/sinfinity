@@ -39,6 +39,27 @@ En développement, les primitives `src/components/ui` sont visibles sur
 [http://localhost:3001/dev/ui](http://localhost:3001/dev/ui).
 La route renvoie 404 en production.
 
+## Seeds settings (dev only)
+
+Sur [Paramètres](http://localhost:3001/parametres), un bandeau **Seeds settings
+(dev)** propose « Charger les seeds settings » si :
+
+- `NODE_ENV=development` (le bandeau est masqué en production)
+- l’utilisateur a `settings.write`
+
+L’action appelle `POST /api/v1/settings/seed` (upsert idempotent : devises,
+pays, villes, unités, Incoterms, conditions de paiement, taxes). L’API refuse
+l’appel hors `NODE_ENV=development`.
+
+Équivalent CLI :
+
+```bash
+pnpm --filter @sinfinity/api seed:settings
+```
+
+Voir aussi [`apps/api/docs/database.md`](../api/docs/database.md) et
+[`database/sql/seeds/02_settings.sql`](../../database/sql/seeds/02_settings.sql).
+
 ## Santé API
 
 [http://localhost:3001/system/health](http://localhost:3001/system/health) appelle
