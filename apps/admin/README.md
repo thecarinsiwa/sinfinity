@@ -77,6 +77,18 @@ Menu latéral **Gouvernance** (filtrée par permissions) :
 
 Les journaux d’audit et de connexion sont **append-only** côté API.
 
+## Documents (Phase 6)
+
+Menu **Documents** (`documents.read`) — hub puis sous-routes :
+
+| Route Admin | Permission | API Nest | Rôle |
+|-------------|------------|----------|------|
+| [`/documents`](http://localhost:3001/documents) | `documents.read` | — | Hub Types + Explorer. |
+| [`/documents/types`](http://localhost:3001/documents/types) | `documents.read` / `.write` | `GET/POST/PATCH/DELETE /document-types` | CRUD configuration (code, nom, MIME). Types système non supprimables ; édition système réservée super-admin. |
+| [`/documents/explorer`](http://localhost:3001/documents/explorer) | `documents.read` | `GET /documents` | Liste support lecture seule. Filtres : type, statut, `entityType`, `entityId`, search. Pas d’upload / download. |
+
+`GET /documents` accepte `entityType` / `entityId` (via `document_links` ; `entityId` exige `entityType`).
+
 ## Auth BFF (cookies httpOnly)
 
 Les tokens Nest ne sont **pas** exposés au JavaScript navigateur. Les route handlers
