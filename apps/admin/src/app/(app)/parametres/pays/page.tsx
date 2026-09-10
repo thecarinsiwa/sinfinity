@@ -1,5 +1,13 @@
-import { SettingsResourceStub } from "@/components/settings/settings-resource-stub";
+import { CountriesPanel } from "@/components/settings/countries-panel";
+import { SettingsSubpage } from "@/components/settings/settings-subpage";
 
 export default function PaysPage() {
-  return <SettingsResourceStub title="Pays" />;
+  return (
+    <SettingsSubpage
+      title="Pays"
+      description="Référentiel géographique ISO 3166."
+    >
+      <CountriesPanel />
+    </SettingsSubpage>
+  );
 }

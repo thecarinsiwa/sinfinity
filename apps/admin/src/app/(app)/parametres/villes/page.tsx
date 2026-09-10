@@ -1,5 +1,13 @@
-import { SettingsResourceStub } from "@/components/settings/settings-resource-stub";
+import { CitiesPanel } from "@/components/settings/cities-panel";
+import { SettingsSubpage } from "@/components/settings/settings-subpage";
 
 export default function VillesPage() {
-  return <SettingsResourceStub title="Villes" />;
+  return (
+    <SettingsSubpage
+      title="Villes"
+      description="Villes rattachées aux pays du référentiel."
+    >
+      <CitiesPanel />
+    </SettingsSubpage>
+  );
 }
