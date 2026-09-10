@@ -76,6 +76,12 @@ export const APP_NAV_ITEMS: NavItem[] = [
     group: "governance",
   },
   {
+    label: "Connexions",
+    href: "/audit/connexions",
+    permission: "audit.read",
+    group: "governance",
+  },
+  {
     label: "Système",
     href: "/systeme",
     permission: "system_settings.read",
