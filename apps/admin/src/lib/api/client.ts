@@ -5,8 +5,10 @@ const DEFAULT_API_URL = "http://localhost:4000/api/v1";
 
 export type ApiFetchOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
-  /** Skip Authorization even if a token getter is registered. */
+  /** Skip Authorization / BFF proxy auth (ex. health public). */
   skipAuth?: boolean;
+  /** Internal: do not retry after a refresh attempt. */
+  _retried?: boolean;
 };
 
 export function getApiBaseUrl(): string {
@@ -14,30 +16,72 @@ export function getApiBaseUrl(): string {
   return raw.replace(/\/+$/, "");
 }
 
-function buildUrl(path: string): string {
+function isBrowser(): boolean {
+  return typeof window !== "undefined";
+}
+
+function normalizePath(path: string): string {
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+/** URL Nest directe (Server Components, skipAuth, outils). */
+export function buildNestUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) {
     return path;
   }
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${getApiBaseUrl()}${normalizedPath}`;
+  return `${getApiBaseUrl()}${normalizePath(path)}`;
+}
+
+/** URL same-origin via proxy BFF (navigateur authentifié). */
+export function buildBackendProxyUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  return `/api/backend${normalizePath(path)}`;
+}
+
+async function tryBrowserRefresh(): Promise<boolean> {
+  try {
+    const response = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Client HTTP typé vers l’API Nest (`NEXT_PUBLIC_API_URL`).
- * Compatible Server Components et client.
+ * Client HTTP typé vers l’API Nest.
+ * - Navigateur + auth : `/api/backend/*` (cookies httpOnly + refresh proxy)
+ * - Serveur + auth : Nest direct avec Bearer depuis `setAccessTokenGetter` / header
+ * - skipAuth : Nest direct (ex. GET /health)
+ *
+ * Pour lire le cookie httpOnly côté RSC, utiliser `apiFetchServer` (`server-only`).
  */
 export async function apiFetch<TData>(
   path: string,
   options: ApiFetchOptions = {},
 ): Promise<TData> {
-  const { body, skipAuth = false, headers: initHeaders, ...rest } = options;
-  const headers = new Headers(initHeaders);
+  const {
+    body,
+    skipAuth = false,
+    _retried = false,
+    headers: initHeaders,
+    ...rest
+  } = options;
 
+  const headers = new Headers(initHeaders);
   if (body !== undefined && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  if (!skipAuth && !headers.has("Authorization")) {
+  const useBrowserProxy = isBrowser() && !skipAuth;
+  const url = useBrowserProxy ? buildBackendProxyUrl(path) : buildNestUrl(path);
+
+  if (!skipAuth && !useBrowserProxy && !headers.has("Authorization")) {
     const token = getAccessToken();
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
@@ -46,15 +90,25 @@ export async function apiFetch<TData>(
 
   let response: Response;
   try {
-    response = await fetch(buildUrl(path), {
+    response = await fetch(url, {
       ...rest,
       headers,
+      credentials: useBrowserProxy ? "same-origin" : rest.credentials,
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch (cause) {
     const message =
       cause instanceof Error ? cause.message : "Network request failed";
     throw new ApiError(0, null, message);
+  }
+
+  // Refresh cookie-based only in the browser (proxy path). Server cookie refresh
+  // lives in apiFetchServer to keep this module client-safe.
+  if (response.status === 401 && !skipAuth && !_retried && useBrowserProxy) {
+    const refreshed = await tryBrowserRefresh();
+    if (refreshed) {
+      return apiFetch<TData>(path, { ...options, _retried: true });
+    }
   }
 
   const text = await response.text();
@@ -66,6 +120,10 @@ export async function apiFetch<TData>(
       parseApiErrorBody(payload),
       response.statusText || `HTTP ${response.status}`,
     );
+  }
+
+  if (response.status === 204) {
+    return undefined as TData;
   }
 
   return payload as TData;

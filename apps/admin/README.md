@@ -44,6 +44,22 @@ La route renvoie 404 en production.
 [http://localhost:3001/system/health](http://localhost:3001/system/health) appelle
 `GET /health` via le client HTTP Admin (utile pour valider CORS et la connectivité).
 
+## Auth BFF (cookies httpOnly)
+
+Les tokens Nest ne sont **pas** exposés au JavaScript navigateur. Les route handlers
+posant les cookies `sinfinity_access` / `sinfinity_refresh` :
+
+| Route Admin | Rôle |
+|-------------|------|
+| `POST /api/auth/login` | `{ email, password }` → cookies |
+| `POST /api/auth/logout` | révoque session Nest + clear cookies |
+| `POST /api/auth/refresh` | rotation via cookie refresh |
+| `GET /api/auth/session` | user + organisation (sans tokens) |
+| `/api/backend/*` | proxy authentifié vers l’API Nest |
+
+Le middleware redirige vers `/login` sans cookie de session. Les comptes sans
+permission admin gate aboutissent sur `/forbidden`.
+
 ## Documentation
 
 - Roadmap Admin : [`docs/ROADMAP.md`](./docs/ROADMAP.md)

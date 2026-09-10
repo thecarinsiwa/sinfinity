@@ -1,6 +1,7 @@
 /**
- * Stub d’injection Authorization (phase 1 : brancher la session JWT).
- * Par défaut aucun token n’est envoyé.
+ * Getter synchrone optionnel pour le Bearer (tests / overrides).
+ * En Server Components, `apiFetch` lit aussi le cookie httpOnly `sinfinity_access`.
+ * En navigateur authentifié, le Bearer passe par `/api/backend` (cookies).
  */
 export type AccessTokenGetter = () => string | null | undefined;
 

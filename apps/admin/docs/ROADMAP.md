@@ -15,6 +15,8 @@ Ce document suit le même flux que le roadmap API : **une branche principale par
 
 L’Admin **ne réimplémente pas** le métier : elle orchestre les écrans de configuration et de gouvernance sur l’API déjà livrée (voir [`apps/api/docs/ROADMAP.md`](../../api/docs/ROADMAP.md)).
 
+**Multilingue** : l’application Admin est prévue en **français (fr)**, **anglais (en)** et **espagnol (es)** — sélection de langue utilisateur, libellés UI et messages d’erreur localisés (pas de texte figé dans une seule langue).
+
 **Sources de vérité**
 
 | Sujet | Fichier |
@@ -60,7 +62,7 @@ develop
 | 5 | Système & audit | `feat/admin-m01-ops` | 3 | API M01 audit / system-settings |
 | 6 | Types documentaires | `feat/admin-m16-documents` | 1 | API M16 documents |
 | 7 | Référentiels catalogue | `feat/admin-m03-catalogue` | 4 | API M03 catalogue |
-| 8 | Tableau de bord & polish | `feat/admin-p08-dashboard` | 2–5 | API health + lectures |
+| 8 | Tableau de bord, polish & i18n (fr/en/es) | `feat/admin-p08-dashboard` | 2–5 | API health + lectures |
 
 ```mermaid
 flowchart LR
@@ -92,11 +94,20 @@ flowchart LR
 - Lire [`AGENTS.md`](../AGENTS.md) et la doc Next locale (`node_modules/next/dist/docs/`) avant d’utiliser une API Next — la version 16 peut différer du training.
 - Port dev **3001** (`next dev --port 3001`).
 - Tailwind 4 ; pas d’UI kit imposé tant qu’aucun package partagé n’existe dans `packages/`.
-- UI en **français** (libellés, toasts, erreurs utilisateur). Code / noms de fichiers en anglais.
+- **Internationalisation (i18n)** : français, anglais, espagnol (voir section dédiée). Code / noms de fichiers en anglais.
 - Pas d’appels SQL depuis Admin : **uniquement** l’API REST `/api/v1`.
 - Isolation multi-tenant : l’`organization_id` vient du JWT / contexte API, jamais hardcodé côté UI.
 - Montants : afficher avec la devise ; ne jamais parser en `number` flottant pour des calculs métier (string / decimal lib si besoin).
 - Soft delete : masquer les lignes `deleted_at` ; actions « désactiver » / « archiver » selon l’API.
+
+### Internationalisation (fr / en / es)
+
+- Langues supportées : **`fr`** (défaut produit), **`en`**, **`es`**.
+- Tous les libellés UI, toasts, empty states, pages d’erreur et formulaires passent par des **clés i18n** (pas de chaînes en dur dans les composants, hors contenu métier renvoyé par l’API).
+- Sélecteur de langue accessible depuis le shell (topbar) une fois l’auth en place ; persistance (cookie / `localStorage` / préférence user si l’API l’expose).
+- `lang` du document HTML aligné sur la locale active.
+- Les messages d’erreur API peuvent rester en anglais côté Nest ; l’Admin les mappe ou les affiche via clés quand c’est possible.
+- La livraison i18n complète (fichiers de messages + bascule) est planifiée en **phase 8** ; dès les phases précédentes, **éviter** de figer du français en dur — préférer des clés ou un socle i18n dès qu’il existe.
 
 ### Auth & permissions
 
@@ -117,6 +128,7 @@ flowchart LR
 - [ ] États loading / empty / error / success
 - [ ] Respect des permissions (`*.read` / `*.write`)
 - [ ] Formulaires validés (côté client) + messages d’erreur API affichés
+- [ ] Libellés via clés i18n (fr / en / es) dès que le socle i18n est disponible ; sinon ne pas multiplier le français en dur
 - [ ] Responsive utilisable (desktop prioritaire, mobile lisible)
 - [ ] Aucune colonne / champ inventé : coller au DDL / Swagger
 - [ ] README Admin mis à jour si le démarrage ou les variables d’env changent
@@ -148,7 +160,7 @@ Stack attendue (posée en phase 0, à réutiliser) :
 Règles :
 1. Consommer uniquement l’API Nest ; pas d’accès MySQL depuis Admin.
 2. Isolation organization_id via le contexte auth API.
-3. UI en français ; code en anglais.
+3. UI multilingue fr / en / es (clés i18n) ; code en anglais.
 4. Permissions module.action pour afficher / autoriser les actions.
 5. Ne pas construire les écrans métier Web (CRM, devis, stock opérationnel…).
 6. Lire la doc Next locale avant d’utiliser une API framework récente.
@@ -273,7 +285,7 @@ Stocker access + refresh selon la stratégie choisie (préférer cookies httpOnl
 via route handlers Next si possible ; sinon documenter le choix).
 POST /auth/logout, refresh automatique sur 401.
 Page /login publique ; le reste de l’app protégé.
-UI française, erreurs API affichées clairement.
+UI multilingue (fr / en / es), erreurs API affichées clairement.
 ```
 
 ### `feat/admin-p01-session`
@@ -684,7 +696,7 @@ Les **marques** et **catégories** sont du référentiel pur. Le **produit lite*
 
 ## Objectif
 
-Donner une **vue d’accueil** utile à l’admin (compteurs, liens rapides, santé API) et figer la qualité UX transversale (états vides, 403/404, i18n figée FR).
+Donner une **vue d’accueil** utile à l’admin (compteurs, liens rapides, santé API), figer la qualité UX transversale (états vides, 403/404), et livrer l’**i18n complet** (français, anglais, espagnol).
 
 ## Branche principale
 
@@ -697,6 +709,7 @@ Donner une **vue d’accueil** utile à l’admin (compteurs, liens rapides, san
 | `feat/admin-p08-home` | Dashboard : compteurs users/branches, liens, health |
 | `feat/admin-p08-errors` | Pages 403 / 404 / erreur API globale |
 | `feat/admin-p08-ux` | Empty states, confirmations destructives, accessibilité de base |
+| `feat/admin-p08-i18n` | Socle i18n + messages fr / en / es + sélecteur de langue |
 
 ## Prompt branches secondaires
 
@@ -719,7 +732,7 @@ sauf agrégats déjà exposés.
 
 Branche : feat/admin-p08-errors
 Pages not-found, forbidden, error boundary App Router.
-Messages FR clairs. Bouton retour dashboard / login.
+Messages via clés i18n (fr / en / es). Bouton retour dashboard / login.
 ```
 
 ### `feat/admin-p08-ux`
@@ -732,9 +745,24 @@ Passer en revue listes existantes : EmptyState, confirmations delete/désactivat
 focus clavier formulaires, labels associés. Pas de nouvelle feature métier.
 ```
 
+### `feat/admin-p08-i18n`
+
+```text
+[Coller le prompt socle]
+
+Branche : feat/admin-p08-i18n
+Objectif : Admin multilingue — français (défaut), anglais, espagnol.
+- Choisir et documenter la lib i18n (ex. next-intl) compatible App Router Next 16
+- Fichiers de messages pour login, shell, menus, erreurs, stubs existants
+- Sélecteur de langue dans la topbar ; persister le choix (cookie)
+- Attribut lang du <html> synchronisé
+- Migrer les chaînes FR en dur des phases 0–7 vers des clés
+Pas de traduction des données métier API (noms org, etc.) — UI chrome uniquement.
+```
+
 ## Explication littéraire (branches secondaires)
 
-Le **dashboard** ancre la console ; les **erreurs** évitent les écrans blancs ; le **polish UX** homogénéise ce que les phases précédentes ont livré chacune dans leur coin.
+Le **dashboard** ancre la console ; les **erreurs** évitent les écrans blancs ; le **polish UX** homogénéise ce que les phases précédentes ont livré chacune dans leur coin. L’**i18n** (fr / en / es) est volontairement en fin de parcours pour basculer tout le chrome UI d’un coup, une fois les écrans stabilisés — tout en interdisant dès le début de considérer le français comme seule langue cible.
 
 ---
 
