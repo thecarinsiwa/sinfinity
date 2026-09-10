@@ -23,7 +23,7 @@ Ouvrir [http://localhost:3001](http://localhost:3001).
 
 ## Accueil (dashboard)
 
-La route `/` affiche un **tableau de bord** en lectures API uniquement :
+La route `/` affiche un **tableau de bord** en lectures API uniquement (livrable Phase 8 — voir [Phase 8](#phase-8--tableau-de-bord--polish)) :
 
 | Indicateur | Source |
 |------------|--------|
@@ -125,33 +125,97 @@ Menu **Catalogue** (`catalog.read`) — hub puis sous-routes. Permissions écrit
 
 L’Admin ne remplace pas le module Catalogue Web : il débloque un catalogue vide et maintient les référentiels.
 
-## UX listes (Phase 8)
+## Phase 8 — Tableau de bord & polish
+
+Objectif roadmap : vue d’accueil utile, qualité UX transversale (états vides, 403/404), et **i18n** fr / en / es. Voir aussi [`docs/ROADMAP.md`](./docs/ROADMAP.md) § Phase 8.
+
+### Livrables
+
+| Volet | Contenu |
+|-------|---------|
+| **Accueil** | Dashboard `/` — compteurs, raccourcis, santé API (voir [Accueil](#accueil-dashboard)) |
+| **Erreurs** | `not-found`, `error`, `/forbidden` — chrome partagé `ErrorPageShell` |
+| **UX listes** | EmptyState, confirms d’archivage, focus Modal/Drawer, labels filtres |
+| **i18n** | `next-intl` sans préfixe d’URL, cookie, sélecteur, messages fr/en/es |
+
+### Pages d’erreur
+
+| Route / fichier | Code | Actions |
+|-----------------|------|---------|
+| `src/app/not-found.tsx` | 404 | Tableau de bord, Connexion |
+| `src/app/error.tsx` | erreur client | Réessayer, Tableau de bord, Connexion |
+| `/forbidden` | 403 | Déconnexion, Tableau de bord, Santé API |
+
+Layout commun : `src/components/layout/error-page-shell.tsx` (EmptyState + code). Textes via clés `errors.*`.
+
+### UX listes
 
 Polish transversal (sans nouvelle feature métier) :
 
-- **EmptyState** sur chaque liste vide, copy FR unifiée (« Créez… ou ajustez les filtres »)
-- **Confirmations** d’archivage via Modal (pas `window.confirm`) ; soft-delete en français utilisateur ; suppression définitive des types de documents inchangée
-- **Focus** Modal / Drawer : premier contrôle au focus, piège Tab, restauration à la fermeture, Escape
+- **EmptyState** sur chaque liste vide — copy unifiée (« Créez… ou ajustez les filtres / la recherche »)
+- **Confirmations** d’archivage via `Modal` (jamais `window.confirm`) ; soft-delete en langage utilisateur ; suppression définitive des types de documents inchangée
+- **Focus** Modal / Drawer (`useDialogA11y`) : focus initial, piège Tab, restauration à la fermeture, Escape ; backdrop hors tabulation
 - Bouton **Filtrer** hors du `<label>` (évite le focus parasite sur le champ)
 
-## i18n (Phase 8)
+### i18n (fr / en / es)
 
-Lib : **`next-intl`** (App Router, **sans** préfixe de locale dans l’URL — routes FR métier inchangées).
+Lib : **`next-intl`** (App Router Next 16). **Pas de préfixe de locale dans l’URL** — les routes métier restent `/parametres`, `/organisation`, etc. La locale est lue depuis un cookie.
 
 | Élément | Détail |
 |---------|--------|
-| Locales | `fr` (défaut), `en`, `es` |
-| Cookie | `sinfinity_locale` (1 an, `SameSite=Lax`) |
+| Locales | `fr` (défaut), `en`, `es` — `src/i18n/config.ts` |
+| Cookie | `sinfinity_locale` (1 an, `SameSite=Lax`) — écrit par `setLocaleAction` |
 | Messages | `apps/admin/messages/{fr,en,es}.json` |
-| Config | `src/i18n/request.ts` + plugin dans `next.config.ts` |
-| `<html lang>` | synchronisé via `getLocale()` dans le layout racine |
-| Sélecteur | topbar (session) + page login |
+| Request config | `src/i18n/request.ts` + plugin `next-intl` dans `next.config.ts` |
+| Typage | `src/i18n/global.d.ts` (messages FR comme source de vérité TypeScript) |
+| `<html lang>` | `getLocale()` dans `src/app/layout.tsx` |
+| Provider | `NextIntlClientProvider` dans le layout racine |
+| Sélecteur | `LocaleSwitcher` — topbar (session) + page login |
 
-Chrome migré : login, shell (nav / topbar / app-shell), dashboard, erreurs 403/404/`error`, stubs, **et écrans phases 0–7** (paramètres, organisation, catalogue, documents, audit, système, health, pagination). Les données métier API (noms, codes) restent non traduites. Showcase `/dev/ui` hors scope.
+#### Namespaces messages
 
-Namespaces messages : `common`, `pagination`, `settings.*`, `organisation.*`, `catalogue.*`, `documents.*`, `audit.*`, `systeme.*`, `health.*` (+ chrome déjà présent : `nav`, `loginPage`, `dashboard`, `errors`…).
+| Namespace | Périmètre |
+|-----------|-----------|
+| `common`, `pagination` | Actions partagées, statuts, chargement, pagination |
+| `nav`, `topbar`, `loginPage`, `metadata` | Shell, login, titres app |
+| `errors`, `stubs`, `dashboard` | Erreurs, stubs, accueil |
+| `settings.*` | Hub / seed / pays…incoterms |
+| `organisation.*` | Fiche org + agences |
+| `catalogue.*` | Hub, marques, produits, stubs catégories |
+| `documents.*` | Hub, types, explorer, statuts, entity types |
+| `audit.*` | Journaux + connexions |
+| `systeme.*`, `health.*` | System settings + page santé |
+| `locale` | Libellés du sélecteur de langue |
+
+#### Usage dans le code
+
+```tsx
+// Client
+const t = useTranslations("settings.countries");
+const tc = useTranslations("common");
+
+// Serveur (page / metadata)
+const t = await getTranslations("settings.countries");
+```
+
+Changer de langue : `setLocaleAction(locale)` puis `router.refresh()` (déjà dans `LocaleSwitcher`).
+
+Régénération optionnelle du chrome messages (script de bootstrap) :
+
+```bash
+node apps/admin/scripts/build-chrome-messages.mjs
+```
+
+Préférer éditer directement `messages/*.json` pour les ajouts courants, en gardant les **mêmes clés** dans fr, en et es.
+
+#### Hors scope i18n
+
+- Données métier API (noms d’organisation, codes ISO, libellés stockés en base)
+- Messages d’erreur bruts renvoyés par Nest (`ApiError.message`)
+- Showcase `/dev/ui` (dev only)
 
 ## Auth BFF (cookies httpOnly)
+
 
 Les tokens Nest ne sont **pas** exposés au JavaScript navigateur. Les route handlers
 posant les cookies `sinfinity_access` / `sinfinity_refresh` :
