@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from "@/lib/api/client";
-import { parseApiErrorBody, type ApiErrorBody } from "@/lib/api";
+import { parseApiErrorBody } from "@/lib/api/errors";
+import type { ApiErrorBody } from "@/lib/api/types";
 
 export type AuthTokens = {
   accessToken: string;

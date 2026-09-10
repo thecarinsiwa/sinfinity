@@ -14,3 +14,4 @@ export type {
   PaginationMeta,
 } from "./types";
 export type { HealthResponse } from "./health";
+// apiFetchServer: import from `@/lib/api/server-fetch` (server-only).

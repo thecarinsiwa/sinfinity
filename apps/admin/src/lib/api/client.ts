@@ -40,30 +40,6 @@ export function buildBackendProxyUrl(path: string): string {
   return `/api/backend${normalizePath(path)}`;
 }
 
-async function resolveServerAccessToken(): Promise<string | null> {
-  const fromGetter = getAccessToken();
-  if (fromGetter) {
-    return fromGetter;
-  }
-
-  try {
-    const { getAuthCookies } = await import("@/lib/auth/cookies");
-    const { accessToken } = await getAuthCookies();
-    return accessToken;
-  } catch {
-    return null;
-  }
-}
-
-async function tryServerRefresh(): Promise<boolean> {
-  try {
-    const { refreshAuthTokens } = await import("@/lib/auth/session");
-    return refreshAuthTokens();
-  } catch {
-    return false;
-  }
-}
-
 async function tryBrowserRefresh(): Promise<boolean> {
   try {
     const response = await fetch("/api/auth/refresh", {
@@ -80,8 +56,10 @@ async function tryBrowserRefresh(): Promise<boolean> {
 /**
  * Client HTTP typé vers l’API Nest.
  * - Navigateur + auth : `/api/backend/*` (cookies httpOnly + refresh proxy)
- * - Serveur + auth : Nest direct avec Bearer depuis cookie / getter
+ * - Serveur + auth : Nest direct avec Bearer depuis `setAccessTokenGetter` / header
  * - skipAuth : Nest direct (ex. GET /health)
+ *
+ * Pour lire le cookie httpOnly côté RSC, utiliser `apiFetchServer` (`server-only`).
  */
 export async function apiFetch<TData>(
   path: string,
@@ -104,7 +82,7 @@ export async function apiFetch<TData>(
   const url = useBrowserProxy ? buildBackendProxyUrl(path) : buildNestUrl(path);
 
   if (!skipAuth && !useBrowserProxy && !headers.has("Authorization")) {
-    const token = await resolveServerAccessToken();
+    const token = getAccessToken();
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
@@ -124,11 +102,10 @@ export async function apiFetch<TData>(
     throw new ApiError(0, null, message);
   }
 
-  if (response.status === 401 && !skipAuth && !_retried) {
-    const refreshed = useBrowserProxy
-      ? await tryBrowserRefresh()
-      : await tryServerRefresh();
-
+  // Refresh cookie-based only in the browser (proxy path). Server cookie refresh
+  // lives in apiFetchServer to keep this module client-safe.
+  if (response.status === 401 && !skipAuth && !_retried && useBrowserProxy) {
+    const refreshed = await tryBrowserRefresh();
     if (refreshed) {
       return apiFetch<TData>(path, { ...options, _retried: true });
     }

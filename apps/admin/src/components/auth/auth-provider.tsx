@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { parseApiErrorBody } from "@/lib/api";
+import { parseApiErrorBody } from "@/lib/api/errors";
 import type {
   AuthMe,
   SessionOrganization,

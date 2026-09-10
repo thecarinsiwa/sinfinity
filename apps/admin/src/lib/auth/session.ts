@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import type { ApiErrorBody } from "@/lib/api";
+import type { ApiErrorBody } from "@/lib/api/types";
 import {
   clearAuthCookies,
   getAuthCookies,
