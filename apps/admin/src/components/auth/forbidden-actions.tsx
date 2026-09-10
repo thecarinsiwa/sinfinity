@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/components/auth/auth-provider";
 
 export function ForbiddenActions() {
+  const t = useTranslations("errors.forbidden");
+  const tCommon = useTranslations("common");
   const { logout, status } = useAuth();
 
   return (
@@ -14,19 +17,19 @@ export function ForbiddenActions() {
         onClick={() => void logout()}
         disabled={status === "loading"}
       >
-        Se déconnecter
+        {t("logout")}
       </Button>
       <Link
         href="/"
         className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-muted"
       >
-        Tableau de bord
+        {tCommon("dashboard")}
       </Link>
       <Link
         href="/system/health"
         className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-muted"
       >
-        Santé API
+        {tCommon("apiHealth")}
       </Link>
     </div>
   );

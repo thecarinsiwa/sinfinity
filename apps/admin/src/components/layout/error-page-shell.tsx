@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/ui";
 
 type ErrorPageShellProps = {
@@ -18,11 +21,13 @@ export function ErrorPageShell({
   description,
   action,
 }: ErrorPageShellProps) {
+  const t = useTranslations("errors");
+
   return (
     <div className="flex min-h-full flex-1 flex-col items-center justify-center bg-background px-6 py-16">
       <main className="w-full max-w-lg">
         <p className="mb-3 text-center text-sm font-medium tracking-wide text-primary uppercase">
-          Sinfinity Admin · {code}
+          {t("brandLine", { code })}
         </p>
         <EmptyState
           title={title}

@@ -1,0 +1,135 @@
+{
+  "common": {
+    "brand": "Sinfinity",
+    "admin": "Admin",
+    "consoleAdmin": "Consola Admin",
+    "orgAdminSuffix": "{name} · Admin",
+    "organization": "Organización",
+    "superAdmin": "Super",
+    "logout": "Cerrar sesión",
+    "openMenu": "Abrir menú",
+    "dashboard": "Panel",
+    "login": "Iniciar sesión",
+    "apiHealth": "Salud API",
+    "close": "Cerrar",
+    "closeDialog": "Cerrar ventana",
+    "closeDrawer": "Cerrar panel",
+    "retry": "Reintentar",
+    "comingSoon": "Próximamente",
+    "emDash": "—"
+  },
+  "locale": {
+    "label": "Idioma",
+    "fr": "Français",
+    "en": "English",
+    "es": "Español"
+  },
+  "nav": {
+    "groups": {
+      "general": "General",
+      "references": "Referenciales",
+      "governance": "Gobernanza"
+    },
+    "items": {
+      "dashboard": "Panel",
+      "organization": "Organización",
+      "branches": "Agencias",
+      "users": "Usuarios",
+      "roles": "Roles",
+      "settings": "Parámetros",
+      "documents": "Documentos",
+      "catalogue": "Catálogo",
+      "audit": "Auditoría",
+      "loginLogs": "Conexiones",
+      "system": "Sistema"
+    }
+  },
+  "topbar": {
+    "greetingMorning": "Buenos días",
+    "greetingAfternoon": "Buenas tardes",
+    "greetingEvening": "Buenas noches"
+  },
+  "loginPage": {
+    "metaTitle": "Iniciar sesión — Sinfinity Admin",
+    "metaDescription": "Acceso a la consola de administración Sinfinity",
+    "subtitle": "Introduzca correctamente su correo electrónico y contraseña para acceder a la consola de administración.",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submit": "Iniciar sesión",
+    "submitting": "Conectando…",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "forgotHint": "Contacte a un administrador para restablecer su contraseña",
+    "errorGeneric": "No se pudo iniciar sesión"
+  },
+  "errors": {
+    "brandLine": "Sinfinity Admin · {code}",
+    "notFound": {
+      "metaTitle": "Página no encontrada — Sinfinity Admin",
+      "title": "Página no encontrada",
+      "description": "Esta dirección no existe o se ha movido. Vuelva al panel o inicie sesión de nuevo."
+    },
+    "error": {
+      "code": "Error",
+      "title": "Se produjo un error",
+      "description": "Un problema inesperado bloqueó esta pantalla. Puede reintentar o volver al panel."
+    },
+    "forbidden": {
+      "metaTitle": "Acceso denegado — Sinfinity Admin",
+      "title": "Acceso denegado",
+      "description": "Su cuenta está autenticada pero no tiene los permisos necesarios para la consola de administración.",
+      "logout": "Cerrar sesión"
+    }
+  },
+  "stubs": {
+    "defaultDescription": "Esta pantalla se conectará en una fase posterior del roadmap Admin.",
+    "usersTitle": "Usuarios",
+    "rolesTitle": "Roles"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "lead": "Agregados de solo lectura (meta.total, sesión, GET /health) — sin endpoint de negocio dedicado.",
+    "organizationLabel": "Organización",
+    "organizationBlurb": "Consola de administración Sinfinity. Los módulos de negocio permanecen en Web y POS.",
+    "openOrg": "Abrir ficha",
+    "overviewLabel": "Vista general",
+    "indicators": "Indicadores",
+    "apiReads": "Lecturas API",
+    "activeUsers": "Usuarios activos",
+    "activeBranches": "Agencias activas",
+    "lastLogin": "Último acceso",
+    "shortcutsLabel": "Atajos",
+    "quickAccess": "Accesos rápidos",
+    "healthLabel": "Salud API",
+    "nestAvailability": "Disponibilidad Nest",
+    "healthChecking": "Comprobando…",
+    "healthUnreachable": "API inaccesible",
+    "loadFailed": "No se pudo cargar",
+    "denied": "Acceso denegado",
+    "retryHealth": "Reintentar",
+    "permissionRequired": "Permiso requerido",
+    "viewDetail": "Ver detalle",
+    "openList": "{label} — abrir lista",
+    "sessionLabel": "Sesión",
+    "currentProfile": "Perfil actual",
+    "name": "Nombre",
+    "email": "Email",
+    "platformRole": "Rol de plataforma",
+    "superAdminRole": "Super-admin",
+    "orgUserRole": "Usuario org",
+    "permissions": "Permisos",
+    "permissionCodes": "{count} código(s)",
+    "links": {
+      "organization": { "title": "Organización", "hint": "Ficha tenant" },
+      "users": { "title": "Usuarios", "hint": "Cuentas" },
+      "settings": { "title": "Parámetros", "hint": "Referenciales" },
+      "audit": { "title": "Auditoría", "hint": "Registro" },
+      "branches": { "title": "Agencias", "hint": "Sitios y almacenes" },
+      "roles": { "title": "Roles", "hint": "RBAC" },
+      "health": { "title": "Salud API", "hint": "Diagnóstico" }
+    }
+  },
+  "metadata": {
+    "appTitle": "Sinfinity Admin",
+    "appDescription": "Consola de administración Sinfinity"
+  }
+}

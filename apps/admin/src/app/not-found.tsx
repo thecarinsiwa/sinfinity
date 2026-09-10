@@ -1,24 +1,29 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import {
   ErrorPageLink,
   ErrorPageShell,
 } from "@/components/layout/error-page-shell";
 
-export const metadata: Metadata = {
-  title: "Page introuvable — Sinfinity Admin",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("errors.notFound");
+  return { title: t("metaTitle") };
+}
 
-export default function NotFoundPage() {
+export default async function NotFoundPage() {
+  const t = await getTranslations("errors.notFound");
+  const tCommon = await getTranslations("common");
+
   return (
     <ErrorPageShell
       code="404"
-      title="Page introuvable"
-      description="Cette adresse n’existe pas ou a été déplacée. Retournez au tableau de bord ou reconnectez-vous."
+      title={t("title")}
+      description={t("description")}
       action={
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <ErrorPageLink href="/">Tableau de bord</ErrorPageLink>
+          <ErrorPageLink href="/">{tCommon("dashboard")}</ErrorPageLink>
           <ErrorPageLink href="/login" variant="secondary">
-            Connexion
+            {tCommon("login")}
           </ErrorPageLink>
         </div>
       }

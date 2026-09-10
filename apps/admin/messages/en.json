@@ -1,0 +1,135 @@
+{
+  "common": {
+    "brand": "Sinfinity",
+    "admin": "Admin",
+    "consoleAdmin": "Admin console",
+    "orgAdminSuffix": "{name} · Admin",
+    "organization": "Organization",
+    "superAdmin": "Super",
+    "logout": "Sign out",
+    "openMenu": "Open menu",
+    "dashboard": "Dashboard",
+    "login": "Sign in",
+    "apiHealth": "API health",
+    "close": "Close",
+    "closeDialog": "Close dialog",
+    "closeDrawer": "Close drawer",
+    "retry": "Try again",
+    "comingSoon": "Coming soon",
+    "emDash": "—"
+  },
+  "locale": {
+    "label": "Language",
+    "fr": "Français",
+    "en": "English",
+    "es": "Español"
+  },
+  "nav": {
+    "groups": {
+      "general": "General",
+      "references": "References",
+      "governance": "Governance"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "organization": "Organization",
+      "branches": "Branches",
+      "users": "Users",
+      "roles": "Roles",
+      "settings": "Settings",
+      "documents": "Documents",
+      "catalogue": "Catalog",
+      "audit": "Audit",
+      "loginLogs": "Sign-ins",
+      "system": "System"
+    }
+  },
+  "topbar": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening"
+  },
+  "loginPage": {
+    "metaTitle": "Sign in — Sinfinity Admin",
+    "metaDescription": "Sign in to the Sinfinity administration console",
+    "subtitle": "Enter your email address and password to access the administration console.",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "forgotPassword": "Forgot password?",
+    "forgotHint": "Contact an administrator to reset your password",
+    "errorGeneric": "Unable to sign in"
+  },
+  "errors": {
+    "brandLine": "Sinfinity Admin · {code}",
+    "notFound": {
+      "metaTitle": "Page not found — Sinfinity Admin",
+      "title": "Page not found",
+      "description": "This address does not exist or has moved. Return to the dashboard or sign in again."
+    },
+    "error": {
+      "code": "Error",
+      "title": "Something went wrong",
+      "description": "An unexpected problem blocked this screen. You can try again or return to the dashboard."
+    },
+    "forbidden": {
+      "metaTitle": "Access denied — Sinfinity Admin",
+      "title": "Access denied",
+      "description": "Your account is signed in but does not have the permissions required for the administration console.",
+      "logout": "Sign out"
+    }
+  },
+  "stubs": {
+    "defaultDescription": "This screen will be wired in a later Admin roadmap phase.",
+    "usersTitle": "Users",
+    "rolesTitle": "Roles"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "lead": "Read-only aggregates (meta.total, session, GET /health) — no dedicated business endpoint.",
+    "organizationLabel": "Organization",
+    "organizationBlurb": "Sinfinity administration console. Business modules remain on Web and POS.",
+    "openOrg": "Open profile",
+    "overviewLabel": "Overview",
+    "indicators": "Indicators",
+    "apiReads": "API reads",
+    "activeUsers": "Active users",
+    "activeBranches": "Active branches",
+    "lastLogin": "Last sign-in",
+    "shortcutsLabel": "Shortcuts",
+    "quickAccess": "Quick access",
+    "healthLabel": "API health",
+    "nestAvailability": "Nest availability",
+    "healthChecking": "Checking…",
+    "healthUnreachable": "API unreachable",
+    "loadFailed": "Unable to load",
+    "denied": "Access denied",
+    "retryHealth": "Try again",
+    "permissionRequired": "Permission required",
+    "viewDetail": "View details",
+    "openList": "{label} — open list",
+    "sessionLabel": "Session",
+    "currentProfile": "Current profile",
+    "name": "Name",
+    "email": "Email",
+    "platformRole": "Platform role",
+    "superAdminRole": "Super-admin",
+    "orgUserRole": "Org user",
+    "permissions": "Permissions",
+    "permissionCodes": "{count} code(s)",
+    "links": {
+      "organization": { "title": "Organization", "hint": "Tenant profile" },
+      "users": { "title": "Users", "hint": "Accounts" },
+      "settings": { "title": "Settings", "hint": "References" },
+      "audit": { "title": "Audit", "hint": "Log" },
+      "branches": { "title": "Branches", "hint": "Sites & warehouses" },
+      "roles": { "title": "Roles", "hint": "RBAC" },
+      "health": { "title": "API health", "hint": "Diagnostics" }
+    }
+  },
+  "metadata": {
+    "appTitle": "Sinfinity Admin",
+    "appDescription": "Sinfinity administration console"
+  }
+}

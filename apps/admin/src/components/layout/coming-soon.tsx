@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/ui";
 
 type ComingSoonPageProps = {
@@ -7,8 +10,11 @@ type ComingSoonPageProps = {
 
 export function ComingSoonPage({
   title,
-  description = "Cet écran sera branché dans une phase ultérieure du roadmap Admin.",
+  description,
 }: ComingSoonPageProps) {
+  const t = useTranslations("common");
+  const tStubs = useTranslations("stubs");
+
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -16,7 +22,10 @@ export function ComingSoonPage({
           {title}
         </h1>
       </div>
-      <EmptyState title="À venir" description={description} />
+      <EmptyState
+        title={t("comingSoon")}
+        description={description ?? tStubs("defaultDescription")}
+      />
     </div>
   );
 }

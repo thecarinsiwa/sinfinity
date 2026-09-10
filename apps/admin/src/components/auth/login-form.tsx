@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/auth-provider";
 import { cn } from "@/lib/cn";
 
 export function LoginForm() {
+  const t = useTranslations("loginPage");
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,9 +22,7 @@ export function LoginForm() {
       await login(email.trim(), password);
     } catch (cause) {
       setError(
-        cause instanceof Error
-          ? cause.message
-          : "Impossible de se connecter",
+        cause instanceof Error ? cause.message : t("errorGeneric"),
       );
     } finally {
       setSubmitting(false);
@@ -49,7 +49,7 @@ export function LoginForm() {
               : "text-neutral-400",
           )}
         >
-          Adresse e-mail
+          {t("email")}
         </span>
         <input
           type="email"
@@ -81,7 +81,7 @@ export function LoginForm() {
               : "text-neutral-400",
           )}
         >
-          Mot de passe
+          {t("password")}
         </span>
         <input
           type="password"
@@ -116,7 +116,7 @@ export function LoginForm() {
           "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900",
         )}
       >
-        {submitting ? "Connexion…" : "Se connecter"}
+        {submitting ? t("submitting") : t("submit")}
       </button>
     </form>
   );

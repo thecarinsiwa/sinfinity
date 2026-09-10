@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   ErrorPageLink,
   ErrorPageShell,
@@ -14,25 +15,28 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("errors.error");
+  const tCommon = useTranslations("common");
+
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
     <ErrorPageShell
-      code="Erreur"
-      title="Une erreur est survenue"
-      description="Un problème inattendu a bloqué cet écran. Vous pouvez réessayer ou revenir au tableau de bord."
+      code={t("code")}
+      title={t("title")}
+      description={t("description")}
       action={
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button type="button" onClick={() => reset()}>
-            Réessayer
+            {tCommon("retry")}
           </Button>
           <ErrorPageLink href="/" variant="secondary">
-            Tableau de bord
+            {tCommon("dashboard")}
           </ErrorPageLink>
           <ErrorPageLink href="/login" variant="secondary">
-            Connexion
+            {tCommon("login")}
           </ErrorPageLink>
         </div>
       }

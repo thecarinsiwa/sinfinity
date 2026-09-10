@@ -6,6 +6,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useDialogA11y } from "@/components/ui/use-dialog-a11y";
 import { cn } from "@/lib/cn";
@@ -27,6 +28,7 @@ export function Modal({
   footer,
   className,
 }: ModalProps) {
+  const t = useTranslations("common");
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -42,7 +44,7 @@ export function Modal({
       <button
         type="button"
         tabIndex={-1}
-        aria-label="Fermer la fenêtre"
+        aria-label={t("closeDialog")}
         className="absolute inset-0 bg-foreground/40"
         onClick={onClose}
       />
@@ -62,7 +64,12 @@ export function Modal({
           <h2 id={titleId} className="text-lg font-semibold text-foreground">
             {title}
           </h2>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Fermer">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            aria-label={t("close")}
+          >
             ×
           </Button>
         </div>

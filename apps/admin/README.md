@@ -134,6 +134,21 @@ Polish transversal (sans nouvelle feature métier) :
 - **Focus** Modal / Drawer : premier contrôle au focus, piège Tab, restauration à la fermeture, Escape
 - Bouton **Filtrer** hors du `<label>` (évite le focus parasite sur le champ)
 
+## i18n (Phase 8)
+
+Lib : **`next-intl`** (App Router, **sans** préfixe de locale dans l’URL — routes FR métier inchangées).
+
+| Élément | Détail |
+|---------|--------|
+| Locales | `fr` (défaut), `en`, `es` |
+| Cookie | `sinfinity_locale` (1 an, `SameSite=Lax`) |
+| Messages | `apps/admin/messages/{fr,en,es}.json` |
+| Config | `src/i18n/request.ts` + plugin dans `next.config.ts` |
+| `<html lang>` | synchronisé via `getLocale()` dans le layout racine |
+| Sélecteur | topbar (session) + page login |
+
+Chrome migré : login, shell (nav / topbar), dashboard, erreurs 403/404/`error`, stubs utilisateurs/rôles. Les libellés métier des listes CRUD (paramètres, catalogue, etc.) restent à migrer progressivement — **pas** de traduction des données API.
+
 ## Auth BFF (cookies httpOnly)
 
 Les tokens Nest ne sont **pas** exposés au JavaScript navigateur. Les route handlers

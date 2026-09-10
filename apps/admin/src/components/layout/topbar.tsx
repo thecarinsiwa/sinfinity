@@ -1,14 +1,17 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Badge, Button } from "@/components/ui";
 import { useAuth } from "@/components/auth/auth-provider";
-import { greetingForHour } from "@/lib/dashboard/format";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { greetingKeyForHour } from "@/lib/dashboard/format";
 
 type TopbarProps = {
   onMenuClick: () => void;
 };
 
 export function Topbar({ onMenuClick }: TopbarProps) {
+  const t = useTranslations();
   const { user, organization, isSuperAdmin } = useAuth();
 
   const displayName = user
@@ -16,7 +19,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       user.email
     : "…";
 
-  const greeting = greetingForHour(new Date().getHours());
+  const greeting = t(greetingKeyForHour(new Date().getHours()));
   const initials = initialsFromName(displayName);
 
   return (
@@ -28,7 +31,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           size="sm"
           className="md:hidden"
           onClick={onMenuClick}
-          aria-label="Ouvrir le menu"
+          aria-label={t("common.openMenu")}
         >
           ☰
         </Button>
@@ -37,30 +40,33 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             {greeting}, {displayName}
             {isSuperAdmin ? (
               <Badge tone="primary" className="ml-2 align-middle">
-                Super
+                {t("common.superAdmin")}
               </Badge>
             ) : null}
           </h1>
           <p className="truncate text-sm text-muted">
-            {organization?.name ?? "Organisation"}
+            {organization?.name ?? t("common.organization")}
           </p>
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 rounded-full border border-border/80 bg-surface py-1 pr-3 pl-1 shadow-sm">
-        <span
-          className="inline-flex size-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary"
-          aria-hidden
-        >
-          {initials}
-        </span>
-        <div className="hidden min-w-0 sm:block">
-          <p className="max-w-[10rem] truncate text-sm font-medium text-foreground">
-            {displayName}
-          </p>
-          <p className="max-w-[10rem] truncate text-xs text-muted">
-            {user?.email ?? ""}
-          </p>
+      <div className="flex shrink-0 items-center gap-3">
+        <LocaleSwitcher />
+        <div className="flex items-center gap-2 rounded-full border border-border/80 bg-surface py-1 pr-3 pl-1 shadow-sm">
+          <span
+            className="inline-flex size-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary"
+            aria-hidden
+          >
+            {initials}
+          </span>
+          <div className="hidden min-w-0 sm:block">
+            <p className="max-w-[10rem] truncate text-sm font-medium text-foreground">
+              {displayName}
+            </p>
+            <p className="max-w-[10rem] truncate text-xs text-muted">
+              {user?.email ?? ""}
+            </p>
+          </div>
         </div>
       </div>
     </header>
