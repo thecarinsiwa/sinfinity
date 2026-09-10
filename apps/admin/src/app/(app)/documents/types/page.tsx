@@ -1,12 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { DocumentTypesPanel } from "@/components/documents/document-types-panel";
 import { DocumentsSubpage } from "@/components/documents/documents-subpage";
 
-export default function DocumentTypesPage() {
+export default async function DocumentTypesPage() {
+  const t = await getTranslations("documents.types");
+
   return (
-    <DocumentsSubpage
-      title="Types documentaires"
-      description="Catalogue code, nom, MIME autorisés (configuration)."
-    >
+    <DocumentsSubpage title={t("pageTitle")} description={t("pageLead")}>
       <DocumentTypesPanel />
     </DocumentsSubpage>
   );

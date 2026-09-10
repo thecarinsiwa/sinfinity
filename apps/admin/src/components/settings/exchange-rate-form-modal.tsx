@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input, Select } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -39,6 +40,8 @@ export function ExchangeRateFormModal({
   onClose,
   onSaved,
 }: ExchangeRateFormModalProps) {
+  const t = useTranslations("settings.exchangeRates");
+  const tc = useTranslations("common");
   const isEdit = rate !== null;
   const [form, setForm] = useState<FormState>({
     fromCurrencyId: "",
@@ -79,7 +82,7 @@ export function ExchangeRateFormModal({
 
     const rateValue = form.rate.trim();
     if (!isDecimalString(rateValue)) {
-      setError("Le taux doit être un nombre décimal (string), ex. 2850.50000000");
+      setError(t("rateInvalid"));
       setSaving(false);
       return;
     }
@@ -108,7 +111,7 @@ export function ExchangeRateFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -119,12 +122,12 @@ export function ExchangeRateFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier le taux" : "Nouveau taux"}
+      title={isEdit ? t("edit") : t("new")}
       className="max-w-xl"
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
@@ -137,7 +140,7 @@ export function ExchangeRateFormModal({
               !form.rateDate
             }
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -149,7 +152,7 @@ export function ExchangeRateFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Devise source</span>
+          <span className="font-medium">{t("formFrom")}</span>
           <Select
             required
             value={form.fromCurrencyId}
@@ -158,7 +161,7 @@ export function ExchangeRateFormModal({
             }
             disabled={saving}
           >
-            <option value="">—</option>
+            <option value="">{tc("emDash")}</option>
             {currencies.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.code}
@@ -167,7 +170,7 @@ export function ExchangeRateFormModal({
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Devise cible</span>
+          <span className="font-medium">{t("formTo")}</span>
           <Select
             required
             value={form.toCurrencyId}
@@ -176,7 +179,7 @@ export function ExchangeRateFormModal({
             }
             disabled={saving}
           >
-            <option value="">—</option>
+            <option value="">{tc("emDash")}</option>
             {currencies.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.code}
@@ -185,7 +188,7 @@ export function ExchangeRateFormModal({
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Taux (decimal string)</span>
+          <span className="font-medium">{t("formRate")}</span>
           <Input
             required
             inputMode="decimal"
@@ -197,7 +200,7 @@ export function ExchangeRateFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Date</span>
+          <span className="font-medium">{t("formDate")}</span>
           <Input
             required
             type="date"
@@ -207,7 +210,7 @@ export function ExchangeRateFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Source</span>
+          <span className="font-medium">{t("formSource")}</span>
           <Input
             value={form.source}
             onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ProductFormModal } from "@/components/catalogue/product-form-modal";
@@ -33,6 +34,8 @@ import type {
 const PAGE_SIZE = 20;
 
 export function ProductsPanel() {
+  const t = useTranslations("catalogue");
+  const tCommon = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("catalog.write");
@@ -132,12 +135,12 @@ export function ProductsPanel() {
       setError(
         cause instanceof ApiError
           ? cause.message
-          : "Impossible de charger les produits",
+          : t("products.loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [page, search, brandId, categoryId, isActive]);
+  }, [page, search, brandId, categoryId, isActive, t]);
 
   useEffect(() => {
     void load();
@@ -153,15 +156,17 @@ export function ProductsPanel() {
     setDeleteLoading(true);
     try {
       await apiFetch<void>(`/products/${deleting.id}`, { method: "DELETE" });
-      toast({ title: "Produit archivé", tone: "success" });
+      toast({ title: t("products.toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tCommon("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError
+            ? cause.message
+            : tCommon("genericError"),
         tone: "danger",
       });
     } finally {
@@ -175,23 +180,23 @@ export function ProductsPanel() {
         <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1">
             <span className="font-medium" id="products-search-label">
-              Recherche
+              {tCommon("search")}
             </span>
             <div className="flex gap-2">
               <Input
                 aria-labelledby="products-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="SKU ou nom…"
+                placeholder={t("products.searchPlaceholder")}
                 onKeyDown={(e) => e.key === "Enter" && applyFilters()}
               />
               <Button type="button" variant="secondary" onClick={applyFilters}>
-                Filtrer
+                {tCommon("filter")}
               </Button>
             </div>
           </div>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Marque</span>
+            <span className="font-medium">{t("products.brand")}</span>
             <Select
               value={brandId}
               onChange={(e) => {
@@ -199,7 +204,7 @@ export function ProductsPanel() {
                 setBrandId(e.target.value);
               }}
             >
-              <option value="">Toutes</option>
+              <option value="">{tCommon("allF")}</option>
               {brands.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -208,7 +213,7 @@ export function ProductsPanel() {
             </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Catégorie</span>
+            <span className="font-medium">{t("products.category")}</span>
             <Select
               value={categoryId}
               onChange={(e) => {
@@ -216,7 +221,7 @@ export function ProductsPanel() {
                 setCategoryId(e.target.value);
               }}
             >
-              <option value="">Toutes</option>
+              <option value="">{tCommon("allF")}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code}
@@ -225,7 +230,7 @@ export function ProductsPanel() {
             </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Statut</span>
+            <span className="font-medium">{tCommon("status")}</span>
             <Select
               value={isActive}
               onChange={(e) => {
@@ -233,9 +238,9 @@ export function ProductsPanel() {
                 setIsActive(e.target.value);
               }}
             >
-              <option value="">Tous</option>
-              <option value="true">Actifs</option>
-              <option value="false">Inactifs</option>
+              <option value="">{tCommon("all")}</option>
+              <option value="true">{tCommon("activesM")}</option>
+              <option value="false">{tCommon("inactivesM")}</option>
             </Select>
           </label>
         </div>
@@ -247,25 +252,25 @@ export function ProductsPanel() {
               setFormOpen(true);
             }}
           >
-            Nouveau produit
+            {t("products.new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tCommon("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des produits…" />
+          <Spinner label={t("products.loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun produit"
-          description="Créez un produit ou ajustez les filtres."
+          title={t("products.emptyTitle")}
+          description={t("products.emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -276,7 +281,7 @@ export function ProductsPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouveau produit
+                {t("products.new")}
               </Button>
             ) : undefined
           }
@@ -286,13 +291,13 @@ export function ProductsPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>SKU</Th>
-                <Th>Nom</Th>
-                <Th>Marque</Th>
-                <Th>Catégorie</Th>
-                <Th>Unité</Th>
-                <Th>Statut</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{t("products.sku")}</Th>
+                <Th>{tCommon("name")}</Th>
+                <Th>{t("products.brand")}</Th>
+                <Th>{t("products.category")}</Th>
+                <Th>{t("products.unit")}</Th>
+                <Th>{tCommon("status")}</Th>
+                <Th className="text-right">{tCommon("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -302,20 +307,25 @@ export function ProductsPanel() {
                   <Td>{row.name}</Td>
                   <Td className="text-muted">
                     {row.brandId
-                      ? (brandNameById.get(row.brandId) ?? "—")
-                      : "—"}
+                      ? (brandNameById.get(row.brandId) ?? tCommon("emDash"))
+                      : tCommon("emDash")}
                   </Td>
                   <Td className="text-xs text-muted">
                     {row.categoryId
-                      ? (categoryLabelById.get(row.categoryId) ?? "—")
-                      : "—"}
+                      ? (categoryLabelById.get(row.categoryId) ??
+                        tCommon("emDash"))
+                      : tCommon("emDash")}
                   </Td>
                   <Td className="font-mono text-xs">
-                    {row.unitId ? (unitLabelById.get(row.unitId) ?? "—") : "—"}
+                    {row.unitId
+                      ? (unitLabelById.get(row.unitId) ?? tCommon("emDash"))
+                      : tCommon("emDash")}
                   </Td>
                   <Td>
                     <Badge tone={row.isActive ? "success" : "neutral"}>
-                      {row.isActive ? "Actif" : "Inactif"}
+                      {row.isActive
+                        ? tCommon("activeM")
+                        : tCommon("inactiveM")}
                     </Badge>
                   </Td>
                   <Td>
@@ -330,7 +340,7 @@ export function ProductsPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tCommon("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -338,7 +348,7 @@ export function ProductsPanel() {
                           size="sm"
                           onClick={() => setDeleting(row)}
                         >
-                          Archiver
+                          {tCommon("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -365,7 +375,9 @@ export function ProductsPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Produit mis à jour" : "Produit créé",
+            title: editing
+              ? t("products.toastUpdated")
+              : t("products.toastCreated"),
             tone: "success",
           });
           void load();
@@ -377,7 +389,7 @@ export function ProductsPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver le produit"
+        title={t("products.archiveTitle")}
         footer={
           <>
             <Button
@@ -386,7 +398,7 @@ export function ProductsPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tCommon("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -394,17 +406,13 @@ export function ProductsPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tCommon("archiving") : tCommon("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Archiver le produit{" "}
-          <span className="font-mono font-medium text-foreground">
-            {deleting?.sku}
-          </span>{" "}
-          ? L’élément ne sera plus visible dans les listes actives.
+          {t("products.archiveBody", { sku: deleting?.sku ?? "" })}
         </p>
       </Modal>
     </div>

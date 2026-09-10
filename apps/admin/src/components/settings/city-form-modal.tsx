@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input, Select } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -34,6 +35,8 @@ export function CityFormModal({
   onClose,
   onSaved,
 }: CityFormModalProps) {
+  const t = useTranslations("settings.cities");
+  const tc = useTranslations("common");
   const isEdit = city !== null;
   const [form, setForm] = useState<FormState>({
     countryId: "",
@@ -85,7 +88,7 @@ export function CityFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -96,18 +99,18 @@ export function CityFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier la ville" : "Nouvelle ville"}
+      title={isEdit ? t("edit") : t("new")}
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
             form="city-form"
             disabled={saving || !form.countryId || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -119,14 +122,14 @@ export function CityFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Pays</span>
+          <span className="font-medium">{t("formCountry")}</span>
           <Select
             required
             value={form.countryId}
             onChange={(e) => setForm((f) => ({ ...f, countryId: e.target.value }))}
             disabled={saving}
           >
-            <option value="">— Choisir —</option>
+            <option value="">{tc("noneOption")}</option>
             {countries.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.code} — {c.name}
@@ -135,7 +138,7 @@ export function CityFormModal({
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Nom</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             value={form.name}
@@ -144,7 +147,7 @@ export function CityFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Région / province</span>
+          <span className="font-medium">{t("formRegion")}</span>
           <Input
             value={form.region}
             onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}

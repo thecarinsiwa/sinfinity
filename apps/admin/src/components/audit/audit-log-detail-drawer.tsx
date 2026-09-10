@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { stringifyJsonPretty, type AuditLog } from "@/lib/ops";
 import { Button, Drawer } from "@/components/ui";
 
@@ -28,30 +29,36 @@ export function AuditLogDetailDrawer({
   log,
   onClose,
 }: AuditLogDetailDrawerProps) {
+  const t = useTranslations("audit.detail");
+  const tLogin = useTranslations("audit.loginLogs");
+  const tCommon = useTranslations("common");
+
   return (
     <Drawer
       open={open}
       onClose={onClose}
-      title="Détail audit"
+      title={t("title")}
       className="max-w-xl"
       footer={
         <Button variant="secondary" type="button" onClick={onClose}>
-          Fermer
+          {t("close")}
         </Button>
       }
     >
       {log ? (
         <div className="flex flex-col gap-4">
           <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-            <dt className="text-muted">Date</dt>
+            <dt className="text-muted">{t("createdAt")}</dt>
             <dd className="font-mono text-xs">
               {log.createdAt.slice(0, 19).replace("T", " ")}
             </dd>
-            <dt className="text-muted">Utilisateur</dt>
-            <dd className="font-mono text-xs break-all">{log.userId ?? "—"}</dd>
-            <dt className="text-muted">Action</dt>
+            <dt className="text-muted">{t("userId")}</dt>
+            <dd className="font-mono text-xs break-all">
+              {log.userId ?? tCommon("emDash")}
+            </dd>
+            <dt className="text-muted">{t("action")}</dt>
             <dd>{log.action}</dd>
-            <dt className="text-muted">Entité</dt>
+            <dt className="text-muted">{t("entityType")}</dt>
             <dd>
               <span className="font-mono text-xs">{log.entityType}</span>
               {log.entityId ? (
@@ -60,11 +67,13 @@ export function AuditLogDetailDrawer({
                 </span>
               ) : null}
             </dd>
-            <dt className="text-muted">IP</dt>
-            <dd className="font-mono text-xs">{log.ipAddress ?? "—"}</dd>
+            <dt className="text-muted">{tLogin("ip")}</dt>
+            <dd className="font-mono text-xs">
+              {log.ipAddress ?? tCommon("emDash")}
+            </dd>
           </dl>
-          <JsonBlock label="oldValues" value={log.oldValues} />
-          <JsonBlock label="newValues" value={log.newValues} />
+          <JsonBlock label={t("oldValues")} value={log.oldValues} />
+          <JsonBlock label={t("newValues")} value={log.newValues} />
         </div>
       ) : null}
     </Drawer>

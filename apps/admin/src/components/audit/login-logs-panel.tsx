@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Alert,
   Badge,
@@ -23,6 +24,9 @@ import type { LoginLog } from "@/lib/ops";
 const PAGE_SIZE = 20;
 
 export function LoginLogsPanel() {
+  const t = useTranslations("audit.loginLogs");
+  const tCommon = useTranslations("common");
+
   const [page, setPage] = useState(1);
   const [emailInput, setEmailInput] = useState("");
   const [email, setEmail] = useState("");
@@ -59,14 +63,12 @@ export function LoginLogsPanel() {
       setItems([]);
       setTotal(0);
       setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les journaux de connexion",
+        cause instanceof ApiError ? cause.message : t("loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [page, email, success, dateFrom, dateTo]);
+  }, [page, email, success, dateFrom, dateTo, t]);
 
   useEffect(() => {
     void load();
@@ -83,16 +85,16 @@ export function LoginLogsPanel() {
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Email</span>
+          <span className="font-medium">{t("email")}</span>
           <Input
             value={emailInput}
             onChange={(e) => setEmailInput(e.target.value)}
-            placeholder="admin@"
+            placeholder={t("emailPlaceholder")}
             onKeyDown={(e) => e.key === "Enter" && applyFilters()}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Statut</span>
+          <span className="font-medium">{t("status")}</span>
           <Select
             value={success}
             onChange={(e) => {
@@ -100,13 +102,13 @@ export function LoginLogsPanel() {
               setSuccess(e.target.value);
             }}
           >
-            <option value="">Tous</option>
-            <option value="true">Succès</option>
-            <option value="false">Échec</option>
+            <option value="">{tCommon("all")}</option>
+            <option value="true">{tCommon("success")}</option>
+            <option value="false">{tCommon("failure")}</option>
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Du</span>
+          <span className="font-medium">{tCommon("from")}</span>
           <Input
             type="date"
             value={dateFromInput}
@@ -115,7 +117,7 @@ export function LoginLogsPanel() {
         </label>
         <div className="flex flex-col gap-1 text-sm">
           <span className="font-medium" id="login-logs-date-to-label">
-            Au
+            {tCommon("to")}
           </span>
           <div className="flex gap-2">
             <Input
@@ -125,38 +127,38 @@ export function LoginLogsPanel() {
               onChange={(e) => setDateToInput(e.target.value)}
             />
             <Button type="button" variant="secondary" onClick={applyFilters}>
-              Filtrer
+              {tCommon("filter")}
             </Button>
           </div>
         </div>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tCommon("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des connexions…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucune connexion"
-          description="Aucun essai de connexion ne correspond aux filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <>
           <Table>
             <Thead>
               <Tr>
-                <Th>Date</Th>
-                <Th>Statut</Th>
-                <Th>Email</Th>
-                <Th>IP</Th>
-                <Th>User-Agent</Th>
-                <Th>Raison</Th>
+                <Th>{t("createdAt")}</Th>
+                <Th>{t("status")}</Th>
+                <Th>{t("email")}</Th>
+                <Th>{t("ip")}</Th>
+                <Th>{t("userAgent")}</Th>
+                <Th>{tCommon("error")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -167,19 +169,27 @@ export function LoginLogsPanel() {
                   </Td>
                   <Td>
                     <Badge tone={row.success ? "success" : "danger"}>
-                      {row.success ? "Succès" : "Échec"}
+                      {row.success
+                        ? tCommon("success")
+                        : tCommon("failure")}
                     </Badge>
                   </Td>
-                  <Td className="text-sm">{row.emailAttempted ?? "—"}</Td>
-                  <Td className="font-mono text-xs">{row.ipAddress ?? "—"}</Td>
+                  <Td className="text-sm">
+                    {row.emailAttempted ?? tCommon("emDash")}
+                  </Td>
+                  <Td className="font-mono text-xs">
+                    {row.ipAddress ?? tCommon("emDash")}
+                  </Td>
                   <Td
                     className="max-w-[14rem] truncate text-xs text-muted"
                     title={row.userAgent ?? undefined}
                   >
-                    {row.userAgent ?? "—"}
+                    {row.userAgent ?? tCommon("emDash")}
                   </Td>
                   <Td className="text-xs text-muted">
-                    {row.success ? "—" : (row.failureReason ?? "—")}
+                    {row.success
+                      ? tCommon("emDash")
+                      : (row.failureReason ?? tCommon("emDash"))}
                   </Td>
                 </Tr>
               ))}

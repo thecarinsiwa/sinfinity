@@ -147,7 +147,9 @@ Lib : **`next-intl`** (App Router, **sans** préfixe de locale dans l’URL — 
 | `<html lang>` | synchronisé via `getLocale()` dans le layout racine |
 | Sélecteur | topbar (session) + page login |
 
-Chrome migré : login, shell (nav / topbar), dashboard, erreurs 403/404/`error`, stubs utilisateurs/rôles. Les libellés métier des listes CRUD (paramètres, catalogue, etc.) restent à migrer progressivement — **pas** de traduction des données API.
+Chrome migré : login, shell (nav / topbar / app-shell), dashboard, erreurs 403/404/`error`, stubs, **et écrans phases 0–7** (paramètres, organisation, catalogue, documents, audit, système, health, pagination). Les données métier API (noms, codes) restent non traduites. Showcase `/dev/ui` hors scope.
+
+Namespaces messages : `common`, `pagination`, `settings.*`, `organisation.*`, `catalogue.*`, `documents.*`, `audit.*`, `systeme.*`, `health.*` (+ chrome déjà présent : `nav`, `loginPage`, `dashboard`, `errors`…).
 
 ## Auth BFF (cookies httpOnly)
 

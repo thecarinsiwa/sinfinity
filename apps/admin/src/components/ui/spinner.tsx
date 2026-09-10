@@ -1,15 +1,17 @@
+"use client";
+
 import type { HTMLAttributes } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 
 export type SpinnerProps = HTMLAttributes<HTMLDivElement> & {
   label?: string;
 };
 
-export function Spinner({
-  className,
-  label = "Chargement…",
-  ...props
-}: SpinnerProps) {
+export function Spinner({ className, label, ...props }: SpinnerProps) {
+  const t = useTranslations("common");
+  const resolvedLabel = label ?? t("loading");
+
   return (
     <div
       role="status"
@@ -21,7 +23,7 @@ export function Spinner({
         className="size-4 animate-spin rounded-full border-2 border-border border-t-primary"
         aria-hidden
       />
-      <span>{label}</span>
+      <span>{resolvedLabel}</span>
     </div>
   );
 }

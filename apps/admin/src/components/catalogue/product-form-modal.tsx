@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Checkbox, Input, Select } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -50,6 +51,8 @@ export function ProductFormModal({
   onClose,
   onSaved,
 }: ProductFormModalProps) {
+  const t = useTranslations("catalogue");
+  const tCommon = useTranslations("common");
   const isEdit = product !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -102,7 +105,9 @@ export function ProductFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError
+          ? cause.message
+          : tCommon("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -113,7 +118,7 @@ export function ProductFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier le produit" : "Nouveau produit"}
+      title={isEdit ? t("products.edit") : t("products.new")}
       className="max-w-xl"
       footer={
         <>
@@ -123,14 +128,18 @@ export function ProductFormModal({
             onClick={onClose}
             disabled={saving}
           >
-            Annuler
+            {tCommon("cancel")}
           </Button>
           <Button
             type="submit"
             form="product-lite-form"
             disabled={saving || !form.sku.trim() || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving
+              ? tCommon("saving")
+              : isEdit
+                ? tCommon("save")
+                : tCommon("create")}
           </Button>
         </>
       }
@@ -146,7 +155,7 @@ export function ProductFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">SKU</span>
+          <span className="font-medium">{t("products.formSku")}</span>
           <Input
             required
             maxLength={64}
@@ -165,10 +174,10 @@ export function ProductFormModal({
             }
             disabled={saving}
           />
-          <span>Actif</span>
+          <span>{t("products.formActive")}</span>
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Nom</span>
+          <span className="font-medium">{t("products.formName")}</span>
           <Input
             required
             maxLength={255}
@@ -178,7 +187,7 @@ export function ProductFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Marque</span>
+          <span className="font-medium">{t("products.formBrand")}</span>
           <Select
             value={form.brandId}
             onChange={(e) =>
@@ -186,7 +195,7 @@ export function ProductFormModal({
             }
             disabled={saving}
           >
-            <option value="">—</option>
+            <option value="">{tCommon("emDash")}</option>
             {brands.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
@@ -195,7 +204,7 @@ export function ProductFormModal({
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Catégorie</span>
+          <span className="font-medium">{t("products.formCategory")}</span>
           <Select
             value={form.categoryId}
             onChange={(e) =>
@@ -203,7 +212,7 @@ export function ProductFormModal({
             }
             disabled={saving}
           >
-            <option value="">—</option>
+            <option value="">{tCommon("emDash")}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.code} — {c.name}
@@ -212,13 +221,13 @@ export function ProductFormModal({
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Unité</span>
+          <span className="font-medium">{t("products.formUnit")}</span>
           <Select
             value={form.unitId}
             onChange={(e) => setForm((f) => ({ ...f, unitId: e.target.value }))}
             disabled={saving}
           >
-            <option value="">—</option>
+            <option value="">{tCommon("emDash")}</option>
             {units.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.code} — {u.name}
@@ -226,10 +235,7 @@ export function ProductFormModal({
             ))}
           </Select>
         </label>
-        <p className="text-xs text-muted sm:col-span-2">
-          Fiche allégée Admin — specs, images et pricing avancé restent sur
-          Web.
-        </p>
+        <p className="text-xs text-muted sm:col-span-2">{t("products.pageLead")}</p>
       </form>
     </Modal>
   );

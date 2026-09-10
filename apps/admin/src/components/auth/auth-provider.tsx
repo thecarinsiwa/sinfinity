@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { parseApiErrorBody } from "@/lib/api/errors";
 import type {
   AuthMe,
@@ -68,6 +69,7 @@ async function fetchSession(): Promise<SessionPayload | null> {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const tLogin = useTranslations("loginPage");
   const router = useRouter();
   const pathname = usePathname();
   const [status, setStatus] = useState<AuthStatus>("loading");
@@ -152,17 +154,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? Array.isArray(body.message)
             ? body.message.join("; ")
             : body.message
-          : "Identifiants invalides";
+          : tLogin("invalidCredentials");
         throw new Error(message);
       }
 
       const ok = await refreshSession();
       if (!ok) {
-        throw new Error("Connexion réussie mais session indisponible");
+        throw new Error(tLogin("sessionUnavailable"));
       }
       router.replace("/");
     },
-    [refreshSession, router],
+    [refreshSession, router, tLogin],
   );
 
   const logout = useCallback(async () => {

@@ -7,4 +7,4 @@ export type {
   UpdateBranchInput,
   UpdateOrganizationInput,
 } from "./types";
-export { BRANCH_TYPE_LABELS, BRANCH_TYPES } from "./types";
+export { BRANCH_TYPES } from "./types";

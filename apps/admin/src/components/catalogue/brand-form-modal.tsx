@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -31,6 +32,8 @@ export function BrandFormModal({
   onClose,
   onSaved,
 }: BrandFormModalProps) {
+  const t = useTranslations("catalogue");
+  const tCommon = useTranslations("common");
   const isEdit = brand !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -77,7 +80,9 @@ export function BrandFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError
+          ? cause.message
+          : tCommon("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -88,7 +93,7 @@ export function BrandFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier la marque" : "Nouvelle marque"}
+      title={isEdit ? t("brands.edit") : t("brands.new")}
       footer={
         <>
           <Button
@@ -97,14 +102,18 @@ export function BrandFormModal({
             onClick={onClose}
             disabled={saving}
           >
-            Annuler
+            {tCommon("cancel")}
           </Button>
           <Button
             type="submit"
             form="brand-form"
             disabled={saving || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving
+              ? tCommon("saving")
+              : isEdit
+                ? tCommon("save")
+                : tCommon("create")}
           </Button>
         </>
       }
@@ -116,7 +125,7 @@ export function BrandFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Nom</span>
+          <span className="font-medium">{t("brands.formName")}</span>
           <Input
             required
             maxLength={255}
@@ -127,7 +136,9 @@ export function BrandFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Logo URL (optionnel)</span>
+          <span className="font-medium">
+            {tCommon("optional", { label: t("brands.formLogo") })}
+          </span>
           <Input
             maxLength={512}
             value={form.logoUrl}
@@ -137,7 +148,9 @@ export function BrandFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Site web (optionnel)</span>
+          <span className="font-medium">
+            {tCommon("optional", { label: t("brands.formWebsite") })}
+          </span>
           <Input
             maxLength={255}
             value={form.website}

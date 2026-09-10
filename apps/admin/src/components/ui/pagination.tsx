@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -18,6 +19,7 @@ export function Pagination({
   onPageChange,
   className,
 }: PaginationProps) {
+  const t = useTranslations("pagination");
   const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1;
   const safePage = Math.min(Math.max(page, 1), totalPages);
   const from = total === 0 ? 0 : (safePage - 1) * pageSize + 1;
@@ -32,8 +34,8 @@ export function Pagination({
     >
       <p>
         {total === 0
-          ? "Aucun résultat"
-          : `${from}–${to} sur ${total}`}
+          ? t("none")
+          : t("range", { from, to, total })}
       </p>
       <div className="flex items-center gap-2">
         <Button
@@ -42,7 +44,7 @@ export function Pagination({
           disabled={safePage <= 1}
           onClick={() => onPageChange(safePage - 1)}
         >
-          Précédent
+          {t("previous")}
         </Button>
         <span className="tabular-nums text-foreground">
           {safePage} / {totalPages}
@@ -53,7 +55,7 @@ export function Pagination({
           disabled={safePage >= totalPages}
           onClick={() => onPageChange(safePage + 1)}
         >
-          Suivant
+          {t("next")}
         </Button>
       </div>
     </div>

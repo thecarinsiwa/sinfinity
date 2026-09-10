@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
@@ -9,6 +10,7 @@ import { Spinner } from "@/components/ui";
 import { hasAdminConsoleAccess } from "@/lib/auth/admin-access";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const t = useTranslations("common");
   const { status, permissions, isSuperAdmin } = useAuth();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -26,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (status === "loading") {
     return (
       <div className="flex flex-1 items-center justify-center bg-background">
-        <Spinner label="Chargement de la session…" />
+        <Spinner label={t("loadingSession")} />
       </div>
     );
   }
@@ -34,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (status !== "authenticated") {
     return (
       <div className="flex flex-1 items-center justify-center bg-background">
-        <Spinner label="Redirection vers la connexion…" />
+        <Spinner label={t("redirectingLogin")} />
       </div>
     );
   }
@@ -42,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (!allowed) {
     return (
       <div className="flex flex-1 items-center justify-center bg-background">
-        <Spinner label="Vérification des droits…" />
+        <Spinner label={t("checkingAccess")} />
       </div>
     );
   }
@@ -52,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {mobileOpen ? (
         <button
           type="button"
-          aria-label="Fermer le menu"
+          aria-label={t("closeMenu")}
           className="fixed inset-0 z-30 bg-foreground/30 md:hidden"
           onClick={() => setMobileOpen(false)}
         />

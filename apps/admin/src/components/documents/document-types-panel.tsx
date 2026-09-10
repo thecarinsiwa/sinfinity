@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { DocumentTypeFormModal } from "@/components/documents/document-type-form-modal";
@@ -27,13 +28,9 @@ import type { DocumentType } from "@/lib/documents";
 
 const PAGE_SIZE = 20;
 
-function mimePreview(mimes: string[] | null): string {
-  if (!mimes?.length) return "—";
-  const joined = mimes.join(", ");
-  return joined.length > 48 ? `${joined.slice(0, 45)}…` : joined;
-}
-
 export function DocumentTypesPanel() {
+  const t = useTranslations("documents.types");
+  const tCommon = useTranslations("common");
   const { hasPermission, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("documents.write");
@@ -52,6 +49,12 @@ export function DocumentTypesPanel() {
   const [editing, setEditing] = useState<DocumentType | null>(null);
   const [deleting, setDeleting] = useState<DocumentType | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  function mimePreview(mimes: string[] | null): string {
+    if (!mimes?.length) return tCommon("emDash");
+    const joined = mimes.join(", ");
+    return joined.length > 48 ? `${joined.slice(0, 45)}…` : joined;
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,14 +76,12 @@ export function DocumentTypesPanel() {
       setItems([]);
       setTotal(0);
       setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les types",
+        cause instanceof ApiError ? cause.message : t("loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [page, search, isSystem]);
+  }, [page, search, isSystem, t]);
 
   useEffect(() => {
     void load();
@@ -108,15 +109,17 @@ export function DocumentTypesPanel() {
       await apiFetch<void>(`/document-types/${deleting.id}`, {
         method: "DELETE",
       });
-      toast({ title: "Type supprimé", tone: "success" });
+      toast({ title: t("toastDeleted"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tCommon("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError
+            ? cause.message
+            : tCommon("genericError"),
         tone: "danger",
       });
     } finally {
@@ -130,23 +133,23 @@ export function DocumentTypesPanel() {
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1 text-sm">
             <span className="font-medium" id="document-types-search-label">
-              Recherche
+              {tCommon("search")}
             </span>
             <div className="flex gap-2">
               <Input
                 aria-labelledby="document-types-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Code ou nom…"
+                placeholder={t("searchPlaceholder")}
                 onKeyDown={(e) => e.key === "Enter" && applyFilters()}
               />
               <Button type="button" variant="secondary" onClick={applyFilters}>
-                Filtrer
+                {tCommon("filter")}
               </Button>
             </div>
           </div>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Portée</span>
+            <span className="font-medium">{t("scope")}</span>
             <Select
               value={isSystem}
               onChange={(e) => {
@@ -154,9 +157,9 @@ export function DocumentTypesPanel() {
                 setIsSystem(e.target.value);
               }}
             >
-              <option value="">Tous</option>
-              <option value="true">Système</option>
-              <option value="false">Organisation</option>
+              <option value="">{t("scopeAll")}</option>
+              <option value="true">{t("scopeSystem")}</option>
+              <option value="false">{t("scopeOrg")}</option>
             </Select>
           </label>
         </div>
@@ -168,25 +171,25 @@ export function DocumentTypesPanel() {
               setFormOpen(true);
             }}
           >
-            Nouveau type
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tCommon("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des types…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun type"
-          description="Créez un type de document ou ajustez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -197,7 +200,7 @@ export function DocumentTypesPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouveau type
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -207,11 +210,11 @@ export function DocumentTypesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Nom</Th>
-                <Th>MIME</Th>
-                <Th>Portée</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tCommon("code")}</Th>
+                <Th>{tCommon("name")}</Th>
+                <Th>{t("mime")}</Th>
+                <Th>{t("scope")}</Th>
+                <Th className="text-right">{tCommon("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -227,7 +230,7 @@ export function DocumentTypesPanel() {
                   </Td>
                   <Td>
                     <Badge tone={row.isSystem ? "neutral" : "primary"}>
-                      {row.isSystem ? "Système" : "Org"}
+                      {row.isSystem ? t("system") : t("scopeOrg")}
                     </Badge>
                   </Td>
                   <Td>
@@ -242,7 +245,7 @@ export function DocumentTypesPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tCommon("edit")}
                         </Button>
                       ) : null}
                       {canDeleteRow(row) ? (
@@ -252,7 +255,7 @@ export function DocumentTypesPanel() {
                           size="sm"
                           onClick={() => setDeleting(row)}
                         >
-                          Supprimer
+                          {tCommon("delete")}
                         </Button>
                       ) : null}
                     </div>
@@ -276,7 +279,7 @@ export function DocumentTypesPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Type mis à jour" : "Type créé",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -288,7 +291,7 @@ export function DocumentTypesPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Supprimer le type"
+        title={t("deleteTitle")}
         footer={
           <>
             <Button
@@ -297,7 +300,7 @@ export function DocumentTypesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tCommon("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -305,17 +308,16 @@ export function DocumentTypesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Suppression…" : "Confirmer"}
+              {deleteLoading ? tCommon("deleting") : tCommon("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Suppression définitive de{" "}
-          <span className="font-mono font-medium text-foreground">
-            {deleting?.code}
-          </span>
-          . Échoue si des documents y sont encore rattachés.
+          {t("deleteBody", {
+            name: deleting?.name ?? "",
+            code: deleting?.code ?? "",
+          })}
         </p>
       </Modal>
     </div>

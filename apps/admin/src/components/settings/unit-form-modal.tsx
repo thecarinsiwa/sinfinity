@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input, Select } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
 import {
-  UNIT_TYPE_LABELS,
   UNIT_TYPES,
   type CreateUnitInput,
   type Unit,
@@ -40,6 +40,9 @@ export function UnitFormModal({
   onClose,
   onSaved,
 }: UnitFormModalProps) {
+  const t = useTranslations("settings.units");
+  const tc = useTranslations("common");
+  const tUnitTypes = useTranslations("settings.unitTypes");
   const isEdit = unit !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -88,7 +91,7 @@ export function UnitFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -99,18 +102,18 @@ export function UnitFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier l'unité" : "Nouvelle unité"}
+      title={isEdit ? t("edit") : t("new")}
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
             form="unit-form"
             disabled={saving || !form.code.trim() || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -122,7 +125,7 @@ export function UnitFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code</span>
+          <span className="font-medium">{t("formCode")}</span>
           <Input
             required
             maxLength={32}
@@ -134,7 +137,7 @@ export function UnitFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Type</span>
+          <span className="font-medium">{t("formType")}</span>
           <Select
             required
             value={form.unitType}
@@ -143,15 +146,15 @@ export function UnitFormModal({
             }
             disabled={saving}
           >
-            {UNIT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {UNIT_TYPE_LABELS[t]}
+            {UNIT_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {tUnitTypes(type)}
               </option>
             ))}
           </Select>
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Nom</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             maxLength={255}
@@ -162,7 +165,9 @@ export function UnitFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Symbole (optionnel)</span>
+          <span className="font-medium">
+            {tc("optional", { label: t("formSymbol") })}
+          </span>
           <Input
             maxLength={32}
             value={form.symbol}

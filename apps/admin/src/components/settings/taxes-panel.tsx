@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { TaxFormModal } from "@/components/settings/tax-form-modal";
@@ -25,7 +26,6 @@ import { useToast } from "@/components/ui/toast";
 import { ApiError, apiFetch, type PaginatedResponse } from "@/lib/api";
 import {
   formatDecimalDisplay,
-  TAX_TYPE_LABELS,
   TAX_TYPES,
   type Country,
   type Tax,
@@ -35,6 +35,9 @@ import {
 const PAGE_SIZE = 20;
 
 export function TaxesPanel() {
+  const t = useTranslations("settings.taxes");
+  const tc = useTranslations("common");
+  const tTaxTypes = useTranslations("settings.taxTypes");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -101,15 +104,11 @@ export function TaxesPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les taxes",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, search, taxType, countryId, isActive]);
+  }, [page, search, taxType, countryId, isActive, t]);
 
   useEffect(() => {
     void load();
@@ -120,20 +119,26 @@ export function TaxesPanel() {
     setDeleteLoading(true);
     try {
       await apiFetch<void>(`/taxes/${deleting.id}`, { method: "DELETE" });
-      toast({ title: "Taxe archivée", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
       setDeleteLoading(false);
     }
+  }
+
+  function taxTypeLabel(type: string) {
+    return TAX_TYPES.includes(type as TaxType)
+      ? tTaxTypes(type as TaxType)
+      : type;
   }
 
   return (
@@ -142,7 +147,7 @@ export function TaxesPanel() {
         <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1">
             <span className="font-medium" id="taxes-search-label">
-              Recherche
+              {tc("search")}
             </span>
             <div className="flex gap-2">
               <Input
@@ -155,7 +160,7 @@ export function TaxesPanel() {
                     setSearch(searchInput);
                   }
                 }}
-                placeholder="Code ou nom…"
+                placeholder={t("searchPlaceholder")}
               />
               <Button
                 type="button"
@@ -165,12 +170,12 @@ export function TaxesPanel() {
                   setSearch(searchInput);
                 }}
               >
-                Filtrer
+                {tc("filter")}
               </Button>
             </div>
           </div>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Type</span>
+            <span className="font-medium">{tc("type")}</span>
             <Select
               value={taxType}
               onChange={(e) => {
@@ -178,16 +183,16 @@ export function TaxesPanel() {
                 setTaxType(e.target.value);
               }}
             >
-              <option value="">Tous</option>
-              {TAX_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {TAX_TYPE_LABELS[t]}
+              <option value="">{tc("all")}</option>
+              {TAX_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {tTaxTypes(type)}
                 </option>
               ))}
             </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Pays</span>
+            <span className="font-medium">{t("country")}</span>
             <Select
               value={countryId}
               onChange={(e) => {
@@ -195,7 +200,7 @@ export function TaxesPanel() {
                 setCountryId(e.target.value);
               }}
             >
-              <option value="">Tous</option>
+              <option value="">{tc("all")}</option>
               {countries.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.code}
@@ -204,7 +209,7 @@ export function TaxesPanel() {
             </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Statut</span>
+            <span className="font-medium">{tc("status")}</span>
             <Select
               value={isActive}
               onChange={(e) => {
@@ -212,9 +217,9 @@ export function TaxesPanel() {
                 setIsActive(e.target.value);
               }}
             >
-              <option value="">Tous</option>
-              <option value="true">Actives</option>
-              <option value="false">Inactives</option>
+              <option value="">{tc("all")}</option>
+              <option value="true">{tc("actives")}</option>
+              <option value="false">{tc("inactives")}</option>
             </Select>
           </label>
         </div>
@@ -226,25 +231,25 @@ export function TaxesPanel() {
               setFormOpen(true);
             }}
           >
-            Nouvelle taxe
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des taxes…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucune taxe"
-          description="Créez une taxe ou ajustez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -255,7 +260,7 @@ export function TaxesPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouvelle taxe
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -265,13 +270,13 @@ export function TaxesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Libellé</Th>
-                <Th>Taux %</Th>
-                <Th>Type</Th>
-                <Th>Pays</Th>
-                <Th>Statut</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tc("code")}</Th>
+                <Th>{tc("name")}</Th>
+                <Th>{t("rate")}</Th>
+                <Th>{tc("type")}</Th>
+                <Th>{t("country")}</Th>
+                <Th>{tc("status")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -282,17 +287,15 @@ export function TaxesPanel() {
                   <Td className="font-mono text-sm">
                     {formatDecimalDisplay(row.rate)}
                   </Td>
-                  <Td>
-                    {TAX_TYPE_LABELS[row.taxType as TaxType] ?? row.taxType}
-                  </Td>
+                  <Td>{taxTypeLabel(row.taxType)}</Td>
                   <Td className="text-muted">
                     {row.countryId
-                      ? (countryLabelById.get(row.countryId) ?? "—")
+                      ? (countryLabelById.get(row.countryId) ?? tc("emDash"))
                       : "Global"}
                   </Td>
                   <Td>
                     <Badge tone={row.isActive ? "success" : "neutral"}>
-                      {row.isActive ? "Active" : "Inactive"}
+                      {row.isActive ? tc("active") : tc("inactive")}
                     </Badge>
                   </Td>
                   <Td>
@@ -307,7 +310,7 @@ export function TaxesPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tc("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -315,7 +318,7 @@ export function TaxesPanel() {
                           size="sm"
                           onClick={() => setDeleting(row)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -340,7 +343,7 @@ export function TaxesPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Taxe mise à jour" : "Taxe créée",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -352,7 +355,7 @@ export function TaxesPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver la taxe"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -361,7 +364,7 @@ export function TaxesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -369,15 +372,13 @@ export function TaxesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Archiver{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span> ?
-          L’élément ne sera plus visible dans les listes actives.
+          {t("archiveBody", { code: deleting?.code ?? "" })}
         </p>
       </Modal>
     </div>

@@ -1,12 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { CitiesPanel } from "@/components/settings/cities-panel";
 import { SettingsSubpage } from "@/components/settings/settings-subpage";
 
-export default function VillesPage() {
+export default async function VillesPage() {
+  const t = await getTranslations("settings.cities");
+
   return (
-    <SettingsSubpage
-      title="Villes"
-      description="Villes rattachées aux pays du référentiel."
-    >
+    <SettingsSubpage title={t("pageTitle")} description={t("pageLead")}>
       <CitiesPanel />
     </SettingsSubpage>
   );

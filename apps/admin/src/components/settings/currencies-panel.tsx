@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { CurrencyFormModal } from "@/components/settings/currency-form-modal";
@@ -28,6 +29,8 @@ import type { Currency } from "@/lib/settings";
 const PAGE_SIZE = 20;
 
 export function CurrenciesPanel() {
+  const t = useTranslations("settings.currencies");
+  const tc = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -73,15 +76,11 @@ export function CurrenciesPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les devises",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, code, search, isActive]);
+  }, [page, code, search, isActive, t]);
 
   useEffect(() => {
     void load();
@@ -98,15 +97,15 @@ export function CurrenciesPanel() {
     setDeleteLoading(true);
     try {
       await apiFetch<void>(`/currencies/${deleting.id}`, { method: "DELETE" });
-      toast({ title: "Devise archivée", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
@@ -119,7 +118,7 @@ export function CurrenciesPanel() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Code</span>
+            <span className="font-medium">{tc("code")}</span>
             <Input
               maxLength={3}
               value={codeInput}
@@ -130,17 +129,17 @@ export function CurrenciesPanel() {
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+            <span className="font-medium">{tc("search")}</span>
             <Input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nom…"
+              placeholder={t("searchPlaceholder")}
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </label>
           <div className="flex flex-col gap-1 text-sm">
             <span className="font-medium" id="currencies-status-label">
-              Statut
+              {tc("status")}
             </span>
             <div className="flex gap-2">
               <Select
@@ -151,12 +150,12 @@ export function CurrenciesPanel() {
                   setIsActive(e.target.value);
                 }}
               >
-                <option value="">Tous</option>
-                <option value="true">Actives</option>
-                <option value="false">Inactives</option>
+                <option value="">{tc("all")}</option>
+                <option value="true">{tc("actives")}</option>
+                <option value="false">{tc("inactives")}</option>
               </Select>
               <Button type="button" variant="secondary" onClick={applyFilters}>
-                Filtrer
+                {tc("filter")}
               </Button>
             </div>
           </div>
@@ -169,25 +168,25 @@ export function CurrenciesPanel() {
               setFormOpen(true);
             }}
           >
-            Nouvelle devise
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des devises…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucune devise"
-          description="Créez une devise ou ajustez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -198,7 +197,7 @@ export function CurrenciesPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouvelle devise
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -208,12 +207,12 @@ export function CurrenciesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Nom</Th>
-                <Th>Symbole</Th>
-                <Th>Déc.</Th>
-                <Th>Statut</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tc("code")}</Th>
+                <Th>{tc("name")}</Th>
+                <Th>{tc("symbol")}</Th>
+                <Th>{t("decimals")}</Th>
+                <Th>{tc("status")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -225,7 +224,7 @@ export function CurrenciesPanel() {
                   <Td>{currency.decimalPlaces}</Td>
                   <Td>
                     <Badge tone={currency.isActive ? "success" : "neutral"}>
-                      {currency.isActive ? "Active" : "Inactive"}
+                      {currency.isActive ? tc("active") : tc("inactive")}
                     </Badge>
                   </Td>
                   <Td>
@@ -240,7 +239,7 @@ export function CurrenciesPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tc("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -248,7 +247,7 @@ export function CurrenciesPanel() {
                           size="sm"
                           onClick={() => setDeleting(currency)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -272,7 +271,7 @@ export function CurrenciesPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Devise mise à jour" : "Devise créée",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -284,7 +283,7 @@ export function CurrenciesPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver la devise"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -293,7 +292,7 @@ export function CurrenciesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -301,15 +300,13 @@ export function CurrenciesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Archiver{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span> ?
-          L’élément ne sera plus visible dans les listes actives.
+          {t("archiveBody", { code: deleting?.code ?? "" })}
         </p>
       </Modal>
     </div>

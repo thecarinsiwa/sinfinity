@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { PaymentTermFormModal } from "@/components/settings/payment-term-form-modal";
@@ -28,6 +29,8 @@ import type { PaymentTerm } from "@/lib/settings";
 const PAGE_SIZE = 20;
 
 export function PaymentTermsPanel() {
+  const t = useTranslations("settings.paymentTerms");
+  const tc = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -64,15 +67,11 @@ export function PaymentTermsPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les conditions",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, search, globalOnly]);
+  }, [page, search, globalOnly, t]);
 
   useEffect(() => {
     void load();
@@ -90,15 +89,15 @@ export function PaymentTermsPanel() {
       await apiFetch<void>(`/payment-terms/${deleting.id}`, {
         method: "DELETE",
       });
-      toast({ title: "Condition archivée", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
@@ -112,23 +111,23 @@ export function PaymentTermsPanel() {
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1 text-sm">
             <span className="font-medium" id="payment-terms-search-label">
-              Recherche
+              {tc("search")}
             </span>
             <div className="flex gap-2">
               <Input
                 aria-labelledby="payment-terms-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Code ou nom…"
+                placeholder={t("searchPlaceholder")}
                 onKeyDown={(e) => e.key === "Enter" && applyFilters()}
               />
               <Button type="button" variant="secondary" onClick={applyFilters}>
-                Filtrer
+                {tc("filter")}
               </Button>
             </div>
           </div>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Portée</span>
+            <span className="font-medium">{tc("scope")}</span>
             <Select
               value={globalOnly}
               onChange={(e) => {
@@ -136,8 +135,8 @@ export function PaymentTermsPanel() {
                 setGlobalOnly(e.target.value);
               }}
             >
-              <option value="">Toutes</option>
-              <option value="true">Globales uniquement</option>
+              <option value="">{tc("allF")}</option>
+              <option value="true">Global</option>
             </Select>
           </label>
         </div>
@@ -149,25 +148,25 @@ export function PaymentTermsPanel() {
               setFormOpen(true);
             }}
           >
-            Nouvelle condition
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des conditions…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucune condition"
-          description="Créez une condition de paiement ou ajustez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -178,7 +177,7 @@ export function PaymentTermsPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouvelle condition
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -188,11 +187,11 @@ export function PaymentTermsPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Libellé</Th>
-                <Th>Jours</Th>
-                <Th>Portée</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tc("code")}</Th>
+                <Th>{tc("name")}</Th>
+                <Th>{t("daysDue")}</Th>
+                <Th>{tc("scope")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -210,7 +209,7 @@ export function PaymentTermsPanel() {
                   <Td>{row.daysDue}</Td>
                   <Td>
                     <Badge tone={row.organizationId ? "primary" : "neutral"}>
-                      {row.organizationId ? "Org" : "Global"}
+                      {row.organizationId ? tc("organization") : "Global"}
                     </Badge>
                   </Td>
                   <Td>
@@ -225,7 +224,7 @@ export function PaymentTermsPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tc("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -233,7 +232,7 @@ export function PaymentTermsPanel() {
                           size="sm"
                           onClick={() => setDeleting(row)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -257,7 +256,7 @@ export function PaymentTermsPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Condition mise à jour" : "Condition créée",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -269,7 +268,7 @@ export function PaymentTermsPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver la condition"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -278,7 +277,7 @@ export function PaymentTermsPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -286,15 +285,13 @@ export function PaymentTermsPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Archiver{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span> ?
-          L’élément ne sera plus visible dans les listes actives.
+          {t("archiveBody", { code: deleting?.code ?? "" })}
         </p>
       </Modal>
     </div>

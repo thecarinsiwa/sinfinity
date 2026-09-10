@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -37,6 +38,8 @@ export function CountryFormModal({
   onClose,
   onSaved,
 }: CountryFormModalProps) {
+  const t = useTranslations("settings.countries");
+  const tc = useTranslations("common");
   const isEdit = country !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -73,7 +76,7 @@ export function CountryFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -84,18 +87,18 @@ export function CountryFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier le pays" : "Nouveau pays"}
+      title={isEdit ? t("edit") : t("new")}
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
             form="country-form"
             disabled={saving || form.code.trim().length !== 2 || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -107,7 +110,7 @@ export function CountryFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code ISO (2)</span>
+          <span className="font-medium">{t("formCode")}</span>
           <Input
             required
             maxLength={2}
@@ -119,7 +122,7 @@ export function CountryFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code ISO (3)</span>
+          <span className="font-medium">{t("formCode3")}</span>
           <Input
             maxLength={3}
             value={form.code3}
@@ -130,7 +133,7 @@ export function CountryFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Nom</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             value={form.name}
@@ -139,7 +142,7 @@ export function CountryFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Indicatif téléphone</span>
+          <span className="font-medium">{t("formPhone")}</span>
           <Input
             value={form.phoneCode}
             onChange={(e) => setForm((f) => ({ ...f, phoneCode: e.target.value }))}

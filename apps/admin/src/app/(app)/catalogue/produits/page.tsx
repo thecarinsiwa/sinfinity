@@ -1,11 +1,14 @@
+import { getTranslations } from "next-intl/server";
 import { ProductsPanel } from "@/components/catalogue/products-panel";
 import { CatalogueSubpage } from "@/components/catalogue/catalogue-subpage";
 
-export default function CatalogueProduitsPage() {
+export default async function CatalogueProduitsPage() {
+  const t = await getTranslations("catalogue");
+
   return (
     <CatalogueSubpage
-      title="Produits"
-      description="CRUD allégé : SKU, marque, catégorie, unité, statut. Specs / images → Web."
+      title={t("products.pageTitle")}
+      description={t("products.pageLead")}
     >
       <ProductsPanel />
     </CatalogueSubpage>

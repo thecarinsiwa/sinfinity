@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { CountryFormModal } from "@/components/settings/country-form-modal";
@@ -26,6 +27,8 @@ import type { Country } from "@/lib/settings";
 const PAGE_SIZE = 20;
 
 export function CountriesPanel() {
+  const t = useTranslations("settings.countries");
+  const tc = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("settings.write");
@@ -67,15 +70,11 @@ export function CountriesPanel() {
     } catch (cause) {
       setItems([]);
       setTotal(0);
-      setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les pays",
-      );
+      setError(cause instanceof ApiError ? cause.message : t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [page, code, search]);
+  }, [page, code, search, t]);
 
   useEffect(() => {
     void load();
@@ -92,7 +91,7 @@ export function CountriesPanel() {
     setDeleteLoading(true);
     try {
       await apiFetch<void>(`/countries/${deleting.id}`, { method: "DELETE" });
-      toast({ title: "Pays archivé", tone: "success" });
+      toast({ title: t("toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) {
         setPage((p) => p - 1);
@@ -101,9 +100,9 @@ export function CountriesPanel() {
       }
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tc("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError ? cause.message : tc("genericError"),
         tone: "danger",
       });
     } finally {
@@ -116,7 +115,7 @@ export function CountriesPanel() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Code ISO</span>
+            <span className="font-medium">{t("isoCode")}</span>
             <Input
               maxLength={2}
               value={codeInput}
@@ -128,18 +127,18 @@ export function CountriesPanel() {
           </label>
           <div className="flex flex-col gap-1 text-sm sm:col-span-2">
             <span className="font-medium" id="countries-search-label">
-              Recherche
+              {tc("search")}
             </span>
             <div className="flex gap-2">
               <Input
                 aria-labelledby="countries-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Nom du pays…"
+                placeholder={t("searchPlaceholder")}
                 onKeyDown={(e) => e.key === "Enter" && applyFilters()}
               />
               <Button type="button" variant="secondary" onClick={applyFilters}>
-                Filtrer
+                {tc("filter")}
               </Button>
             </div>
           </div>
@@ -152,25 +151,25 @@ export function CountriesPanel() {
               setFormOpen(true);
             }}
           >
-            Nouveau pays
+            {t("new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tc("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des pays…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun pays"
-          description="Créez un pays ou ajustez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -181,7 +180,7 @@ export function CountriesPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouveau pays
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -191,11 +190,11 @@ export function CountriesPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Code3</Th>
-                <Th>Nom</Th>
-                <Th>Tél.</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tc("code")}</Th>
+                <Th>{t("code3")}</Th>
+                <Th>{tc("name")}</Th>
+                <Th>{t("phoneCol")}</Th>
+                <Th className="text-right">{tc("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -203,10 +202,12 @@ export function CountriesPanel() {
                 <Tr key={country.id}>
                   <Td className="font-mono text-xs">{country.code}</Td>
                   <Td className="font-mono text-xs text-muted">
-                    {country.code3 ?? "—"}
+                    {country.code3 ?? tc("emDash")}
                   </Td>
                   <Td>{country.name}</Td>
-                  <Td className="text-muted">{country.phoneCode ?? "—"}</Td>
+                  <Td className="text-muted">
+                    {country.phoneCode ?? tc("emDash")}
+                  </Td>
                   <Td>
                     <div className="flex justify-end gap-2">
                       <Can permission="settings.write">
@@ -219,7 +220,7 @@ export function CountriesPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tc("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -227,7 +228,7 @@ export function CountriesPanel() {
                           size="sm"
                           onClick={() => setDeleting(country)}
                         >
-                          Archiver
+                          {tc("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -251,7 +252,7 @@ export function CountriesPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Pays mis à jour" : "Pays créé",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();
@@ -263,7 +264,7 @@ export function CountriesPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver le pays"
+        title={t("archiveTitle")}
         footer={
           <>
             <Button
@@ -272,7 +273,7 @@ export function CountriesPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tc("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -280,16 +281,16 @@ export function CountriesPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tc("archiving") : tc("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Archiver{" "}
-          <span className="font-medium text-foreground">{deleting?.name}</span> (
-          {deleting?.code}) ? L’élément ne sera plus visible dans les listes
-          actives.
+          {t("archiveBody", {
+            name: deleting?.name ?? "",
+            code: deleting?.code ?? "",
+          })}
         </p>
       </Modal>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input, Textarea } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -47,6 +48,8 @@ export function DocumentTypeFormModal({
   onClose,
   onSaved,
 }: DocumentTypeFormModalProps) {
+  const t = useTranslations("documents.types");
+  const tCommon = useTranslations("common");
   const isEdit = documentType !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -98,7 +101,9 @@ export function DocumentTypeFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError
+          ? cause.message
+          : tCommon("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -109,7 +114,7 @@ export function DocumentTypeFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier le type" : "Nouveau type"}
+      title={isEdit ? t("edit") : t("new")}
       className="max-w-xl"
       footer={
         <>
@@ -119,7 +124,7 @@ export function DocumentTypeFormModal({
             onClick={onClose}
             disabled={saving}
           >
-            Annuler
+            {tCommon("cancel")}
           </Button>
           <Button
             type="submit"
@@ -130,7 +135,11 @@ export function DocumentTypeFormModal({
               (!isEdit && !form.code.trim())
             }
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving
+              ? tCommon("saving")
+              : isEdit
+                ? tCommon("save")
+                : tCommon("create")}
           </Button>
         </>
       }
@@ -146,7 +155,7 @@ export function DocumentTypeFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code</span>
+          <span className="font-medium">{t("formCode")}</span>
           <Input
             required={!isEdit}
             maxLength={64}
@@ -158,7 +167,7 @@ export function DocumentTypeFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Nom</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             maxLength={255}
@@ -169,7 +178,7 @@ export function DocumentTypeFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">MIME autorisés</span>
+          <span className="font-medium">{t("formMime")}</span>
           <Textarea
             rows={5}
             value={form.mimeText}
@@ -181,10 +190,7 @@ export function DocumentTypeFormModal({
             placeholder={"application/pdf\nimage/png"}
             spellCheck={false}
           />
-          <span className="text-xs text-muted">
-            Une MIME par ligne (ou séparées par des virgules). Vide = aucune
-            restriction côté type.
-          </span>
+          <span className="text-xs text-muted">{t("formMimeHelp")}</span>
         </label>
       </form>
     </Modal>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Checkbox, Input, Select, Textarea } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ApiError, apiFetch, type PaginatedResponse } from "@/lib/api";
 import {
-  BRANCH_TYPE_LABELS,
   BRANCH_TYPES,
   type Branch,
   type BranchType,
@@ -75,6 +75,8 @@ export function BranchFormModal({
   onClose,
   onSaved,
 }: BranchFormModalProps) {
+  const t = useTranslations("organisation");
+  const tCommon = useTranslations("common");
   const { hasPermission } = useAuth();
   const canReadSettings = hasPermission("settings.read");
   const canReadUsers = hasPermission("users.read");
@@ -186,7 +188,7 @@ export function BranchFormModal({
       setError(
         cause instanceof ApiError
           ? cause.message
-          : "Impossible d’enregistrer l’agence",
+          : tCommon("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -197,19 +199,28 @@ export function BranchFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier l’agence" : "Nouvelle agence"}
+      title={isEdit ? t("branches.edit") : t("branches.new")}
       className="max-w-xl"
       footer={
         <>
-          <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+          >
+            {tCommon("cancel")}
           </Button>
           <Button
             type="submit"
             form="branch-form"
             disabled={saving || !form.code.trim() || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving
+              ? tCommon("saving")
+              : isEdit
+                ? tCommon("save")
+                : tCommon("create")}
           </Button>
         </>
       }
@@ -223,7 +234,7 @@ export function BranchFormModal({
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Code</span>
+            <span className="font-medium">{t("branches.formCode")}</span>
             <Input
               required
               value={form.code}
@@ -233,21 +244,23 @@ export function BranchFormModal({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Type</span>
+            <span className="font-medium">{t("branches.formType")}</span>
             <Select
               value={form.type}
-              onChange={(e) => updateField("type", e.target.value as BranchType)}
+              onChange={(e) =>
+                updateField("type", e.target.value as BranchType)
+              }
               disabled={saving}
             >
               {BRANCH_TYPES.map((type) => (
                 <option key={type} value={type}>
-                  {BRANCH_TYPE_LABELS[type]}
+                  {t(`branchTypes.${type}`)}
                 </option>
               ))}
             </Select>
           </label>
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="font-medium">Nom</span>
+            <span className="font-medium">{t("branches.formName")}</span>
             <Input
               required
               value={form.name}
@@ -256,7 +269,7 @@ export function BranchFormModal({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="font-medium">Adresse</span>
+            <span className="font-medium">{t("branches.formAddress")}</span>
             <Textarea
               value={form.address}
               onChange={(e) => updateField("address", e.target.value)}
@@ -265,14 +278,14 @@ export function BranchFormModal({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Ville</span>
+            <span className="font-medium">{t("branches.formCity")}</span>
             {!citiesStub && cities.length > 0 ? (
               <Select
                 value={form.cityId}
                 onChange={(e) => updateField("cityId", e.target.value)}
                 disabled={saving}
               >
-                <option value="">— Aucune —</option>
+                <option value="">{tCommon("noneOptionF")}</option>
                 {cities.map((city) => (
                   <option key={city.id} value={city.id}>
                     {city.name}
@@ -284,13 +297,13 @@ export function BranchFormModal({
                 value={form.cityId}
                 onChange={(e) => updateField("cityId", e.target.value)}
                 disabled={saving}
-                placeholder="UUID ville"
+                placeholder="UUID"
                 className="font-mono text-xs"
               />
             )}
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Téléphone</span>
+            <span className="font-medium">{t("branches.formPhone")}</span>
             <Input
               value={form.phone}
               onChange={(e) => updateField("phone", e.target.value)}
@@ -305,7 +318,7 @@ export function BranchFormModal({
                 onChange={(e) => updateField("managerUserId", e.target.value)}
                 disabled={saving}
               >
-                <option value="">— Aucun —</option>
+                <option value="">{tCommon("noneOption")}</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.firstName} {u.lastName} ({u.email})
@@ -317,7 +330,7 @@ export function BranchFormModal({
                 value={form.managerUserId}
                 onChange={(e) => updateField("managerUserId", e.target.value)}
                 disabled={saving}
-                placeholder="UUID utilisateur"
+                placeholder="UUID"
                 className="font-mono text-xs"
               />
             )}
@@ -328,7 +341,7 @@ export function BranchFormModal({
               onChange={(e) => updateField("isActive", e.target.checked)}
               disabled={saving}
             />
-            <span>Agence active</span>
+            <span>{t("branches.formActive")}</span>
           </label>
         </div>
       </form>

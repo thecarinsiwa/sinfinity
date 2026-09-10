@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { BrandFormModal } from "@/components/catalogue/brand-form-modal";
@@ -26,6 +27,8 @@ import type { ProductBrand } from "@/lib/catalogue";
 const PAGE_SIZE = 20;
 
 export function BrandsPanel() {
+  const t = useTranslations("catalogue");
+  const tCommon = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("catalog.write");
@@ -63,12 +66,12 @@ export function BrandsPanel() {
       setError(
         cause instanceof ApiError
           ? cause.message
-          : "Impossible de charger les marques",
+          : t("brands.loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, t]);
 
   useEffect(() => {
     void load();
@@ -86,15 +89,17 @@ export function BrandsPanel() {
       await apiFetch<void>(`/product-brands/${deleting.id}`, {
         method: "DELETE",
       });
-      toast({ title: "Marque archivée", tone: "success" });
+      toast({ title: t("brands.toastArchived"), tone: "success" });
       setDeleting(null);
       if (items.length === 1 && page > 1) setPage((p) => p - 1);
       else await load();
     } catch (cause) {
       toast({
-        title: "Suppression impossible",
+        title: tCommon("deleteFailed"),
         description:
-          cause instanceof ApiError ? cause.message : "Une erreur est survenue",
+          cause instanceof ApiError
+            ? cause.message
+            : tCommon("genericError"),
         tone: "danger",
       });
     } finally {
@@ -107,18 +112,18 @@ export function BrandsPanel() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
           <span className="font-medium" id="brands-search-label">
-            Recherche
+            {tCommon("search")}
           </span>
           <div className="flex gap-2">
             <Input
               aria-labelledby="brands-search-label"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nom…"
+              placeholder={t("brands.searchPlaceholder")}
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
             <Button type="button" variant="secondary" onClick={applyFilters}>
-              Filtrer
+              {tCommon("filter")}
             </Button>
           </div>
         </div>
@@ -130,25 +135,25 @@ export function BrandsPanel() {
               setFormOpen(true);
             }}
           >
-            Nouvelle marque
+            {t("brands.new")}
           </Button>
         </Can>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tCommon("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des marques…" />
+          <Spinner label={t("brands.loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucune marque"
-          description="Créez une marque ou ajustez la recherche."
+          title={t("brands.emptyTitle")}
+          description={t("brands.emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -159,7 +164,7 @@ export function BrandsPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouvelle marque
+                {t("brands.new")}
               </Button>
             ) : undefined
           }
@@ -169,10 +174,10 @@ export function BrandsPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Nom</Th>
-                <Th>Site</Th>
-                <Th>Logo</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{tCommon("name")}</Th>
+                <Th>{t("brands.website")}</Th>
+                <Th>{t("brands.logoUrl")}</Th>
+                <Th className="text-right">{tCommon("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -190,14 +195,14 @@ export function BrandsPanel() {
                         {row.website}
                       </a>
                     ) : (
-                      "—"
+                      tCommon("emDash")
                     )}
                   </Td>
                   <Td
                     className="max-w-[10rem] truncate font-mono text-xs text-muted"
                     title={row.logoUrl ?? undefined}
                   >
-                    {row.logoUrl ?? "—"}
+                    {row.logoUrl ?? tCommon("emDash")}
                   </Td>
                   <Td>
                     <div className="flex justify-end gap-2">
@@ -211,7 +216,7 @@ export function BrandsPanel() {
                             setFormOpen(true);
                           }}
                         >
-                          Modifier
+                          {tCommon("edit")}
                         </Button>
                         <Button
                           type="button"
@@ -219,7 +224,7 @@ export function BrandsPanel() {
                           size="sm"
                           onClick={() => setDeleting(row)}
                         >
-                          Archiver
+                          {tCommon("archive")}
                         </Button>
                       </Can>
                     </div>
@@ -243,7 +248,9 @@ export function BrandsPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Marque mise à jour" : "Marque créée",
+            title: editing
+              ? t("brands.toastUpdated")
+              : t("brands.toastCreated"),
             tone: "success",
           });
           void load();
@@ -255,7 +262,7 @@ export function BrandsPanel() {
         onClose={() => {
           if (!deleteLoading) setDeleting(null);
         }}
-        title="Archiver la marque"
+        title={t("brands.archiveTitle")}
         footer={
           <>
             <Button
@@ -264,7 +271,7 @@ export function BrandsPanel() {
               onClick={() => setDeleting(null)}
               disabled={deleteLoading}
             >
-              Annuler
+              {tCommon("cancel")}
             </Button>
             <Button
               variant="danger"
@@ -272,15 +279,13 @@ export function BrandsPanel() {
               onClick={() => void confirmDelete()}
               disabled={deleteLoading}
             >
-              {deleteLoading ? "Archivage…" : "Confirmer"}
+              {deleteLoading ? tCommon("archiving") : tCommon("confirm")}
             </Button>
           </>
         }
       >
         <p className="text-muted">
-          Archiver{" "}
-          <span className="font-medium text-foreground">{deleting?.name}</span> ?
-          L’élément ne sera plus visible dans les listes actives.
+          {t("brands.archiveBody", { name: deleting?.name ?? "" })}
         </p>
       </Modal>
     </div>

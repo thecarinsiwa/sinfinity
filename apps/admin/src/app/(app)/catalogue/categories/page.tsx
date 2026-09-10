@@ -1,15 +1,19 @@
+import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/ui";
 import { CatalogueSubpage } from "@/components/catalogue/catalogue-subpage";
 
-export default function CatalogueCategoriesPage() {
+export default async function CatalogueCategoriesPage() {
+  const t = await getTranslations("catalogue");
+  const tCommon = await getTranslations("common");
+
   return (
     <CatalogueSubpage
-      title="Catégories produits"
-      description="Arbre product-categories (parent_id)."
+      title={t("nav.categories.title")}
+      description={t("nav.categories.description")}
     >
       <EmptyState
-        title="À venir"
-        description="Le CRUD arborescent des catégories produits sera branché ensuite."
+        title={tCommon("comingSoon")}
+        description={t("categoriesStub")}
       />
     </CatalogueSubpage>
   );

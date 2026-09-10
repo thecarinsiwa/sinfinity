@@ -7,6 +7,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
@@ -70,6 +71,8 @@ function emptyToNull(value: string): string | null {
 }
 
 export function OrganizationForm() {
+  const t = useTranslations("organisation");
+  const tCommon = useTranslations("common");
   const { user, hasPermission, refreshSession } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("organizations.write");
@@ -87,7 +90,7 @@ export function OrganizationForm() {
 
   const load = useCallback(async () => {
     if (!organizationId) {
-      setLoadError("Organisation introuvable pour cet utilisateur.");
+      setLoadError(t("form.loadFailed"));
       setLoading(false);
       return;
     }
@@ -124,15 +127,13 @@ export function OrganizationForm() {
       }
     } catch (error) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : "Impossible de charger l’organisation";
+        error instanceof ApiError ? error.message : t("form.loadFailed");
       setLoadError(message);
       setForm(null);
     } finally {
       setLoading(false);
     }
-  }, [organizationId, canReadSettings]);
+  }, [organizationId, canReadSettings, t]);
 
   useEffect(() => {
     void load();
@@ -170,16 +171,16 @@ export function OrganizationForm() {
       setForm(toFormState(updated));
       await refreshSession();
       toast({
-        title: "Organisation enregistrée",
+        title: t("form.toastSaved"),
         tone: "success",
       });
     } catch (error) {
       toast({
-        title: "Échec de l’enregistrement",
+        title: t("form.saveFailed"),
         description:
           error instanceof ApiError
             ? error.message
-            : "Une erreur est survenue",
+            : tCommon("genericError"),
         tone: "danger",
       });
     } finally {
@@ -190,15 +191,15 @@ export function OrganizationForm() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <Spinner label="Chargement de l’organisation…" />
+        <Spinner label={t("form.loading")} />
       </div>
     );
   }
 
   if (loadError || !form) {
     return (
-      <Alert tone="danger" title="Erreur">
-        {loadError ?? "Données indisponibles"}
+      <Alert tone="danger" title={tCommon("error")}>
+        {loadError ?? t("form.loadFailed")}
       </Alert>
     );
   }
@@ -206,21 +207,17 @@ export function OrganizationForm() {
   return (
     <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
       {!canWrite ? (
-        <Alert tone="info" title="Lecture seule">
-          Vous n’avez pas la permission organizations.write.
+        <Alert tone="info" title={tCommon("readonly")}>
+          {t("form.readonlyBanner")}
         </Alert>
       ) : null}
 
       {settingsStub ? (
-        <Alert tone="warning" title="Référentiels limités">
-          {canReadSettings
-            ? "Impossible de charger devises/pays — saisie UUID en secours."
-            : "Permission settings.read absente — saisie UUID en secours pour devise et pays."}
-        </Alert>
+        <Alert tone="warning">{t("form.limitedRefs")}</Alert>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Nom">
+        <Field label={t("form.name")}>
           <Input
             required
             value={form.name}
@@ -228,21 +225,21 @@ export function OrganizationForm() {
             disabled={!canWrite || saving}
           />
         </Field>
-        <Field label="Raison sociale">
+        <Field label={t("form.legalName")}>
           <Input
             value={form.legalName}
             onChange={(e) => updateField("legalName", e.target.value)}
             disabled={!canWrite || saving}
           />
         </Field>
-        <Field label="NIF / Tax ID">
+        <Field label={t("form.taxId")}>
           <Input
             value={form.taxId}
             onChange={(e) => updateField("taxId", e.target.value)}
             disabled={!canWrite || saving}
           />
         </Field>
-        <Field label="E-mail">
+        <Field label={t("form.email")}>
           <Input
             type="email"
             value={form.email}
@@ -250,21 +247,21 @@ export function OrganizationForm() {
             disabled={!canWrite || saving}
           />
         </Field>
-        <Field label="Téléphone">
+        <Field label={t("form.phone")}>
           <Input
             value={form.phone}
             onChange={(e) => updateField("phone", e.target.value)}
             disabled={!canWrite || saving}
           />
         </Field>
-        <Field label="Site web">
+        <Field label={t("form.website")}>
           <Input
             value={form.website}
             onChange={(e) => updateField("website", e.target.value)}
             disabled={!canWrite || saving}
           />
         </Field>
-        <Field label="URL du logo" className="sm:col-span-2">
+        <Field label={t("form.logoUrl")} className="sm:col-span-2">
           <Input
             value={form.logoUrl}
             onChange={(e) => updateField("logoUrl", e.target.value)}
@@ -273,14 +270,14 @@ export function OrganizationForm() {
           />
         </Field>
 
-        <Field label="Devise par défaut">
+        <Field label={t("form.currency")}>
           {!settingsStub && currencies.length > 0 ? (
             <Select
               value={form.defaultCurrencyId}
               onChange={(e) => updateField("defaultCurrencyId", e.target.value)}
               disabled={!canWrite || saving}
             >
-              <option value="">— Aucune —</option>
+              <option value="">{tCommon("noneOptionF")}</option>
               {currencies.map((currency) => (
                 <option key={currency.id} value={currency.id}>
                   {currency.code} — {currency.name}
@@ -292,20 +289,20 @@ export function OrganizationForm() {
               value={form.defaultCurrencyId}
               onChange={(e) => updateField("defaultCurrencyId", e.target.value)}
               disabled={!canWrite || saving}
-              placeholder="UUID devise"
+              placeholder="UUID"
               className="font-mono text-xs"
             />
           )}
         </Field>
 
-        <Field label="Pays">
+        <Field label={t("form.country")}>
           {!settingsStub && countries.length > 0 ? (
             <Select
               value={form.countryId}
               onChange={(e) => updateField("countryId", e.target.value)}
               disabled={!canWrite || saving}
             >
-              <option value="">— Aucun —</option>
+              <option value="">{tCommon("noneOption")}</option>
               {countries.map((country) => (
                 <option key={country.id} value={country.id}>
                   {country.code} — {country.name}
@@ -317,7 +314,7 @@ export function OrganizationForm() {
               value={form.countryId}
               onChange={(e) => updateField("countryId", e.target.value)}
               disabled={!canWrite || saving}
-              placeholder="UUID pays"
+              placeholder="UUID"
               className="font-mono text-xs"
             />
           )}
@@ -329,14 +326,14 @@ export function OrganizationForm() {
             onChange={(e) => updateField("isActive", e.target.checked)}
             disabled={!canWrite || saving}
           />
-          <span>Organisation active</span>
+          <span>{t("form.active")}</span>
         </label>
       </div>
 
       <Can permission="organizations.write">
         <div className="flex justify-end">
           <Button type="submit" disabled={saving || !form.name.trim()}>
-            {saving ? "Enregistrement…" : "Enregistrer"}
+            {saving ? t("form.saving") : t("form.save")}
           </Button>
         </div>
       </Can>

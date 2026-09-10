@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AuditLogDetailDrawer } from "@/components/audit/audit-log-detail-drawer";
 import {
   Alert,
@@ -22,6 +23,9 @@ import type { AuditLog } from "@/lib/ops";
 const PAGE_SIZE = 20;
 
 export function AuditLogsPanel() {
+  const t = useTranslations("audit.logs");
+  const tCommon = useTranslations("common");
+
   const [page, setPage] = useState(1);
   const [actionInput, setActionInput] = useState("");
   const [entityTypeInput, setEntityTypeInput] = useState("");
@@ -66,14 +70,12 @@ export function AuditLogsPanel() {
       setItems([]);
       setTotal(0);
       setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les journaux d’audit",
+        cause instanceof ApiError ? cause.message : t("loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [page, action, entityType, entityId, userId, dateFrom, dateTo]);
+  }, [page, action, entityType, entityId, userId, dateFrom, dateTo, t]);
 
   useEffect(() => {
     void load();
@@ -93,7 +95,7 @@ export function AuditLogsPanel() {
     <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Action</span>
+          <span className="font-medium">{t("action")}</span>
           <Input
             value={actionInput}
             onChange={(e) => setActionInput(e.target.value)}
@@ -102,7 +104,7 @@ export function AuditLogsPanel() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">entity_type</span>
+          <span className="font-medium">{t("entityType")}</span>
           <Input
             value={entityTypeInput}
             onChange={(e) => setEntityTypeInput(e.target.value)}
@@ -111,7 +113,7 @@ export function AuditLogsPanel() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">entity_id</span>
+          <span className="font-medium">{t("entityId")}</span>
           <Input
             value={entityIdInput}
             onChange={(e) => setEntityIdInput(e.target.value)}
@@ -121,7 +123,7 @@ export function AuditLogsPanel() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">user_id</span>
+          <span className="font-medium">{t("userId")}</span>
           <Input
             value={userIdInput}
             onChange={(e) => setUserIdInput(e.target.value)}
@@ -131,7 +133,7 @@ export function AuditLogsPanel() {
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Du</span>
+          <span className="font-medium">{tCommon("from")}</span>
           <Input
             type="date"
             value={dateFromInput}
@@ -140,7 +142,7 @@ export function AuditLogsPanel() {
         </label>
         <div className="flex flex-col gap-1 text-sm">
           <span className="font-medium" id="audit-logs-date-to-label">
-            Au
+            {tCommon("to")}
           </span>
           <div className="flex gap-2">
             <Input
@@ -150,38 +152,38 @@ export function AuditLogsPanel() {
               onChange={(e) => setDateToInput(e.target.value)}
             />
             <Button type="button" variant="secondary" onClick={applyFilters}>
-              Filtrer
+              {tCommon("filter")}
             </Button>
           </div>
         </div>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tCommon("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement de l’audit…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun journal"
-          description="Aucun événement ne correspond aux filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <>
           <Table>
             <Thead>
               <Tr>
-                <Th>Date</Th>
-                <Th>Utilisateur</Th>
-                <Th>Action</Th>
-                <Th>Entité</Th>
-                <Th>ID entité</Th>
-                <Th className="text-right">Détail</Th>
+                <Th>{t("createdAt")}</Th>
+                <Th>{t("actor")}</Th>
+                <Th>{t("action")}</Th>
+                <Th>{t("entityType")}</Th>
+                <Th>{t("entityId")}</Th>
+                <Th className="text-right">{tCommon("detail")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -190,8 +192,11 @@ export function AuditLogsPanel() {
                   <Td className="whitespace-nowrap font-mono text-xs">
                     {row.createdAt.slice(0, 19).replace("T", " ")}
                   </Td>
-                  <Td className="max-w-[8rem] truncate font-mono text-xs" title={row.userId ?? undefined}>
-                    {row.userId ?? "—"}
+                  <Td
+                    className="max-w-[8rem] truncate font-mono text-xs"
+                    title={row.userId ?? undefined}
+                  >
+                    {row.userId ?? tCommon("emDash")}
                   </Td>
                   <Td>{row.action}</Td>
                   <Td className="font-mono text-xs">{row.entityType}</Td>
@@ -199,7 +204,7 @@ export function AuditLogsPanel() {
                     className="max-w-[10rem] truncate font-mono text-xs text-muted"
                     title={row.entityId ?? undefined}
                   >
-                    {row.entityId ?? "—"}
+                    {row.entityId ?? tCommon("emDash")}
                   </Td>
                   <Td>
                     <div className="flex justify-end">
@@ -209,7 +214,7 @@ export function AuditLogsPanel() {
                         size="sm"
                         onClick={() => setSelected(row)}
                       >
-                        Voir
+                        {tCommon("view")}
                       </Button>
                     </div>
                   </Td>

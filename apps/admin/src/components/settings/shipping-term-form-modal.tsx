@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input, Textarea } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -37,6 +38,8 @@ export function ShippingTermFormModal({
   onClose,
   onSaved,
 }: ShippingTermFormModalProps) {
+  const t = useTranslations("settings.shippingTerms");
+  const tc = useTranslations("common");
   const isEdit = term !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -85,7 +88,7 @@ export function ShippingTermFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError ? cause.message : tc("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -96,19 +99,19 @@ export function ShippingTermFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Modifier l'Incoterm" : "Nouvel Incoterm"}
+      title={isEdit ? t("edit") : t("new")}
       className="max-w-xl"
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Annuler
+            {tc("cancel")}
           </Button>
           <Button
             type="submit"
             form="shipping-term-form"
             disabled={saving || !form.code.trim() || !form.name.trim()}
           >
-            {saving ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
+            {saving ? tc("saving") : isEdit ? tc("save") : tc("create")}
           </Button>
         </>
       }
@@ -124,7 +127,7 @@ export function ShippingTermFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Code</span>
+          <span className="font-medium">{t("formCode")}</span>
           <Input
             required
             maxLength={32}
@@ -136,7 +139,7 @@ export function ShippingTermFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Version</span>
+          <span className="font-medium">{t("formVersion")}</span>
           <Input
             maxLength={32}
             value={form.incotermVersion}
@@ -148,7 +151,7 @@ export function ShippingTermFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Libellé</span>
+          <span className="font-medium">{t("formName")}</span>
           <Input
             required
             maxLength={255}
@@ -159,7 +162,9 @@ export function ShippingTermFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">Description (optionnel)</span>
+          <span className="font-medium">
+            {tc("optional", { label: t("formDescription") })}
+          </span>
           <Textarea
             rows={3}
             value={form.description}

@@ -1,15 +1,16 @@
+import { getTranslations } from "next-intl/server";
 import { OrganizationForm } from "@/components/organisation/organization-form";
 
-export default function OrganisationPage() {
+export default async function OrganisationPage() {
+  const t = await getTranslations("organisation");
+
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Organisation
+          {t("pageTitle")}
         </h1>
-        <p className="mt-1 text-sm text-muted">
-          Fiche du tenant courant — identité légale et paramètres de base.
-        </p>
+        <p className="mt-1 text-sm text-muted">{t("pageLead")}</p>
       </div>
       <OrganizationForm />
     </div>

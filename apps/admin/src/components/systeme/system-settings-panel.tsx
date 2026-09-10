@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
 import { SystemSettingFormModal } from "@/components/systeme/system-setting-form-modal";
@@ -32,6 +33,8 @@ function previewValue(value: unknown): string {
 }
 
 export function SystemSettingsPanel() {
+  const t = useTranslations("systeme");
+  const tCommon = useTranslations("common");
   const { hasPermission } = useAuth();
   const { toast } = useToast();
   const canWrite = hasPermission("system_settings.write");
@@ -65,14 +68,12 @@ export function SystemSettingsPanel() {
       setItems([]);
       setTotal(0);
       setError(
-        cause instanceof ApiError
-          ? cause.message
-          : "Impossible de charger les paramètres système",
+        cause instanceof ApiError ? cause.message : t("loadFailed"),
       );
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, t]);
 
   useEffect(() => {
     void load();
@@ -88,18 +89,18 @@ export function SystemSettingsPanel() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
           <span className="font-medium" id="system-settings-search-label">
-            Recherche
+            {tCommon("search")}
           </span>
           <div className="flex gap-2">
             <Input
               aria-labelledby="system-settings-search-label"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Clé ou description…"
+              placeholder={t("searchPlaceholder")}
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
             <Button type="button" variant="secondary" onClick={applyFilters}>
-              Filtrer
+              {tCommon("filter")}
             </Button>
           </div>
         </div>
@@ -108,7 +109,7 @@ export function SystemSettingsPanel() {
             href="/system/health"
             className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-surface px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted"
           >
-            Santé API
+            {tCommon("apiHealth")}
           </Link>
           <Can permission="system_settings.write">
             <Button
@@ -118,26 +119,26 @@ export function SystemSettingsPanel() {
                 setFormOpen(true);
               }}
             >
-              Nouvelle clé
+              {t("new")}
             </Button>
           </Can>
         </div>
       </div>
 
       {error ? (
-        <Alert tone="danger" title="Erreur">
+        <Alert tone="danger" title={tCommon("error")}>
           {error}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Spinner label="Chargement des paramètres…" />
+          <Spinner label={t("loading")} />
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          title="Aucun paramètre"
-          description="Créez une clé ou ajustez la recherche."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
           action={
             canWrite ? (
               <Button
@@ -148,7 +149,7 @@ export function SystemSettingsPanel() {
                   setFormOpen(true);
                 }}
               >
-                Nouvelle clé
+                {t("new")}
               </Button>
             ) : undefined
           }
@@ -158,11 +159,11 @@ export function SystemSettingsPanel() {
           <Table>
             <Thead>
               <Tr>
-                <Th>Clé</Th>
-                <Th>Valeur</Th>
-                <Th>Description</Th>
-                <Th>Mis à jour</Th>
-                <Th className="text-right">Actions</Th>
+                <Th>{t("key")}</Th>
+                <Th>{t("value")}</Th>
+                <Th>{tCommon("description")}</Th>
+                <Th>updatedAt</Th>
+                <Th className="text-right">{tCommon("actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -174,7 +175,9 @@ export function SystemSettingsPanel() {
                       {previewValue(row.value)}
                     </code>
                   </Td>
-                  <Td className="text-muted">{row.description ?? "—"}</Td>
+                  <Td className="text-muted">
+                    {row.description ?? tCommon("emDash")}
+                  </Td>
                   <Td className="whitespace-nowrap text-xs text-muted">
                     {row.updatedAt.slice(0, 19).replace("T", " ")}
                   </Td>
@@ -189,7 +192,7 @@ export function SystemSettingsPanel() {
                           setFormOpen(true);
                         }}
                       >
-                        {canWrite ? "Modifier" : "Voir"}
+                        {canWrite ? t("edit") : t("view")}
                       </Button>
                     </div>
                   </Td>
@@ -213,7 +216,7 @@ export function SystemSettingsPanel() {
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           toast({
-            title: editing ? "Paramètre mis à jour" : "Paramètre créé",
+            title: editing ? t("toastUpdated") : t("toastCreated"),
             tone: "success",
           });
           void load();

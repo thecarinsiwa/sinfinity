@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import type { ApiErrorBody } from "@/lib/api/types";
 import {
   clearAuthCookies,
@@ -140,8 +141,11 @@ async function loadOrganizationName(
   accessToken: string,
   permissions: string[],
 ): Promise<SessionOrganization | null> {
+  const t = await getTranslations("common");
+  const fallbackName = t("organization");
+
   if (!permissions.includes("organizations.read")) {
-    return { id: organizationId, name: "Organisation" };
+    return { id: organizationId, name: fallbackName };
   }
 
   const result = await nestFetch<{ id: string; name: string }>(
@@ -150,7 +154,7 @@ async function loadOrganizationName(
   );
 
   if (!result.ok) {
-    return { id: organizationId, name: "Organisation" };
+    return { id: organizationId, name: fallbackName };
   }
 
   return { id: result.data.id, name: result.data.name };

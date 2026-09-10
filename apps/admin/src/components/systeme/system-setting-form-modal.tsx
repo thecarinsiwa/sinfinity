@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, Input, Textarea } from "@/components/ui";
 import { Modal } from "@/components/ui/modal";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -39,6 +40,8 @@ export function SystemSettingFormModal({
   onClose,
   onSaved,
 }: SystemSettingFormModalProps) {
+  const t = useTranslations("systeme");
+  const tCommon = useTranslations("common");
   const isEdit = setting !== null;
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -111,7 +114,9 @@ export function SystemSettingFormModal({
       onClose();
     } catch (cause) {
       setError(
-        cause instanceof ApiError ? cause.message : "Enregistrement impossible",
+        cause instanceof ApiError
+          ? cause.message
+          : tCommon("saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -119,10 +124,10 @@ export function SystemSettingFormModal({
   }
 
   const title = readOnly
-    ? `Paramètre « ${setting?.key ?? ""} »`
+    ? t("view")
     : isEdit
-      ? `Modifier « ${setting?.key} »`
-      : "Nouvelle clé";
+      ? t("edit")
+      : t("new");
 
   return (
     <Modal
@@ -133,7 +138,7 @@ export function SystemSettingFormModal({
       footer={
         readOnly ? (
           <Button variant="secondary" type="button" onClick={onClose}>
-            Fermer
+            {tCommon("close")}
           </Button>
         ) : (
           <>
@@ -143,7 +148,7 @@ export function SystemSettingFormModal({
               onClick={onClose}
               disabled={saving}
             >
-              Annuler
+              {tCommon("cancel")}
             </Button>
             <Button
               type="submit"
@@ -155,7 +160,7 @@ export function SystemSettingFormModal({
                 jsonError !== null
               }
             >
-              {saving ? "Enregistrement…" : "Enregistrer"}
+              {saving ? tCommon("saving") : tCommon("save")}
             </Button>
           </>
         )
@@ -172,7 +177,7 @@ export function SystemSettingFormModal({
           </p>
         ) : null}
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Clé</span>
+          <span className="font-medium">{t("formKey")}</span>
           <Input
             required
             maxLength={128}
@@ -185,7 +190,9 @@ export function SystemSettingFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Description (optionnel)</span>
+          <span className="font-medium">
+            {tCommon("optional", { label: t("formDescription") })}
+          </span>
           <Input
             value={form.description}
             onChange={(e) =>
@@ -196,7 +203,7 @@ export function SystemSettingFormModal({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Valeur JSON</span>
+          <span className="font-medium">{t("formValue")}</span>
           <Textarea
             required={!readOnly}
             rows={12}
@@ -217,12 +224,7 @@ export function SystemSettingFormModal({
           />
           {!readOnly && jsonError ? (
             <span className="text-danger" role="alert">
-              JSON invalide : {jsonError}
-            </span>
-          ) : null}
-          {!readOnly && !jsonError ? (
-            <span className="text-xs text-muted">
-              Validé côté client avant envoi (parse JSON).
+              {t("jsonInvalid")}: {jsonError}
             </span>
           ) : null}
         </label>

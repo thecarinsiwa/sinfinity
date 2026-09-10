@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
 
-export function DocumentsSubpage({
+export async function DocumentsSubpage({
   title,
   description,
   children,
@@ -10,6 +11,8 @@ export function DocumentsSubpage({
   description?: string;
   children: ReactNode;
 }) {
+  const t = await getTranslations("documents");
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -18,7 +21,7 @@ export function DocumentsSubpage({
             href="/documents"
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            ← Documents
+            {t("back")}
           </Link>
         </p>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">

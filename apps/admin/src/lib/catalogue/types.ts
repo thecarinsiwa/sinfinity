@@ -113,31 +113,20 @@ export type CreateProductLiteInput = {
 
 export type UpdateProductLiteInput = Partial<CreateProductLiteInput>;
 
+export type CatalogueNavId =
+  | "brands"
+  | "categories"
+  | "serviceCategories"
+  | "products";
+
 export type CatalogueNavItem = {
-  title: string;
-  description: string;
+  id: CatalogueNavId;
   href: string;
 };
 
 export const CATALOGUE_NAV_ITEMS: CatalogueNavItem[] = [
-  {
-    title: "Marques",
-    description: "Référentiel product-brands.",
-    href: "/catalogue/marques",
-  },
-  {
-    title: "Catégories produits",
-    description: "Arbre product-categories (parent_id).",
-    href: "/catalogue/categories",
-  },
-  {
-    title: "Catégories services",
-    description: "Liste plate service-categories.",
-    href: "/catalogue/categories-services",
-  },
-  {
-    title: "Produits",
-    description: "CRUD allégé : SKU, marque, catégorie, unité, statut.",
-    href: "/catalogue/produits",
-  },
+  { id: "brands", href: "/catalogue/marques" },
+  { id: "categories", href: "/catalogue/categories" },
+  { id: "serviceCategories", href: "/catalogue/categories-services" },
+  { id: "products", href: "/catalogue/produits" },
 ];
