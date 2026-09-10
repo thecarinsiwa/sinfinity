@@ -62,7 +62,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenuClick={() => setMobileOpen((value) => !value)} />
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-auto bg-[radial-gradient(ellipse_at_top,_rgb(15_107_107_/_0.05),_transparent_55%)] p-4 md:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );
