@@ -39,6 +39,11 @@ En développement, les primitives `src/components/ui` sont visibles sur
 [http://localhost:3001/dev/ui](http://localhost:3001/dev/ui).
 La route renvoie 404 en production.
 
+## Santé API
+
+[http://localhost:3001/system/health](http://localhost:3001/system/health) appelle
+`GET /health` via le client HTTP Admin (utile pour valider CORS et la connectivité).
+
 ## Documentation
 
 - Roadmap Admin : [`docs/ROADMAP.md`](./docs/ROADMAP.md)

@@ -8,3 +8,4 @@ export type {
   PaginatedResponse,
   PaginationMeta,
 } from "./types";
+export type { HealthResponse } from "./health";
