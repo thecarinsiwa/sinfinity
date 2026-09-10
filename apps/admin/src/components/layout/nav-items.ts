@@ -8,6 +8,7 @@ export type NavItem = {
 export const APP_NAV_ITEMS: NavItem[] = [
   { label: "Tableau de bord", href: "/", permission: null },
   { label: "Organisation", href: "/organisation", permission: "organizations.read" },
+  { label: "Agences", href: "/organisation/agences", permission: "branches.read" },
   { label: "Utilisateurs", href: "/utilisateurs", permission: "users.read" },
   { label: "Rôles", href: "/roles", permission: "roles.read" },
   { label: "Paramètres", href: "/parametres", permission: "settings.read" },
