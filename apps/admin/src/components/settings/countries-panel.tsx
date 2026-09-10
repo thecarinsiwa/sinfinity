@@ -1,10 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
-import { CountryFormModal } from "@/components/settings/country-form-modal";
 import {
   Alert,
   Button,
@@ -22,9 +22,23 @@ import {
 } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 import { ApiError, apiFetch, type PaginatedResponse } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import type { Country } from "@/lib/settings";
 
 const PAGE_SIZE = 20;
+const NEW_HREF = "/parametres/pays/nouveau";
+
+const linkButtonClass = cn(
+  "inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors",
+  "border-transparent bg-primary text-primary-foreground hover:bg-primary-hover",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+);
+
+const linkButtonSmSecondaryClass = cn(
+  "inline-flex h-8 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
+  "border-border bg-surface text-foreground hover:bg-surface-muted",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+);
 
 export function CountriesPanel() {
   const t = useTranslations("settings.countries");
@@ -44,8 +58,6 @@ export function CountriesPanel() {
   const [items, setItems] = useState<Country[]>([]);
   const [total, setTotal] = useState(0);
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Country | null>(null);
   const [deleting, setDeleting] = useState<Country | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -144,15 +156,9 @@ export function CountriesPanel() {
           </div>
         </div>
         <Can permission="settings.write">
-          <Button
-            type="button"
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-          >
+          <Link href={NEW_HREF} className={linkButtonClass}>
             {t("new")}
-          </Button>
+          </Link>
         </Can>
       </div>
 
@@ -172,16 +178,12 @@ export function CountriesPanel() {
           description={t("emptyDescription")}
           action={
             canWrite ? (
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  setEditing(null);
-                  setFormOpen(true);
-                }}
+              <Link
+                href={NEW_HREF}
+                className={cn(linkButtonClass, "h-8 px-3 text-sm")}
               >
                 {t("new")}
-              </Button>
+              </Link>
             ) : undefined
           }
         />
@@ -211,17 +213,12 @@ export function CountriesPanel() {
                   <Td>
                     <div className="flex justify-end gap-2">
                       <Can permission="settings.write">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            setEditing(country);
-                            setFormOpen(true);
-                          }}
+                        <Link
+                          href={`/parametres/pays/${country.id}/edit`}
+                          className={linkButtonSmSecondaryClass}
                         >
                           {tc("edit")}
-                        </Button>
+                        </Link>
                         <Button
                           type="button"
                           variant="danger"
@@ -245,19 +242,6 @@ export function CountriesPanel() {
           />
         </>
       )}
-
-      <CountryFormModal
-        open={formOpen}
-        country={editing}
-        onClose={() => setFormOpen(false)}
-        onSaved={() => {
-          toast({
-            title: editing ? t("toastUpdated") : t("toastCreated"),
-            tone: "success",
-          });
-          void load();
-        }}
-      />
 
       <Modal
         open={deleting !== null}
