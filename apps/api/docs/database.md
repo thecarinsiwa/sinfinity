@@ -101,6 +101,26 @@ Référentiels (USD/CDF/CNY/EUR, pays CD/CN/AE/FR/BE, unités, Incoterms, TVA RD
 
 SQL bootstrap minimal (optionnel) : [`database/sql/seeds/01_rbac.sql`](../../../database/sql/seeds/01_rbac.sql).
 
+## Seed développement (org + utilisateurs)
+
+Crée le tenant de démo, deux agences, et un compte par rôle système (idempotent).
+Enchaîne aussi `seed:settings` + `seed:rbac`. Uniquement si `NODE_ENV` est `development` ou `test` :
+
+```bash
+pnpm --filter @sinfinity/api seed:dev
+```
+
+| Email | Rôle |
+|-------|------|
+| `admin@sinfinity.cd` | ADMIN (+ super-admin si listé dans `SUPER_ADMIN_EMAILS`) |
+| `sales@sinfinity.cd` | SALES |
+| `procurement@sinfinity.cd` | PROCUREMENT |
+| `logistics@sinfinity.cd` | LOGISTICS |
+| `technical@sinfinity.cd` | TECHNICAL |
+| `finance@sinfinity.cd` | FINANCE |
+
+Mot de passe : `SEED_DEV_PASSWORD` ou défaut `local-dev-only-1`.
+
 ## Seeds document types
 
 Types système (`QUOTE`, `INVOICE`, `BL`, `CONTRACT`, …) :

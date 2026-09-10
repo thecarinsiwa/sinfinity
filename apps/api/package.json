@@ -24,7 +24,8 @@
     "seed:rbac": "ts-node -r tsconfig-paths/register ./scripts/seed-rbac.ts",
     "seed:document-types": "ts-node -r tsconfig-paths/register ./scripts/seed-document-types.ts",
     "seed:activity-types": "ts-node -r tsconfig-paths/register ./scripts/seed-activity-types.ts",
-    "seed:settings": "ts-node -r tsconfig-paths/register ./scripts/seed-settings.ts"
+    "seed:settings": "ts-node -r tsconfig-paths/register ./scripts/seed-settings.ts",
+    "seed:dev": "ts-node -r tsconfig-paths/register ./scripts/seed-dev.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
