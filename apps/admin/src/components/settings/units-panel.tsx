@@ -136,10 +136,13 @@ export function UnitsPanel() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Type</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="units-type-label">
+              Type
+            </span>
             <div className="flex gap-2">
               <Select
+                aria-labelledby="units-type-label"
                 value={unitType}
                 onChange={(e) => {
                   setPage(1);
@@ -157,7 +160,7 @@ export function UnitsPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
           <Button
@@ -185,7 +188,7 @@ export function UnitsPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucune unité"
-          description="Ajustez les filtres ou créez une unité."
+          description="Créez une unité ou ajustez les filtres."
           action={
             canWrite ? (
               <Button
@@ -301,8 +304,9 @@ export function UnitsPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span>.
+          Archiver{" "}
+          <span className="font-medium text-foreground">{deleting?.code}</span> ?
+          L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>

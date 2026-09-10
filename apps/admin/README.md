@@ -125,6 +125,15 @@ Menu **Catalogue** (`catalog.read`) — hub puis sous-routes. Permissions écrit
 
 L’Admin ne remplace pas le module Catalogue Web : il débloque un catalogue vide et maintient les référentiels.
 
+## UX listes (Phase 8)
+
+Polish transversal (sans nouvelle feature métier) :
+
+- **EmptyState** sur chaque liste vide, copy FR unifiée (« Créez… ou ajustez les filtres »)
+- **Confirmations** d’archivage via Modal (pas `window.confirm`) ; soft-delete en français utilisateur ; suppression définitive des types de documents inchangée
+- **Focus** Modal / Drawer : premier contrôle au focus, piège Tab, restauration à la fermeture, Escape
+- Bouton **Filtrer** hors du `<label>` (évite le focus parasite sur le champ)
+
 ## Auth BFF (cookies httpOnly)
 
 Les tokens Nest ne sont **pas** exposés au JavaScript navigateur. Les route handlers

@@ -110,10 +110,13 @@ export function PaymentTermsPanel() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="payment-terms-search-label">
+              Recherche
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="payment-terms-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Code ou nom…"
@@ -123,7 +126,7 @@ export function PaymentTermsPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Portée</span>
             <Select
@@ -164,7 +167,7 @@ export function PaymentTermsPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucune condition"
-          description="Ajustez les filtres ou créez une condition de paiement."
+          description="Créez une condition de paiement ou ajustez les filtres."
           action={
             canWrite ? (
               <Button
@@ -289,8 +292,9 @@ export function PaymentTermsPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span>.
+          Archiver{" "}
+          <span className="font-medium text-foreground">{deleting?.code}</span> ?
+          L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>

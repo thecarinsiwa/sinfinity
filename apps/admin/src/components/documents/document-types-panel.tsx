@@ -128,10 +128,13 @@ export function DocumentTypesPanel() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="document-types-search-label">
+              Recherche
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="document-types-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Code ou nom…"
@@ -141,7 +144,7 @@ export function DocumentTypesPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Portée</span>
             <Select
@@ -183,7 +186,7 @@ export function DocumentTypesPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucun type"
-          description="Créez un type organisation ou ajustez les filtres."
+          description="Créez un type de document ou ajustez les filtres."
           action={
             canWrite ? (
               <Button

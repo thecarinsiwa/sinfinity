@@ -113,10 +113,13 @@ export function LoginLogsPanel() {
             onChange={(e) => setDateFromInput(e.target.value)}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Au</span>
+        <div className="flex flex-col gap-1 text-sm">
+          <span className="font-medium" id="login-logs-date-to-label">
+            Au
+          </span>
           <div className="flex gap-2">
             <Input
+              aria-labelledby="login-logs-date-to-label"
               type="date"
               value={dateToInput}
               onChange={(e) => setDateToInput(e.target.value)}
@@ -125,7 +128,7 @@ export function LoginLogsPanel() {
               Filtrer
             </Button>
           </div>
-        </label>
+        </div>
       </div>
 
       {error ? (

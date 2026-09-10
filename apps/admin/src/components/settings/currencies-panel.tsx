@@ -138,10 +138,13 @@ export function CurrenciesPanel() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Statut</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="currencies-status-label">
+              Statut
+            </span>
             <div className="flex gap-2">
               <Select
+                aria-labelledby="currencies-status-label"
                 value={isActive}
                 onChange={(e) => {
                   setPage(1);
@@ -156,7 +159,7 @@ export function CurrenciesPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
           <Button
@@ -184,7 +187,7 @@ export function CurrenciesPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucune devise"
-          description="Ajustez les filtres ou créez une devise."
+          description="Créez une devise ou ajustez les filtres."
           action={
             canWrite ? (
               <Button
@@ -304,8 +307,9 @@ export function CurrenciesPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span>.
+          Archiver{" "}
+          <span className="font-medium text-foreground">{deleting?.code}</span> ?
+          L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>

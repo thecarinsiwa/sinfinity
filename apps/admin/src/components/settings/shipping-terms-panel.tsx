@@ -136,10 +136,13 @@ export function ShippingTermsPanel() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Version</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="shipping-terms-version-label">
+              Version
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="shipping-terms-version-label"
                 maxLength={32}
                 value={versionInput}
                 onChange={(e) => setVersionInput(e.target.value)}
@@ -150,7 +153,7 @@ export function ShippingTermsPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
           <Button
@@ -178,7 +181,7 @@ export function ShippingTermsPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucun Incoterm"
-          description="Ajustez les filtres ou créez un terme de livraison."
+          description="Créez un Incoterm ou ajustez les filtres."
           action={
             canWrite ? (
               <Button
@@ -297,8 +300,9 @@ export function ShippingTermsPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span>.
+          Archiver{" "}
+          <span className="font-medium text-foreground">{deleting?.code}</span> ?
+          L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>

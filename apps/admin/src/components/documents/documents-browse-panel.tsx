@@ -196,10 +196,13 @@ export function DocumentsBrowsePanel() {
             ))}
           </Select>
         </label>
-        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">entity_id (UUID)</span>
+        <div className="flex flex-col gap-1 text-sm sm:col-span-2">
+          <span className="font-medium" id="documents-entity-id-label">
+            entity_id (UUID)
+          </span>
           <div className="flex gap-2">
             <Input
+              aria-labelledby="documents-entity-id-label"
               value={entityIdInput}
               onChange={(e) => setEntityIdInput(e.target.value)}
               placeholder="Requiert entity_type"
@@ -210,7 +213,7 @@ export function DocumentsBrowsePanel() {
               Filtrer
             </Button>
           </div>
-        </label>
+        </div>
       </div>
 
       {error ? (

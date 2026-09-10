@@ -140,10 +140,13 @@ export function TaxesPanel() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1">
+            <span className="font-medium" id="taxes-search-label">
+              Recherche
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="taxes-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -165,7 +168,7 @@ export function TaxesPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Type</span>
             <Select
@@ -372,9 +375,9 @@ export function TaxesPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.code}</span>
-          .
+          Archiver{" "}
+          <span className="font-medium text-foreground">{deleting?.code}</span> ?
+          L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>

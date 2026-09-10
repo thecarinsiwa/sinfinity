@@ -406,11 +406,11 @@ export function ExchangeRatesPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete du taux{" "}
+          Archiver le taux{" "}
           <span className="font-mono text-foreground">
             {formatDecimalDisplay(deleting?.rate)}
-          </span>
-          .
+          </span>{" "}
+          ? L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>

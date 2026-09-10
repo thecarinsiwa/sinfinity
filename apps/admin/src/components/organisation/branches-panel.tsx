@@ -139,10 +139,13 @@ export function BranchesPanel() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="branches-search-label">
+              Recherche
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="branches-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Code ou nom…"
@@ -161,10 +164,10 @@ export function BranchesPanel() {
                   setSearch(searchInput);
                 }}
               >
-                OK
+                Filtrer
               </Button>
             </div>
-          </label>
+          </div>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Type</span>
             <Select
@@ -218,7 +221,7 @@ export function BranchesPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucune agence"
-          description="Créez une première agence ou ajustez les filtres."
+          description="Créez une agence ou ajustez les filtres."
           action={
             canWrite ? (
               <Button type="button" size="sm" onClick={openCreate}>
@@ -330,11 +333,12 @@ export function BranchesPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
+          Archiver{" "}
           <span className="font-medium text-foreground">
             {deleting?.name ?? ""}
           </span>{" "}
-          ({deleting?.code}). L’agence disparaîtra des listes actives.
+          ({deleting?.code}) ? L’élément ne sera plus visible dans les listes
+          actives.
         </p>
       </Modal>
     </div>

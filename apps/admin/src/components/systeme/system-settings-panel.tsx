@@ -86,10 +86,13 @@ export function SystemSettingsPanel() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
-          <span className="font-medium">Recherche</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
+          <span className="font-medium" id="system-settings-search-label">
+            Recherche
+          </span>
           <div className="flex gap-2">
             <Input
+              aria-labelledby="system-settings-search-label"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Clé ou description…"
@@ -99,7 +102,7 @@ export function SystemSettingsPanel() {
               Filtrer
             </Button>
           </div>
-        </label>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/system/health"

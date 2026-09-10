@@ -152,10 +152,13 @@ export function CitiesPanel() {
               ))}
             </Select>
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="font-medium" id="cities-search-label">
+              Recherche
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="cities-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Nom de ville…"
@@ -177,7 +180,7 @@ export function CitiesPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
           <Button
@@ -205,7 +208,7 @@ export function CitiesPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucune ville"
-          description="Ajustez les filtres ou créez une première ville."
+          description="Créez une ville ou ajustez les filtres."
           action={
             canWrite ? (
               <Button
@@ -321,8 +324,9 @@ export function CitiesPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.name}</span>.
+          Archiver{" "}
+          <span className="font-medium text-foreground">{deleting?.name}</span> ?
+          L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>

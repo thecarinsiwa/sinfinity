@@ -126,10 +126,13 @@ export function CountriesPanel() {
               onKeyDown={(e) => e.key === "Enter" && applyFilters()}
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="font-medium">Recherche</span>
+          <div className="flex flex-col gap-1 text-sm sm:col-span-2">
+            <span className="font-medium" id="countries-search-label">
+              Recherche
+            </span>
             <div className="flex gap-2">
               <Input
+                aria-labelledby="countries-search-label"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Nom du pays…"
@@ -139,7 +142,7 @@ export function CountriesPanel() {
                 Filtrer
               </Button>
             </div>
-          </label>
+          </div>
         </div>
         <Can permission="settings.write">
           <Button
@@ -167,7 +170,7 @@ export function CountriesPanel() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Aucun pays"
-          description="Ajustez les filtres ou créez un premier pays."
+          description="Créez un pays ou ajustez les filtres."
           action={
             canWrite ? (
               <Button
@@ -283,9 +286,10 @@ export function CountriesPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
+          Archiver{" "}
           <span className="font-medium text-foreground">{deleting?.name}</span> (
-          {deleting?.code}).
+          {deleting?.code}) ? L’élément ne sera plus visible dans les listes
+          actives.
         </p>
       </Modal>
     </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useId, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { useDialogA11y } from "@/components/ui/use-dialog-a11y";
 import { cn } from "@/lib/cn";
 
 export type DrawerProps = {
@@ -26,27 +27,10 @@ export function Drawer({
   className,
 }: DrawerProps) {
   const titleId = useId();
+  const descriptionId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open, onClose]);
+  useDialogA11y(open, onClose, panelRef);
 
   if (!open) {
     return null;
@@ -56,16 +40,20 @@ export function Drawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       <button
         type="button"
+        tabIndex={-1}
         aria-label="Fermer le tiroir"
         className="absolute inset-0 bg-foreground/40"
         onClick={onClose}
       />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        tabIndex={-1}
         className={cn(
-          "relative z-10 flex h-full w-full max-w-xl flex-col border-l border-border bg-surface shadow-md",
+          "relative z-10 flex h-full w-full max-w-xl flex-col border-l border-border bg-surface shadow-md outline-none",
           className,
         )}
       >
@@ -77,7 +65,10 @@ export function Drawer({
             ×
           </Button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm text-foreground">
+        <div
+          id={descriptionId}
+          className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm text-foreground"
+        >
           {children}
         </div>
         {footer ? (

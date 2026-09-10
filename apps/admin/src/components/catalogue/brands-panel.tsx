@@ -105,10 +105,13 @@ export function BrandsPanel() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
-          <span className="font-medium">Recherche</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
+          <span className="font-medium" id="brands-search-label">
+            Recherche
+          </span>
           <div className="flex gap-2">
             <Input
+              aria-labelledby="brands-search-label"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Nom…"
@@ -118,7 +121,7 @@ export function BrandsPanel() {
               Filtrer
             </Button>
           </div>
-        </label>
+        </div>
         <Can permission="catalog.write">
           <Button
             type="button"
@@ -275,8 +278,9 @@ export function BrandsPanel() {
         }
       >
         <p className="text-muted">
-          Soft-delete de{" "}
-          <span className="font-medium text-foreground">{deleting?.name}</span>.
+          Archiver{" "}
+          <span className="font-medium text-foreground">{deleting?.name}</span> ?
+          L’élément ne sera plus visible dans les listes actives.
         </p>
       </Modal>
     </div>
