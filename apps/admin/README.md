@@ -21,6 +21,19 @@ pnpm dev:admin
 
 Ouvrir [http://localhost:3001](http://localhost:3001).
 
+## Accueil (dashboard)
+
+La route `/` affiche un **tableau de bord** en lectures API uniquement :
+
+| Indicateur | Source |
+|------------|--------|
+| Utilisateurs actifs | `GET /users?page=1&pageSize=1&isActive=true` → `meta.total` |
+| Agences actives | `GET /branches?page=1&pageSize=1&isActive=true` → `meta.total` |
+| Dernière connexion | session (`/auth/me` → `lastLoginAt`) |
+| Santé Nest | `GET /health` (sans auth) |
+
+Raccourcis : Organisation, Utilisateurs, Paramètres, Audit (+ Agences, Rôles, Santé). Aucun endpoint d’agrégation dédié.
+
 ## Variables d’environnement
 
 Copier l’exemple puis ajuster si besoin :

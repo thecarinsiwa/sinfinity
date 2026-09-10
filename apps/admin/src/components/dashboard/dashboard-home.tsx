@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Can } from "@/components/auth/can";
 import { useAuth } from "@/components/auth/auth-provider";
-import { Badge, Spinner } from "@/components/ui";
+import { Badge, Button, Spinner } from "@/components/ui";
 import {
   ApiError,
   apiFetch,
   type HealthResponse,
   type PaginatedResponse,
 } from "@/lib/api";
-import { formatDateTimeFr } from "@/lib/dashboard/format";
+import { formatDateTimeFr, greetingForHour } from "@/lib/dashboard/format";
 import { cn } from "@/lib/cn";
 
 type CountState =
@@ -25,6 +25,7 @@ type HealthState =
   | { status: "ready"; data: HealthResponse }
   | { status: "error"; message: string };
 
+/** Roadmap: Organisation / Users / Settings / Audit first, then extras. */
 const QUICK_LINKS: Array<{
   title: string;
   href: string;
@@ -38,22 +39,10 @@ const QUICK_LINKS: Array<{
     permission: "organizations.read",
   },
   {
-    title: "Agences",
-    href: "/organisation/agences",
-    hint: "Sites & entrepôts",
-    permission: "branches.read",
-  },
-  {
     title: "Utilisateurs",
     href: "/utilisateurs",
     hint: "Comptes",
     permission: "users.read",
-  },
-  {
-    title: "Rôles",
-    href: "/roles",
-    hint: "RBAC",
-    permission: "roles.read",
   },
   {
     title: "Paramètres",
@@ -66,6 +55,18 @@ const QUICK_LINKS: Array<{
     href: "/audit",
     hint: "Journal",
     permission: "audit.read",
+  },
+  {
+    title: "Agences",
+    href: "/organisation/agences",
+    hint: "Sites & entrepôts",
+    permission: "branches.read",
+  },
+  {
+    title: "Rôles",
+    href: "/roles",
+    hint: "RBAC",
+    permission: "roles.read",
   },
   {
     title: "Santé API",
@@ -85,8 +86,29 @@ export function DashboardHome() {
   });
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
 
+  const loadHealth = useCallback(async (signal?: { cancelled: boolean }) => {
+    setHealth({ status: "loading" });
+    try {
+      const data = await apiFetch<HealthResponse>("/health", {
+        skipAuth: true,
+        cache: "no-store",
+      });
+      if (!signal?.cancelled) {
+        setHealth({ status: "ready", data });
+      }
+    } catch (error) {
+      if (!signal?.cancelled) {
+        setHealth({
+          status: "error",
+          message:
+            error instanceof ApiError ? error.message : "API injoignable",
+        });
+      }
+    }
+  }, []);
+
   useEffect(() => {
-    let cancelled = false;
+    const signal = { cancelled: false };
 
     async function loadCount(
       path: string,
@@ -99,39 +121,22 @@ export function DashboardHome() {
       }
       try {
         const result = await apiFetch<PaginatedResponse<unknown>>(path);
-        if (!cancelled) {
+        if (!signal.cancelled) {
           setState({ status: "ready", total: result.meta.total });
         }
       } catch (error) {
-        if (!cancelled) {
-          setState({
-            status: "error",
-            message:
-              error instanceof ApiError
-                ? error.message
-                : "Chargement impossible",
-          });
+        if (signal.cancelled) return;
+        if (error instanceof ApiError && error.statusCode === 403) {
+          setState({ status: "denied" });
+          return;
         }
-      }
-    }
-
-    async function loadHealth() {
-      try {
-        const data = await apiFetch<HealthResponse>("/health", {
-          skipAuth: true,
-          cache: "no-store",
+        setState({
+          status: "error",
+          message:
+            error instanceof ApiError
+              ? error.message
+              : "Chargement impossible",
         });
-        if (!cancelled) {
-          setHealth({ status: "ready", data });
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setHealth({
-            status: "error",
-            message:
-              error instanceof ApiError ? error.message : "API injoignable",
-          });
-        }
       }
     }
 
@@ -145,15 +150,40 @@ export function DashboardHome() {
       isSuperAdmin || hasPermission("branches.read"),
       setBranchesCount,
     );
-    void loadHealth();
+    void loadHealth(signal);
 
     return () => {
-      cancelled = true;
+      signal.cancelled = true;
     };
-  }, [hasPermission, isSuperAdmin]);
+  }, [hasPermission, isSuperAdmin, loadHealth]);
+
+  const displayName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.email ||
+    "";
+  const greeting = greetingForHour(new Date().getHours());
 
   return (
     <div className="flex flex-col gap-6 pb-2">
+      <header>
+        <p className="text-sm text-muted">
+          {greeting}
+          {displayName ? (
+            <>
+              ,{" "}
+              <span className="font-medium text-foreground">{displayName}</span>
+            </>
+          ) : null}
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+          Tableau de bord
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          Agrégats en lecture seule (meta.total, session, GET /health) — aucun
+          endpoint métier dédié.
+        </p>
+      </header>
+
       <div className="grid gap-4 lg:grid-cols-12">
         <Panel className="lg:col-span-4" delay={0}>
           <p className="text-sm font-medium text-muted">Organisation</p>
@@ -275,7 +305,17 @@ export function DashboardHome() {
                 </>
               ) : null}
               {health.status === "error" ? (
-                <p className="text-danger">{health.message}</p>
+                <div className="space-y-3">
+                  <p className="text-danger">{health.message}</p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void loadHealth()}
+                  >
+                    Réessayer
+                  </Button>
+                </div>
               ) : null}
               <Link
                 href="/system/health"
@@ -369,11 +409,15 @@ function StatTile({
     </div>
   );
 
-  if (state.status === "denied") {
+  if (state.status === "denied" || state.status === "error") {
     return content;
   }
 
-  return <Link href={href}>{content}</Link>;
+  return (
+    <Link href={href} aria-label={`${label} — ouvrir la liste`}>
+      {content}
+    </Link>
+  );
 }
 
 function HealthRing({ state }: { state: HealthState }) {
