@@ -474,8 +474,8 @@ function InfoCell({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
 function QuickLinkGlyph({ label }: { label: string }) {
   const letter = label.trim().charAt(0).toUpperCase() || "?";
   return <span className="text-sm font-bold">{letter}</span>;
 }
+
