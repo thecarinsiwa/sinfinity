@@ -9,6 +9,8 @@ import { ExchangeRatesController } from './exchange-rates/exchange-rates.control
 import { ExchangeRatesService } from './exchange-rates/exchange-rates.service';
 import { PaymentTermsController } from './payment-terms/payment-terms.controller';
 import { PaymentTermsService } from './payment-terms/payment-terms.service';
+import { SettingsSeedController } from './seeds/settings-seed.controller';
+import { SettingsSeedService } from './seeds/settings-seed.service';
 import { ShippingTermsController } from './shipping-terms/shipping-terms.controller';
 import { ShippingTermsService } from './shipping-terms/shipping-terms.service';
 import { TaxesController } from './taxes/taxes.controller';
@@ -21,6 +23,7 @@ import { UnitsService } from './units/units.service';
  */
 @Module({
   controllers: [
+    SettingsSeedController,
     CountriesController,
     CitiesController,
     CurrenciesController,
@@ -31,6 +34,7 @@ import { UnitsService } from './units/units.service';
     ShippingTermsController,
   ],
   providers: [
+    SettingsSeedService,
     CountriesService,
     CitiesService,
     CurrenciesService,
@@ -40,6 +44,6 @@ import { UnitsService } from './units/units.service';
     PaymentTermsService,
     ShippingTermsService,
   ],
-  exports: [ExchangeRatesService, CurrenciesService],
+  exports: [ExchangeRatesService, CurrenciesService, SettingsSeedService],
 })
 export class SettingsModule {}

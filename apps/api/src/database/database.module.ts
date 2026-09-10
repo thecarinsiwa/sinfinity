@@ -32,7 +32,11 @@ class MysqlPoolCloser implements OnModuleDestroy {
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>): Pool =>
         createPool({
-          uri: config.get('DATABASE_URL', { infer: true }),
+          host: config.get('DATABASE_HOST', { infer: true }),
+          port: config.get('DATABASE_PORT', { infer: true }),
+          user: config.get('DATABASE_USER', { infer: true }),
+          password: config.get('DATABASE_PASSWORD', { infer: true }),
+          database: config.get('DATABASE_NAME', { infer: true }),
           waitForConnections: true,
           connectionLimit: POOL_CONNECTION_LIMIT,
           enableKeepAlive: true,

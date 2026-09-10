@@ -22,7 +22,8 @@ export class HealthController {
   })
   @ApiOkResponse({ type: HealthResponseDto })
   @ApiServiceUnavailableResponse({
-    description: 'MySQL ping failed',
+    description:
+      'Example only — returned if MySQL SELECT 1 fails. A healthy server responds 200 above; this is not the live status.',
     type: ServiceUnavailableErrorResponseDto,
   })
   check(): Promise<HealthResponseDto> {

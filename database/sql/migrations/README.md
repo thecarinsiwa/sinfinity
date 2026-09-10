@@ -40,10 +40,19 @@ Depuis la racine du dépôt, dans l’ordre numérique :
 mysql -u root -p sinfinity < database/sql/migrations/001_exemple.sql
 ```
 
+Ou via le helper API (recommandé) :
+
+```bash
+pnpm db:sync              # vérifier DB / tables / migrations
+pnpm db:sync -- --apply   # appliquer baseline (si vide) + migrations en attente
+```
+
 Install neuve (pas de migrations à rejouer) :
 
 ```bash
 mysql -u root -p < database/sql/sinfinity_schema.sql
+# ou
+pnpm db:sync -- --apply
 ```
 
 Le client MySQL 8 local est requis (pas de Docker dans ce projet).

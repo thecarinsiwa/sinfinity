@@ -286,7 +286,7 @@ Doc métier : [`database/modules/18_settings.md`](../../../database/modules/18_s
 | `feat/api-m18-geo` | `countries`, `cities` |
 | `feat/api-m18-money` | `currencies`, `exchange_rates`, `taxes` |
 | `feat/api-m18-terms` | `units`, `payment_terms`, `shipping_terms` |
-| `feat/api-m18-seeds` | Seeds idempotents + endpoint admin de re-seed en dev |
+| `feat/api-m18-seeds` | **Livré** : `seed:settings` + `POST /settings/seed` (dev) + `02_settings.sql` |
 
 ## Prompt branches secondaires
 
@@ -338,6 +338,9 @@ Fichier de préférence sous database/sql/seeds/ + commande documentée (mysql c
 ou pnpm --filter @sinfinity/api seed). En NODE_ENV=development seulement,
 POST /api/v1/settings/seed protégé admin. Ne pas écraser des lignes métier
 déjà saisies (upsert sur codes). Pas de Prisma.
+
+Livré : SettingsSeedService + seed:settings + database/sql/seeds/02_settings.sql
++ POST /settings/seed (settings.write, development only).
 ```
 
 ## Explication littéraire (branches secondaires)
@@ -684,7 +687,7 @@ Doc métier : [`database/modules/04_fournisseurs.md`](../../../database/modules/
 |---------|--------|
 | `feat/api-m04-suppliers` | `supplier_categories`, `suppliers`, contacts, adresses, `supplier_payment_terms` |
 | `feat/api-m04-catalog` | `supplier_products` |
-| `feat/api-m04-quotes` | `supplier_quotes`, `supplier_quote_items` |
+| `feat/api-m04-quotes` | **Livré** : CRUD `/supplier-quotes` + items + transitions |
 | `feat/api-m04-quality` | `supplier_evaluations`, `supplier_documents`, `supplier_histories` |
 
 ## Prompt branches secondaires
@@ -718,6 +721,9 @@ Liste « qui vend ce product_id ». Tag « Fournisseurs ».
 Branche : feat/api-m04-quotes
 CRUD supplier_quotes + items (offres libres, distinctes des procurement_quotes).
 Statuts draft/received/selected/rejected/expired. Tag « Fournisseurs ».
+
+Livré : GET/POST/PATCH/DELETE /supplier-quotes + items + POST :id/transition
+(draft → received|rejected|expired ; received → selected|rejected|expired).
 ```
 
 ### `feat/api-m04-quality`

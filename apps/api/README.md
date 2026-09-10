@@ -8,11 +8,11 @@ Depuis la racine du monorepo (`Node.js ≥ 22`, `pnpm ≥ 10`) :
 
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env   # renseigner DATABASE_URL et les secrets JWT
+cp apps/api/.env.example apps/api/.env   # renseigner DATABASE_* et les secrets JWT
 pnpm --filter @sinfinity/api dev
 ```
 
-MySQL 8 local et `DATABASE_URL` : [docs/database.md](./docs/database.md).
+MySQL 8 local et `DATABASE_*` : [docs/database.md](./docs/database.md).
 
 ## Swagger
 
