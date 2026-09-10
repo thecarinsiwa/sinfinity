@@ -3,11 +3,15 @@
 | Fichier | Contenu |
 |---------|---------|
 | [`01_rbac.sql`](./01_rbac.sql) | Permissions Phase 2 + rôles système (ADMIN…) — bootstrap partiel |
+| [`02_settings.sql`](./02_settings.sql) | Devises, pays, villes, unités, Incoterms, payment terms, TVA RDC |
 
-**Recommandé :** seed Nest idempotent (catalogue complet + mapping par rôle) :
+**Recommandé :** seed Nest idempotent :
 
 ```bash
 pnpm --filter @sinfinity/api seed:rbac
+pnpm --filter @sinfinity/api seed:settings
 ```
 
-Le SQL ci-dessus convient pour un bootstrap minimal (permissions cœur + rôles + ADMIN = toutes les perms déjà en base). Relancer `seed:rbac` après pour synchroniser le catalogue ROADMAP et les matrices SALES / PROCUREMENT / etc.
+En développement, `POST /api/v1/settings/seed` (permission `settings.write`) relance le même upsert Settings.
+
+Le SQL ci-dessus convient pour un bootstrap minimal. Relancer les commandes Nest après pour synchroniser catalogues et matrices de rôles.

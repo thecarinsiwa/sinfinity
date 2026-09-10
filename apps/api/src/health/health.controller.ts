@@ -5,7 +5,7 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ErrorResponseDto } from '../common/dto/error-response.dto';
+import { ServiceUnavailableErrorResponseDto } from '../common/dto/error-response.dto';
 import { HealthResponseDto } from './health-response.dto';
 import { HealthService } from './health.service';
 
@@ -22,8 +22,9 @@ export class HealthController {
   })
   @ApiOkResponse({ type: HealthResponseDto })
   @ApiServiceUnavailableResponse({
-    description: 'MySQL ping failed',
-    type: ErrorResponseDto,
+    description:
+      'Example only — returned if MySQL SELECT 1 fails. A healthy server responds 200 above; this is not the live status.',
+    type: ServiceUnavailableErrorResponseDto,
   })
   check(): Promise<HealthResponseDto> {
     return this.healthService.check();

@@ -12,6 +12,7 @@
     "dev:admin": "pnpm --filter @sinfinity/admin dev",
     "dev:pos": "pnpm --filter @sinfinity/pos dev",
     "dev:api": "pnpm --filter @sinfinity/api dev",
+    "db:sync": "pnpm --filter @sinfinity/api db:sync",
     "build": "pnpm -r --if-present build",
     "lint": "pnpm -r --if-present lint",
     "test": "pnpm -r --if-present test",

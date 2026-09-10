@@ -11,7 +11,10 @@ export { CurrentUser } from './decorators/current-user.decorator';
 export { OrganizationId } from './decorators/organization-id.decorator';
 export { PERMISSIONS_KEY } from './decorators/permissions.constants';
 export { RequirePermissions } from './decorators/require-permissions.decorator';
-export { ErrorResponseDto } from './dto/error-response.dto';
+export {
+  ErrorResponseDto,
+  ServiceUnavailableErrorResponseDto,
+} from './dto/error-response.dto';
 export {
   buildPaginatedResponse,
   PaginatedResponseDto,

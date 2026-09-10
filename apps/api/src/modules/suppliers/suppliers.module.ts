@@ -9,6 +9,8 @@ import { SupplierHistoriesController } from './supplier-histories/supplier-histo
 import { SupplierHistoriesService } from './supplier-histories/supplier-histories.service';
 import { SupplierProductsController } from './supplier-products/supplier-products.controller';
 import { SupplierProductsService } from './supplier-products/supplier-products.service';
+import { SupplierQuotesController } from './supplier-quotes/supplier-quotes.controller';
+import { SupplierQuotesService } from './supplier-quotes/supplier-quotes.service';
 import { SuppliersController } from './suppliers/suppliers.controller';
 import { SuppliersService } from './suppliers/suppliers.service';
 
@@ -18,6 +20,7 @@ import { SuppliersService } from './suppliers/suppliers.service';
     SuppliersController,
     SupplierDocumentsController,
     SupplierProductsController,
+    SupplierQuotesController,
     SupplierEvaluationsController,
     SupplierHistoriesController,
   ],
@@ -26,6 +29,7 @@ import { SuppliersService } from './suppliers/suppliers.service';
     SuppliersService,
     SupplierDocumentsService,
     SupplierProductsService,
+    SupplierQuotesService,
     SupplierEvaluationsService,
     SupplierHistoriesService,
   ],
@@ -34,6 +38,7 @@ import { SuppliersService } from './suppliers/suppliers.service';
     SuppliersService,
     SupplierDocumentsService,
     SupplierProductsService,
+    SupplierQuotesService,
     SupplierEvaluationsService,
     SupplierHistoriesService,
   ],

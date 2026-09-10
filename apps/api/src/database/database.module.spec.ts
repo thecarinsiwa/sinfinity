@@ -11,8 +11,11 @@ describe('DatabaseModule', () => {
 
   beforeAll(async () => {
     process.env.NODE_ENV ??= 'test';
-    process.env.DATABASE_URL ??=
-      'mysql://root:password@127.0.0.1:3306/sinfinity_test';
+    process.env.DATABASE_HOST ??= '127.0.0.1';
+    process.env.DATABASE_PORT ??= '3306';
+    process.env.DATABASE_USER ??= 'root';
+    process.env.DATABASE_PASSWORD ??= 'unit-test-only';
+    process.env.DATABASE_NAME ??= 'sinfinity_test';
     process.env.JWT_ACCESS_SECRET ??= 'test-access-secret-please-change-32ch';
     process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret-please-change-32';
 
@@ -32,12 +35,14 @@ describe('DatabaseModule', () => {
     await moduleRef.close();
   });
 
-  it('provides a mysql2 pool from DATABASE_URL', () => {
+  it('provides a mysql2 pool from discrete DATABASE_* config', () => {
     const pool = moduleRef.get<Pool>(MYSQL_POOL);
     const config = moduleRef.get(ConfigService);
 
     expect(pool).toBeDefined();
-    expect(config.get('DATABASE_URL')).toBe(process.env.DATABASE_URL);
+    expect(config.get('DATABASE_HOST')).toBeDefined();
+    expect(config.get('DATABASE_NAME')).toBeDefined();
+    expect(config.get('DATABASE_URL')).toMatch(/^mysql:\/\//);
   });
 
   it('provides a Drizzle client bound to the pool', () => {
