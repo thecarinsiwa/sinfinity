@@ -33,6 +33,12 @@ cp apps/admin/.env.example apps/admin/.env.local
 |----------|-------------|------------------|
 | `NEXT_PUBLIC_API_URL` | Base URL de l’API (préfixe `/api/v1`) | `http://localhost:4000/api/v1` |
 
+## Showcase UI (dev only)
+
+En développement, les primitives `src/components/ui` sont visibles sur
+[http://localhost:3001/dev/ui](http://localhost:3001/dev/ui).
+La route renvoie 404 en production.
+
 ## Documentation
 
 - Roadmap Admin : [`docs/ROADMAP.md`](./docs/ROADMAP.md)

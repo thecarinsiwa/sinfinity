@@ -19,6 +19,16 @@ export default function Home() {
               "http://localhost:4000/api/v1"}
           </code>
         </p>
+        {process.env.NODE_ENV !== "production" ? (
+          <p className="text-sm">
+            <a
+              href="/dev/ui"
+              className="font-medium text-teal-800 underline-offset-4 hover:underline"
+            >
+              Showcase UI
+            </a>
+          </p>
+        ) : null}
       </main>
     </div>
   );
