@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Alert, Button, Input } from "@/components/ui";
 import { useAuth } from "@/components/auth/auth-provider";
+import { cn } from "@/lib/cn";
 
 export function LoginForm() {
   const { login, status } = useAuth();
@@ -10,6 +10,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [focused, setFocused] = useState<"email" | "password" | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,30 +30,60 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex w-full flex-col gap-8">
       {error ? (
-        <Alert tone="danger" title="Échec de la connexion">
+        <p
+          role="alert"
+          className="text-center text-sm text-red-600 animate-in fade-in"
+        >
           {error}
-        </Alert>
+        </p>
       ) : null}
 
-      <label className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium text-foreground">Adresse e-mail</span>
-        <Input
+      <label className="flex flex-col gap-2">
+        <span
+          className={cn(
+            "text-sm transition-colors",
+            focused === "email" || email
+              ? "font-medium text-neutral-900"
+              : "text-neutral-400",
+          )}
+        >
+          Adresse e-mail
+        </span>
+        <input
           type="email"
           name="email"
           autoComplete="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="admin@sinfinity.cd"
+          onFocus={() => setFocused("email")}
+          onBlur={() => setFocused(null)}
           disabled={submitting}
+          className={cn(
+            "w-full border-0 border-b bg-transparent px-0 pb-2 text-base text-neutral-900 outline-none transition-colors",
+            "placeholder:text-transparent",
+            "disabled:opacity-50",
+            focused === "email"
+              ? "border-b-2 border-neutral-900"
+              : "border-b border-neutral-300",
+          )}
         />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium text-foreground">Mot de passe</span>
-        <Input
+      <label className="flex flex-col gap-2">
+        <span
+          className={cn(
+            "text-sm transition-colors",
+            focused === "password" || password
+              ? "font-medium text-neutral-900"
+              : "text-neutral-400",
+          )}
+        >
+          Mot de passe
+        </span>
+        <input
           type="password"
           name="password"
           autoComplete="current-password"
@@ -60,14 +91,33 @@ export function LoginForm() {
           minLength={8}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="••••••••"
+          onFocus={() => setFocused("password")}
+          onBlur={() => setFocused(null)}
           disabled={submitting}
+          className={cn(
+            "w-full border-0 border-b bg-transparent px-0 pb-2 text-base text-neutral-900 outline-none transition-colors",
+            "placeholder:text-transparent",
+            "disabled:opacity-50",
+            focused === "password"
+              ? "border-b-2 border-neutral-900"
+              : "border-b border-neutral-300",
+          )}
         />
       </label>
 
-      <Button type="submit" disabled={submitting || status === "loading"}>
+      <button
+        type="submit"
+        disabled={submitting || status === "loading"}
+        className={cn(
+          "mt-4 w-full bg-[#ffd200] py-3.5 text-sm font-bold tracking-[0.12em] text-white uppercase",
+          "transition-[transform,filter,opacity] duration-200",
+          "hover:brightness-95 active:scale-[0.99]",
+          "disabled:cursor-not-allowed disabled:opacity-60",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900",
+        )}
+      >
         {submitting ? "Connexion…" : "Se connecter"}
-      </Button>
+      </button>
     </form>
   );
 }
